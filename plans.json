@@ -1,0 +1,11 @@
+{
+  "plans": {
+    "free":     { "label": "Free",                "storageGB": 1 },
+    "personal": { "label": "Personal",            "storageGB": 100 },
+    "family":   { "label": "Family",              "storageGB": 1000 },
+    "creator":  { "label": "Personal + Creator",  "storageGB": 350 }
+  },
+  "assignments": {
+    "jaxon": "personal"
+  }
+}
