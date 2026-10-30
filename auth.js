@@ -3,7 +3,7 @@
 (function () {
   // Paste your Clerk publishable key (starts with pk_test_ or pk_live_).
   // It is safe to keep here. Never paste the secret key (sk_...) into any page.
-  var PUBLISHABLE_KEY = 'pk_test_Zml0LWdyaWZmb24tMjk3Ni5jbGVyay5hY2NvdW50cy5kZXYk';
+  var PUBLISHABLE_KEY = 'pk_test_';
 
   var configured = PUBLISHABLE_KEY.indexOf('PASTE_') !== 0;
   var LB = (window.LB = { configured: configured, loaded: false, signedIn: false });
@@ -43,7 +43,24 @@
   LB.signOut = async function () { await Clerk.signOut(); location.href = '/'; };
   LB.manage = function () { Clerk.openUserProfile(); };
 
-  // Which plan this person has (from plans.json, looked up by username).
+  // Talk to our server as the signed-in person.
+  LB.api = async function (action, extra) {
+    var token = await Clerk.session.getToken();
+    var r = await fetch('/api/account', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + token },
+      body: JSON.stringify(Object.assign({ action: action }, extra || {}))
+    });
+    var d = {};
+    try { d = await r.json(); } catch (e) {}
+    if (!r.ok || !d.ok) { var err = new Error(d.error || 'Something went wrong. Try again.'); err.code = d.code; throw err; }
+    return d;
+  };
+  // Open Stripe's checkout for a plan, or Stripe's billing page.
+  LB.checkout = async function (plan) { var d = await LB.api('checkout', { plan: plan }); location.href = d.url; };
+  LB.billing = async function () { var d = await LB.api('portal'); location.href = d.url; };
+
+  // Which plan this person has (from plans.json or Stripe).
   LB.plan = async function () {
     var token = await Clerk.session.getToken();
     var r = await fetch('/api/account', {
@@ -59,7 +76,7 @@
 
   // Buttons on any page: data-signin, data-signup, data-signout, data-manage
   document.addEventListener('click', function (e) {
-    var el = e.target.closest ? e.target.closest('[data-signin],[data-signup],[data-signout],[data-manage]') : null;
+    var el = e.target.closest ? e.target.closest('[data-signin],[data-signup],[data-signout],[data-manage],[data-billing]') : null;
     if (!el) return;
     e.preventDefault();
     var back = el.getAttribute('data-return') || '/vault';
@@ -67,6 +84,7 @@
     else if (el.hasAttribute('data-signup')) LB.signUp(back);
     else if (el.hasAttribute('data-signout')) LB.signOut();
     else if (el.hasAttribute('data-manage')) LB.manage();
+    else if (el.hasAttribute('data-billing')) LB.billing().catch(function (err) { alert(err.message); });
   });
 
   async function start() {
