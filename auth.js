@@ -18,7 +18,8 @@
       var s = document.createElement('script');
       s.src = src; s.crossOrigin = 'anonymous'; s.async = false;
       if (key) s.setAttribute('data-clerk-publishable-key', key);
-      s.onload = resolve; s.onerror = reject;
+      s.onload = resolve;
+      s.onerror = function () { reject(new Error('Could not load ' + src)); };
       document.head.appendChild(s);
     });
   }
@@ -91,6 +92,7 @@
   }
 
   start().catch(function (err) {
+    console.error('Lifeboat: login did not load.', err);
     showHeader(); // shows Sign in and Get started
     rejectReady(err);
   });
