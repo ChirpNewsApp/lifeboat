@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Lifeboat: get your digital life back after a hack</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=Instrument+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#E6F0F1; --surface:#F7FBFB; --ink:#0A3340; --muted:#4A6B74;
+  --line:#BFD5D8; --signal:#FF5B2E; --signal-ink:#ffffff; --ok:#1C8A5B; --bad:#C2321B;
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px); padding-bottom:env(safe-area-inset-bottom,0px);
+  color-scheme:light;
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --bg:#0A2630; --surface:#10343F; --ink:#E6F3F4; --muted:#93B3BA;
+    --line:#22505D; --signal:#FF7248; --signal-ink:#1A0A05; --ok:#4CCB93; --bad:#FF8A73;
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0A2630; --surface:#10343F; --ink:#E6F3F4; --muted:#93B3BA;
+  --line:#22505D; --signal:#FF7248; --signal-ink:#1A0A05; --ok:#4CCB93; --bad:#FF8A73;
+  color-scheme:dark;
+}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:"Instrument Sans",system-ui,sans-serif;font-size:17px;line-height:1.55}
+h1,h2,h3{font-family:"Bricolage Grotesque","Instrument Sans",system-ui,sans-serif;line-height:1.05;margin:0}
+a{color:inherit}
+.wrap{max-width:1040px;margin:0 auto;padding:0 22px}
+header{display:flex;justify-content:space-between;align-items:center;padding:20px 0}
+.logo{font-family:"Bricolage Grotesque",sans-serif;font-weight:800;font-size:22px;display:flex;align-items:center;gap:10px;text-decoration:none}
+.logo svg{width:30px;height:30px}
+.btn{display:inline-block;background:var(--signal);color:var(--signal-ink);font:600 16px "Instrument Sans",sans-serif;border:0;border-radius:10px;padding:13px 20px;cursor:pointer;text-decoration:none}
+.btn:hover{filter:brightness(1.06)}
+.btn.ghost{background:transparent;color:var(--ink);border:2px solid var(--ink)}
+:focus-visible{outline:3px solid var(--signal);outline-offset:3px}
+
+.hero{display:grid;grid-template-columns:1.05fr 1fr;gap:40px;align-items:center;padding:36px 0 70px}
+.hero h1{font-size:clamp(40px,6.4vw,76px);font-weight:800;letter-spacing:-0.025em}
+.hero p.lead{font-size:20px;color:var(--muted);max-width:30em;margin:20px 0 28px}
+.hero .cta{display:flex;gap:12px;flex-wrap:wrap}
+
+/* demo */
+.demo{background:var(--surface);border:2px solid var(--ink);border-radius:18px;padding:20px;box-shadow:8px 8px 0 var(--ink)}
+.demo-top{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:14px}
+.status{font:600 14px "Instrument Sans",sans-serif;padding:5px 12px;border-radius:99px;border:2px solid currentColor}
+.status.bad{color:var(--bad)} .status.ok{color:var(--ok)}
+.demo-title{font-weight:600}
+.files{list-style:none;margin:0 0 16px;padding:0;display:grid;gap:8px}
+.files li{display:flex;justify-content:space-between;gap:12px;padding:10px 12px;border:1.5px solid var(--line);border-radius:10px;transition:all .35s ease;background:var(--bg)}
+.files li span:last-child{color:var(--muted);font-size:14px;white-space:nowrap}
+.files li.gone{opacity:.35;text-decoration:line-through;border-style:dashed;filter:blur(.6px)}
+.files li.back{border-color:var(--ok)}
+.demo .btn{width:100%}
+.demo-note{font-size:14px;color:var(--muted);margin:12px 0 0;min-height:1.5em}
+
+section{padding:60px 0;border-top:2px solid var(--line)}
+section h2{font-size:clamp(30px,4.4vw,48px);font-weight:700;letter-spacing:-0.02em;max-width:16em}
+.sub{color:var(--muted);max-width:36em;margin:14px 0 0}
+
+.layers{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:0;margin-top:34px;border:2px solid var(--ink);border-radius:16px;overflow:hidden}
+.layer{padding:24px;background:var(--surface);border-right:2px solid var(--ink);border-bottom:2px solid var(--ink);margin:0 -2px -2px 0}
+.layer h3{font-size:24px;font-weight:700;margin-bottom:8px}
+.layer p{margin:0 0 12px;color:var(--muted);font-size:16px}
+.layer ul{margin:0;padding-left:18px;font-size:15px}
+.layer li{margin:3px 0}
+.layer.hl{background:var(--signal);color:var(--signal-ink)}
+.layer.hl p{color:inherit}
+
+.plans{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:18px;margin-top:34px}
+.plan{background:var(--surface);border:2px solid var(--line);border-radius:16px;padding:24px}
+.plan.pick{border-color:var(--ink);box-shadow:6px 6px 0 var(--ink)}
+.plan h3{font-size:22px}
+.price{font:800 40px "Bricolage Grotesque",sans-serif;margin:8px 0}
+.price small{font:500 16px "Instrument Sans",sans-serif;color:var(--muted)}
+.plan ul{padding-left:18px;margin:12px 0 0;font-size:15px}
+.plan li{margin:4px 0}
+
+form{display:flex;gap:10px;flex-wrap:wrap;margin-top:26px;max-width:520px}
+input[type=email]{flex:1 1 220px;font:400 17px "Instrument Sans",sans-serif;padding:13px 14px;border-radius:10px;border:2px solid var(--ink);background:var(--surface);color:var(--ink)}
+#joined{margin-top:14px;color:var(--ok);font-weight:600;min-height:1.5em}
+footer{padding:36px 0 50px;color:var(--muted);font-size:14px;border-top:2px solid var(--line)}
+
+@media (max-width:820px){
+  .hero{grid-template-columns:1fr;padding-bottom:50px}
+}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <a class="logo" href="#top" aria-label="Lifeboat home">
+      <svg viewBox="0 0 32 32" aria-hidden="true"><circle cx="16" cy="16" r="13" fill="none" stroke="#FF5B2E" stroke-width="6"/><g stroke="currentColor" stroke-width="3"><path d="M16 3v6M16 23v6M3 16h6M23 16h6"/></g></svg>
+      Lifeboat
+    </a>
+    <a class="btn ghost" href="#waitlist">Join the waitlist</a>
+  </header>
+
+  <main id="top">
+    <div class="hero">
+      <div>
+        <h1>Hacked? Get everything back.</h1>
+        <p class="lead">Lifeboat keeps safe copies of your files, game saves, and social accounts. When something goes wrong, you restore it in a few clicks.</p>
+        <div class="cta">
+          <a class="btn" href="#waitlist">Get early access</a>
+          <a class="btn ghost" href="#covers">See what it covers</a>
+        </div>
+      </div>
+
+      <div class="demo" aria-live="polite">
+        <div class="demo-top">
+          <span class="demo-title">Your Lifeboat vault</span>
+          <span id="status" class="status bad">Account hacked</span>
+        </div>
+        <ul class="files" id="files">
+          <li class="gone"><span>Family photos 2019–2025</span><span>18 GB</span></li>
+          <li class="gone"><span>Steam saves and keybinds</span><span>2.4 GB</span></li>
+          <li class="gone"><span>Instagram posts and followers</span><span>1,240 posts</span></li>
+          <li class="gone"><span>Tax documents</span><span>86 files</span></li>
+        </ul>
+        <button class="btn" id="restore">Restore everything</button>
+        <p class="demo-note" id="note">Try it. This is what recovery feels like.</p>
+      </div>
+    </div>
+
+    <section id="covers">
+      <h2>One app for the four ways your digital life breaks</h2>
+      <p class="sub">Most security apps stop at warning you. Lifeboat also gets your stuff back.</p>
+      <div class="layers">
+        <div class="layer">
+          <h3>Protect</h3>
+          <p>Catch trouble before it lands.</p>
+          <ul><li>Virus and malware scanning</li><li>Scam checker for texts, links, listings</li><li>Safe phishing practice for your family</li></ul>
+        </div>
+        <div class="layer">
+          <h3>Watch</h3>
+          <p>Know the moment something leaks.</p>
+          <ul><li>Breach alerts with a clear to-do list</li><li>Game and social account monitoring</li></ul>
+        </div>
+        <div class="layer hl">
+          <h3>Back up</h3>
+          <p>Your safety copy, locked so only you can open it.</p>
+          <ul><li>Encrypted file vault</li><li>Social media archive</li><li>Game saves and settings</li><li>Website backups</li></ul>
+        </div>
+        <div class="layer">
+          <h3>Recover</h3>
+          <p>Step-by-step help when it already happened.</p>
+          <ul><li>Hacked-account recovery guides</li><li>Ransomware undo with locked versions</li><li>Digital legacy for the people you trust</li></ul>
+        </div>
+      </div>
+    </section>
+
+    <section id="pricing">
+      <h2>Start free. Pay when you want the safety copy.</h2>
+      <div class="plans">
+        <div class="plan">
+          <h3>Free</h3>
+          <div class="price">$0</div>
+          <ul><li>Scam checker</li><li>Breach alerts</li></ul>
+        </div>
+        <div class="plan pick">
+          <h3>Personal</h3>
+          <div class="price">$8<small>/month</small></div>
+          <ul><li>Everything in Free</li><li>Encrypted vault</li><li>Virus scanning</li><li>Guided recovery</li></ul>
+        </div>
+        <div class="plan">
+          <h3>Family</h3>
+          <div class="price">$15<small>/month</small></div>
+          <ul><li>Everything in Personal</li><li>Up to 6 people</li><li>Phishing practice</li><li>Shared emergency contacts</li></ul>
+        </div>
+        <div class="plan">
+          <h3>Creator and Gamer</h3>
+          <div class="price">+$5<small>/month</small></div>
+          <ul><li>Social account archive</li><li>Game account monitoring</li><li>Save and settings sync</li></ul>
+        </div>
+      </div>
+    </section>
+
+    <section id="waitlist">
+      <h2>Be first in the boat</h2>
+      <p class="sub">Leave your email and we'll tell you when early access opens.</p>
+      <form id="form">
+        <label for="email" style="position:absolute;left:-9999px">Email address</label>
+        <input id="email" type="email" placeholder="you@example.com" required autocomplete="email">
+        <button class="btn" type="submit">Join the waitlist</button>
+      </form>
+      <div id="joined" aria-live="polite"></div>
+    </section>
+  </main>
+
+  <footer>© 2026 Lifeboat. Concept page: prices and features are planned, not final.</footer>
+</div>
+
+<script>
+(function(){
+  var restore=document.getElementById('restore'),
+      items=document.querySelectorAll('#files li'),
+      status=document.getElementById('status'),
+      note=document.getElementById('note'),
+      done=false;
+  restore.addEventListener('click',function(){
+    if(done){
+      items.forEach(function(li){li.className='gone'});
+      status.className='status bad'; status.textContent='Account hacked';
+      restore.textContent='Restore everything';
+      note.textContent='Try it. This is what recovery feels like.';
+      done=false; return;
+    }
+    restore.disabled=true; restore.textContent='Restoring...';
+    items.forEach(function(li,i){
+      setTimeout(function(){
+        li.className='back';
+        li.firstElementChild.textContent='✓ '+li.firstElementChild.textContent;
+      },500*(i+1));
+    });
+    setTimeout(function(){
+      status.className='status ok'; status.textContent='Restored';
+      note.textContent='All files back from your latest clean copy.';
+      restore.disabled=false; restore.textContent='Replay demo';
+      done=true;
+      items.forEach(function(li){li.firstElementChild.textContent=li.firstElementChild.textContent.replace('✓ ','')});
+    },500*items.length+600);
+  });
+
+  // Waitlist signups are sent to your inbox through Web3Forms (free).
+  // Get your access key at web3forms.com and paste it below.
+  var ACCESS_KEY='PASTE_YOUR_WEB3FORMS_ACCESS_KEY_HERE';
+
+  document.getElementById('form').addEventListener('submit',function(e){
+    e.preventDefault();
+    var form=e.target, out=document.getElementById('joined'),
+        btn=form.querySelector('button[type=submit]');
+    out.style.color='';
+    if(ACCESS_KEY.indexOf('PASTE_')===0){
+      out.style.color='var(--bad)';
+      out.textContent='Signups are not connected yet. Add your Web3Forms access key to the page.';
+      return;
+    }
+    btn.disabled=true; btn.textContent='Joining...';
+    fetch('https://api.web3forms.com/submit',{
+      method:'POST',
+      headers:{'Content-Type':'application/json','Accept':'application/json'},
+      body:JSON.stringify({
+        access_key:ACCESS_KEY,
+        subject:'New Lifeboat waitlist signup',
+        from_name:'Lifeboat waitlist',
+        email:document.getElementById('email').value
+      })
+    }).then(function(r){return r.json()}).then(function(d){
+      if(d.success){
+        out.textContent='You’re on the list. We’ll email you when early access opens.';
+        form.reset();
+      }else{
+        out.style.color='var(--bad)';
+        out.textContent='That did not go through. Check the email address and try again.';
+      }
+    }).catch(function(){
+      out.style.color='var(--bad)';
+      out.textContent='Could not reach the server. Check your connection and try again.';
+    }).then(function(){
+      btn.disabled=false; btn.textContent='Join the waitlist';
+    });
+  });
+})();
+</script>
+</body>
+</html>
