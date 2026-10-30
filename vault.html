@@ -146,6 +146,7 @@ footer a{margin-right:14px}
 
     <div id="app" hidden>
       <div class="v-head">
+        <p id="thanks" hidden style="background:var(--tint);border:2px solid var(--ink);border-radius:12px;padding:12px 16px;margin-bottom:14px"><strong>Thank you!</strong> Your payment went through. Your new plan shows up below in a moment.</p>
         <h1>Your vault</h1>
         <p>Signed in as <strong id="who">…</strong></p>
       </div>
@@ -180,6 +181,7 @@ footer a{margin-right:14px}
           <div class="acts">
             <button class="btn" type="button" data-manage>Account and security</button>
             <a class="btn ghost" href="/pricing">Change plan</a>
+            <button class="btn ghost" type="button" id="bill" data-billing hidden>Manage billing</button>
           </div>
         </section>
       </div>
@@ -232,13 +234,15 @@ footer a{margin-right:14px}
     $('who').textContent = u.username ? '@' + u.username : email;
     $('loading').hidden = true; $('app').hidden = false;
 
-    var totalGB = 1, label = 'Free', usedGB = 0;   // nothing can be stored yet
+    var totalGB = 1, label = 'Free', usedGB = 0, billing = false;   // nothing can be stored yet
     try {
       var p = await LB.plan();
-      totalGB = p.storageGB; label = p.label;
+      totalGB = p.storageGB; label = p.label; billing = !!p.billing;
       if(p.username){ $('d-user').textContent = p.username; $('who').textContent = '@' + p.username; }
     } catch(e){}
     $('d-plan').textContent = label;
+    if(billing) $('bill').hidden = false;
+    if(/[?&]checkout=success/.test(location.search)) $('thanks').hidden = false;
     $('used').textContent = usedGB + ' GB';
     $('of').textContent = 'used of ' + LB.size(totalGB);
     $('arc').setAttribute('stroke-dasharray', (C * Math.min(usedGB / totalGB, 1)) + ' ' + C);

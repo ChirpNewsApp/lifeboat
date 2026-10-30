@@ -229,35 +229,57 @@ footer a{margin-right:14px}
     });
   }
 
-  function signedIn(current){
+  var state = { base:'free', addon:false, billing:false };
+
+  function signedIn(){
     gate.hidden = true;
     buttons.forEach(function(b){
       var k = b.getAttribute('data-choose');
+      b.classList.remove('off'); b.removeAttribute('aria-disabled');
       if(k === 'free'){ b.textContent = 'Open my vault'; return; }
-      if(k === current){ b.textContent = 'Your plan'; b.classList.add('off'); b.setAttribute('aria-disabled','true'); return; }
-      b.textContent = k === 'creator' ? 'Choose add-on' : 'Choose ' + labels[k];
+      var mine = (k === 'creator') ? state.addon : (k === state.base);
+      if(mine){ b.textContent = 'Your plan'; b.classList.add('off'); b.setAttribute('aria-disabled','true'); return; }
+      if(k === 'creator') b.textContent = 'Add Creator';
+      else b.textContent = state.base !== 'free' ? 'Switch to ' + labels[k] : 'Choose ' + labels[k];
     });
   }
 
+  var busy = false;
   buttons.forEach(function(b){
-    b.addEventListener('click', function(){
+    b.addEventListener('click', async function(){
       var k = b.getAttribute('data-choose');
       if(!window.LB || !LB.signedIn){
         if(k === 'free') LB.signUp('/vault'); else LB.signIn('/pricing');
         return;
       }
       if(k === 'free'){ location.href = '/vault'; return; }
-      if(b.classList.contains('off')) return;
-      say('Payments open soon. Your account is ready, so you can pick ' + labels[k] + ' as soon as they do.', true);
+      if(b.classList.contains('off') || busy) return;
+      if(k === 'creator' && state.base === 'free'){ say('The Creator add-on goes on top of Personal or Family. Pick one of those first.', false); return; }
+      // Already paying? Changing plans happens on Stripe's billing page.
+      if(k !== 'creator' && state.base !== 'free'){
+        busy = true; say('Opening your billing page…', true);
+        try { await LB.billing(); } catch(e){ busy = false; say(e.message, false); }
+        return;
+      }
+      busy = true; var old = b.textContent; b.textContent = 'One moment…'; say('', true);
+      try { await LB.checkout(k); }
+      catch(e){
+        busy = false; b.textContent = old;
+        if(e.code === 'has_plan'){ say('You already have that. Opening billing…', true); try { await LB.billing(); } catch(x){ say(x.message, false); } }
+        else say(e.message, false);
+      }
     });
   });
 
   signedOut(); // default until we know better
   LB.ready.then(async function(){
     if(!LB.signedIn){ signedOut(); return; }
-    var current = 'free';
-    try { current = (await LB.plan()).plan; } catch(e){}
-    signedIn(current);
+    try {
+      var p = await LB.plan();
+      var parts = String(p.plan).split('+');
+      state.base = parts[0]; state.addon = parts.indexOf('creator') !== -1 || p.plan === 'creator'; state.billing = !!p.billing;
+    } catch(e){}
+    signedIn();
   }).catch(signedOut);
 })();
 </script>
