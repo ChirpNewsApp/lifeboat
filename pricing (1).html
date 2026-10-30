@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Lifeboat plans and pricing</title>
+<meta name="description" content="Pick a Lifeboat plan. Start free and upgrade when you need more room.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ccircle cx='50' cy='50' r='34' fill='none' stroke='%23F7FBFB' stroke-width='24'/%3E%3Ccircle cx='50' cy='50' r='34' fill='none' stroke='%23FF5B2E' stroke-width='24' stroke-dasharray='40.06 13.35' transform='rotate(11.25 50 50)'/%3E%3Ccircle cx='50' cy='50' r='46' fill='none' stroke='%230A3340' stroke-width='3'/%3E%3Ccircle cx='50' cy='50' r='22' fill='none' stroke='%230A3340' stroke-width='3'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=Instrument+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+/* Shared look for the pricing and vault pages. Colors and fonts match the home page. */
+:root{
+  --bg:#E6F0F1; --surface:#F7FBFB; --ink:#0A3340; --muted:#4A6B74;
+  --line:#BFD5D8; --signal:#FF5B2E; --signal-ink:#ffffff; --ok:#1C8A5B; --bad:#C2321B;
+  --tint:#D3E6E8;
+  color-scheme:light;
+}
+@media (prefers-color-scheme:dark){
+  :root{
+    --bg:#0A2630; --surface:#10343F; --ink:#E6F3F4; --muted:#93B3BA;
+    --line:#22505D; --signal:#FF7248; --signal-ink:#1A0A05; --ok:#4CCB93; --bad:#FF8A73;
+    --tint:#17414E;
+    color-scheme:dark;
+  }
+}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html{scroll-padding-top:20px}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:"Instrument Sans",system-ui,sans-serif;font-size:17px;line-height:1.55}
+h1,h2,h3{font-family:"Bricolage Grotesque","Instrument Sans",system-ui,sans-serif;line-height:1.05;margin:0}
+h1{font-size:clamp(38px,6vw,64px);font-weight:800;letter-spacing:-0.025em}
+h2{font-size:clamp(24px,3.4vw,34px);font-weight:700;letter-spacing:-0.02em}
+h3{font-size:22px;font-weight:700}
+p{margin:0}
+a{color:inherit}
+.wrap{max-width:1040px;margin:0 auto;padding:0 22px}
+.muted{color:var(--muted)}
+:focus-visible{outline:3px solid var(--signal);outline-offset:3px}
+
+/* header */
+.top{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:20px 0}
+.logo{display:inline-block;text-decoration:none}
+.logo svg{height:40px;width:auto;display:block}
+.nav{display:flex;align-items:center;gap:10px}
+.navlink{font-weight:600;text-decoration:none;padding:8px 6px}
+.navlink:hover{text-decoration:underline;text-underline-offset:4px}
+
+/* buttons */
+.btn{display:inline-block;background:var(--signal);color:var(--signal-ink);font:600 16px "Instrument Sans",sans-serif;border:2px solid var(--signal);border-radius:10px;padding:11px 18px;cursor:pointer;text-decoration:none;text-align:center;line-height:1.2}
+.btn:hover{filter:brightness(1.06)}
+.btn.ghost{background:transparent;color:var(--ink);border-color:var(--ink)}
+.btn.block{display:block;width:100%}
+.btn[disabled],.btn.off{opacity:.55;cursor:default;filter:none}
+
+/* cards */
+.card{background:var(--surface);border:2px solid var(--ink);border-radius:18px;padding:24px}
+.card.lift{box-shadow:8px 8px 0 var(--ink)}
+
+footer{padding:36px 0 50px;color:var(--muted);font-size:14px;border-top:2px solid var(--line);margin-top:70px;display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap}
+footer a{margin-right:14px}
+
+/* pricing */
+.p-hero{padding:34px 0 26px}
+.p-hero p{font-size:20px;color:var(--muted);max-width:32em;margin-top:16px}
+.gate{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;background:var(--tint);border:2px solid var(--ink);border-radius:14px;padding:16px 20px;margin:6px 0 30px}
+.gate strong{font-family:"Bricolage Grotesque",sans-serif;font-size:20px}
+.gate .row{display:flex;gap:10px;flex-wrap:wrap}
+.plans{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:20px;align-items:stretch}
+.plan{position:relative;display:flex;flex-direction:column;background:var(--surface);border:2px solid var(--ink);border-radius:18px}
+.plan.pick{box-shadow:8px 8px 0 var(--ink)}
+.plan .flag{position:absolute;top:-15px;left:18px;background:var(--signal);color:var(--signal-ink);font-weight:600;font-size:14px;padding:4px 14px;border-radius:99px;border:2px solid var(--ink)}
+.plan .head{padding:26px 22px 6px}
+.price{font:800 44px "Bricolage Grotesque",sans-serif;letter-spacing:-0.02em;margin-top:6px}
+.price small{font:600 17px "Instrument Sans",sans-serif;color:var(--muted);letter-spacing:0}
+.space{margin:14px 22px 0;padding:14px 16px;background:var(--tint);border-radius:12px}
+.space b{display:block;font:800 34px/1 "Bricolage Grotesque",sans-serif;letter-spacing:-0.02em}
+.space span{font-size:14px;color:var(--muted)}
+.plan ul{list-style:none;margin:16px 22px 0;padding:0;font-size:15.5px;flex:1}
+.plan li{display:flex;gap:10px;margin:7px 0}
+.plan li:before{content:"\2713";flex:none;width:20px;height:20px;margin-top:2px;border-radius:50%;background:var(--ok);color:var(--surface);font-size:12px;font-weight:700;display:grid;place-items:center;line-height:1}
+.plan .foot{padding:18px 22px 22px}
+.note{margin-top:22px;min-height:1.5em;font-weight:600}
+.note.ok{color:var(--ok)}
+.fine{margin-top:30px;color:var(--muted);font-size:15px;max-width:44em}
+
+/* vault */
+.v-head{padding:30px 0 22px}
+.v-head p{margin-top:12px;color:var(--muted);font-size:19px}
+.v-grid{display:grid;grid-template-columns:1.15fr 1fr;gap:22px;align-items:start}
+.gauge{display:flex;align-items:center;gap:24px;flex-wrap:wrap}
+.gauge svg{width:210px;height:210px;flex:none}
+.gauge .read{flex:1 1 150px;min-width:150px}
+.gauge .read b{display:block;font:800 40px/1 "Bricolage Grotesque",sans-serif;letter-spacing:-0.02em}
+.gauge .read span{color:var(--muted)}
+.gauge .read p{margin-top:14px;font-size:15px;color:var(--muted)}
+.kv{display:flex;justify-content:space-between;gap:14px;padding:11px 0;border-bottom:2px solid var(--line)}
+.kv:last-of-type{border-bottom:0}
+.kv span:first-child{color:var(--muted)}
+.kv strong{text-align:right;word-break:break-word}
+.acts{display:flex;gap:10px;flex-wrap:wrap;margin-top:16px}
+.sec{margin-top:44px}
+.sec>p{margin-top:8px;color:var(--muted);max-width:38em}
+.tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(215px,1fr));gap:16px;margin-top:20px}
+.tile{display:flex;gap:14px;align-items:flex-start;background:var(--surface);border:2px dashed var(--line);border-radius:14px;padding:18px}
+.tile svg{flex:none;width:34px;height:34px;color:var(--signal)}
+.tile b{display:block;font:700 19px "Bricolage Grotesque",sans-serif}
+.tile span{font-size:14.5px;color:var(--muted)}
+.tile div>span:not(.soon){display:block;line-height:1.4;margin-top:3px}
+.soon{display:inline-block;margin-top:8px;font-size:13px;font-weight:600;color:var(--muted);border:2px solid var(--line);border-radius:99px;padding:1px 10px}
+.skeleton{opacity:.5}
+
+@media (max-width:820px){
+  .v-grid{grid-template-columns:1fr}
+}
+@media (max-width:560px){
+  .navlink{display:none}
+  .btn{padding:10px 14px;font-size:15px}
+  .logo svg{height:34px}
+  .gauge{justify-content:center;text-align:center}
+  .gauge .read p{margin-left:auto;margin-right:auto}
+}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <a class="logo" href="/" aria-label="Lifeboat home"><svg viewBox="0 0 399 100" role="img" aria-label="Lifeboat"><g transform="translate(0.0 0.0) scale(1.0)"><circle cx="50" cy="50" r="34" fill="none" style="stroke:var(--surface)" stroke-width="24"/><circle cx="50" cy="50" r="34" fill="none" style="stroke:var(--signal)" stroke-width="24" stroke-dasharray="40.055 13.352" transform="rotate(11.25 50 50)"/><circle cx="50" cy="50" r="46" fill="none" style="stroke:var(--ink)" stroke-width="3"/><circle cx="50" cy="50" r="22" fill="none" style="stroke:var(--ink)" stroke-width="3"/></g><path d="M119.375 76.19140625H155.234375V65.43359375H132.03125V23.80859375H119.375Z M159.2219375 76.19140625H171.3156875V39.06640625H159.2219375ZM165.23365625 35.4453125C169.136 35.4453125 171.91334375 32.87890625 171.91334375 29.328125C171.91334375 25.77734375 169.136 23.24609375 165.23365625 23.24609375C161.36646875 23.24609375 158.589125 25.77734375 158.589125 29.328125C158.589125 32.87890625 161.36646875 35.4453125 165.23365625 35.4453125Z M201.00246875 39.06640625H193.3735625V37.0625C193.3735625 34.25 194.42825 33.16015625 197.3110625 33.16015625H201.00246875V23.80859375H194.25246875C185.42825 23.80859375 181.24465625 27.39453125 181.24465625 34.953125V39.06640625H174.49465625V48.41796875H181.24465625V76.19140625H193.3735625V48.41796875H201.00246875Z M222.49784375 77.03515625C231.8845625 77.03515625 239.37284375 71.796875 240.7439375 64.30859375H229.88065625C229.00175 66.76953125 226.4705 68.31640625 222.91971875 68.31640625C218.13846875 68.31640625 215.32596875 65.328125 215.18534375 60.6171875H241.0251875V57.34765625C241.0251875 46.09765625 233.32596875 38.22265625 222.1814375 38.22265625C211.17753125 38.22265625 203.37284375 46.30859375 203.37284375 57.62890625C203.37284375 68.94921875 211.10721875 77.03515625 222.49784375 77.03515625ZM215.25565625 53.375C215.783 49.47265625 218.41971875 47.15234375 222.49784375 47.15234375C226.5408125 47.15234375 229.2126875 49.47265625 229.74003125 53.375Z M267.934625 77.0C277.67290625 77.0 283.965875 69.30078125 283.965875 57.55859375C283.965875 46.203125 277.4268125 38.2578125 268.04009375 38.2578125C263.2236875 38.2578125 259.74321875 40.12109375 257.38775 44.05859375H257.3174375V23.80859375H245.22368749999998V76.19140625H257.1768125V70.4609375H257.247125C259.1455625 74.78515625 263.04790625 77.0 267.934625 77.0ZM264.52446875 67.33203125C259.95415625 67.33203125 256.82525 63.5 256.82525 57.55859375C256.82525 51.6875 259.95415625 47.890625 264.52446875 47.890625C268.9893125 47.890625 271.7315 51.51171875 271.7315 57.55859375C271.7315 63.67578125 268.9893125 67.33203125 264.52446875 67.33203125Z M306.34015625 77.03515625C317.976875 77.03515625 325.851875 69.40625 325.851875 57.62890625C325.851875 45.921875 317.976875 38.22265625 306.34015625 38.22265625C294.7034375 38.22265625 286.79328125 45.921875 286.79328125 57.62890625C286.79328125 69.40625 294.7034375 77.03515625 306.34015625 77.03515625ZM306.34015625 67.40234375C302.08625 67.40234375 299.0628125 63.921875 299.0628125 57.62890625C299.0628125 51.37109375 302.12140625 47.85546875 306.34015625 47.85546875C310.55890625 47.85546875 313.6175 51.37109375 313.6175 57.62890625C313.6175 63.921875 310.55890625 67.40234375 306.34015625 67.40234375Z M341.54646875000003 76.82421875C346.78475000000003 76.82421875 350.12459375000003 74.99609375 352.33943750000003 70.98828125H352.48006250000003V76.19140625H364.29256250000003V51.1953125C364.29256250000003 43.00390625 358.35115625000003 38.2578125 347.55818750000003 38.2578125C336.80037500000003 38.2578125 330.71834375000003 43.0390625 330.19100000000003 51.08984375H341.44100000000003C341.68709375000003 48.55859375 343.76131250000003 46.94140625 347.13631250000003 46.94140625C350.33553125000003 46.94140625 352.30428125000003 48.453125 352.30428125000003 50.66796875V50.84375C352.30428125000003 53.05859375 349.87850000000003 53.5859375 343.23396875000003 54.1484375C335.32381250000003 54.78125 328.81990625000003 57.48828125 328.81990625000003 65.8203125C328.81990625000003 73.203125 334.12850000000003 76.82421875 341.54646875000003 76.82421875ZM345.23787500000003 68.9140625C342.28475000000003 68.9140625 340.28084375000003 67.54296875 340.28084375000003 65.2578125C340.28084375000003 62.83203125 342.60115625000003 61.49609375 345.83553125000003 61.00390625C348.82381250000003 60.51171875 351.10896875000003 60.0546875 352.40975000000003 59.45703125V62.83203125C352.40975000000003 66.48828125 349.28084375000003 68.9140625 345.23787500000003 68.9140625Z M393.55746875000006 39.06640625H385.92856250000006V28.94140625H373.79965625000006V39.06640625H367.47153125000006V48.41796875H373.79965625000006V65.75C373.79965625000006 72.95703125 377.80746875000006 76.19140625 386.70200000000006 76.19140625H393.55746875000006V66.83984375H389.37387500000006C386.66684375000006 66.83984375 385.92856250000006 66.1015625 385.92856250000006 63.7109375V48.41796875H393.55746875000006Z" style="fill:var(--ink)"/></svg></a>
+    <nav class="nav" aria-label="Main">
+      <a class="navlink" href="/">Home</a>
+      <span data-auth="out" hidden>
+        <button class="btn ghost" type="button" data-signin data-return="/pricing">Sign in</button>
+        <button class="btn" type="button" data-signup data-return="/pricing">Get started</button>
+      </span>
+      <a class="btn" href="/vault" data-auth="in" hidden>Open my vault</a>
+    </nav>
+  </header>
+
+  <main>
+    <div class="p-hero">
+      <h1>Pick the plan that fits your stuff</h1>
+      <p>Every plan keeps a safe copy you can restore after a hack. Start free, and move up when you need more room. All prices are billed monthly, and you can cancel any time.</p>
+    </div>
+
+    <div class="gate" id="gate" hidden>
+      <strong>Sign in before you choose a plan</strong>
+      <div class="row">
+        <button class="btn ghost" type="button" data-signin data-return="/pricing">Sign in</button>
+        <button class="btn" type="button" data-signup data-return="/pricing">Get started</button>
+      </div>
+    </div>
+
+    <div class="plans" id="plans">
+      <article class="plan" data-plan="free">
+        <div class="head"><h3>Free</h3><div class="price">$0<small> per month</small></div></div>
+        <div class="space"><b>1 GB</b><span>of storage</span></div>
+        <ul>
+          <li>Scam checker</li>
+          <li>Breach alerts</li>
+          <li>Your own private vault</li>
+        </ul>
+        <div class="foot"><button class="btn ghost block" type="button" data-choose="free">Get started free</button></div>
+      </article>
+
+      <article class="plan pick" data-plan="personal">
+        <div class="flag">Where most people start</div>
+        <div class="head"><h3>Personal</h3><div class="price">$12<small> per month</small></div></div>
+        <div class="space"><b>100 GB</b><span>of storage</span></div>
+        <ul>
+          <li>Everything in Free</li>
+          <li>Encrypted file vault</li>
+          <li>Virus scanning</li>
+          <li>Step-by-step hack recovery</li>
+        </ul>
+        <div class="foot"><button class="btn block" type="button" data-choose="personal">Choose Personal</button></div>
+      </article>
+
+      <article class="plan" data-plan="family">
+        <div class="head"><h3>Family</h3><div class="price">$22.50<small> per month</small></div></div>
+        <div class="space"><b>1 TB</b><span>shared by up to 6 people</span></div>
+        <ul>
+          <li>Everything in Personal</li>
+          <li>Phishing practice for the family</li>
+          <li>Shared emergency contacts</li>
+        </ul>
+        <div class="foot"><button class="btn ghost block" type="button" data-choose="family">Choose Family</button></div>
+      </article>
+
+      <article class="plan" data-plan="creator">
+        <div class="head"><h3>Creator and Gamer</h3><div class="price">+$7.50<small> per month</small></div></div>
+        <div class="space"><b>+250 GB</b><span>added to Personal</span></div>
+        <ul>
+          <li>Social account archive</li>
+          <li>Game account monitoring</li>
+          <li>Game save and settings sync</li>
+        </ul>
+        <div class="foot"><button class="btn ghost block" type="button" data-choose="creator">Choose add-on</button></div>
+      </article>
+    </div>
+
+    <p class="note" id="note" aria-live="polite"></p>
+    <p class="fine">Lifeboat is still being built, and these plans and prices may change before payments open.</p>
+  </main>
+
+  <footer>
+    <span>© 2026 Lifeboat</span>
+    <span><a href="/">Home</a><a href="/vault">My vault</a></span>
+  </footer>
+</div>
+
+<script src="/auth.js"></script>
+<script>
+(function(){
+  var gate = document.getElementById('gate'), note = document.getElementById('note');
+  var labels = { free:'Free', personal:'Personal', family:'Family', creator:'Creator and Gamer' };
+  var buttons = document.querySelectorAll('[data-choose]');
+
+  function say(text, ok){ note.textContent = text; note.className = 'note' + (ok ? ' ok' : ''); }
+
+  // Not signed in (or login did not load): ask them to sign in first.
+  function signedOut(){
+    gate.hidden = false;
+    buttons.forEach(function(b){
+      var k = b.getAttribute('data-choose');
+      b.textContent = k === 'free' ? 'Get started free' : 'Sign in to choose';
+    });
+  }
+
+  var state = { base:'free', addon:false, billing:false };
+
+  function signedIn(){
+    gate.hidden = true;
+    buttons.forEach(function(b){
+      var k = b.getAttribute('data-choose');
+      b.classList.remove('off'); b.removeAttribute('aria-disabled');
+      if(k === 'free'){ b.textContent = 'Open my vault'; return; }
+      var mine = (k === 'creator') ? state.addon : (k === state.base);
+      if(mine){ b.textContent = 'Your plan'; b.classList.add('off'); b.setAttribute('aria-disabled','true'); return; }
+      if(k === 'creator') b.textContent = 'Add Creator';
+      else b.textContent = state.base !== 'free' ? 'Switch to ' + labels[k] : 'Choose ' + labels[k];
+    });
+  }
+
+  var busy = false;
+  buttons.forEach(function(b){
+    b.addEventListener('click', async function(){
+      var k = b.getAttribute('data-choose');
+      if(!window.LB || !LB.signedIn){
+        if(k === 'free') LB.signUp('/vault'); else LB.signIn('/pricing');
+        return;
+      }
+      if(k === 'free'){ location.href = '/vault'; return; }
+      if(b.classList.contains('off') || busy) return;
+      if(k === 'creator' && state.base === 'free'){ say('The Creator add-on goes on top of Personal or Family. Pick one of those first.', false); return; }
+      // Already paying? Changing plans happens on Stripe's billing page.
+      if(k !== 'creator' && state.base !== 'free'){
+        busy = true; say('Opening your billing page…', true);
+        try { await LB.billing(); } catch(e){ busy = false; say(e.message, false); }
+        return;
+      }
+      busy = true; var old = b.textContent; b.textContent = 'One moment…'; say('', true);
+      try { await LB.checkout(k); }
+      catch(e){
+        busy = false; b.textContent = old;
+        if(e.code === 'has_plan'){ say('You already have that. Opening billing…', true); try { await LB.billing(); } catch(x){ say(x.message, false); } }
+        else say(e.message, false);
+      }
+    });
+  });
+
+  signedOut(); // default until we know better
+  LB.ready.then(async function(){
+    if(!LB.signedIn){ signedOut(); return; }
+    try {
+      var p = await LB.plan();
+      var parts = String(p.plan).split('+');
+      state.base = parts[0]; state.addon = parts.indexOf('creator') !== -1 || p.plan === 'creator'; state.billing = !!p.billing;
+    } catch(e){}
+    signedIn();
+  }).catch(signedOut);
+})();
+</script>
+</body>
+</html>
