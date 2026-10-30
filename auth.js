@@ -3,7 +3,7 @@
 (function () {
   // Paste your Clerk publishable key (starts with pk_test_ or pk_live_).
   // It is safe to keep here. Never paste the secret key (sk_...) into any page.
-  var PUBLISHABLE_KEY = 'PASTE_YOUR_CLERK_PUBLISHABLE_KEY_HERE';
+  var PUBLISHABLE_KEY = 'pk_test_Zml0LWdyaWZmb24tMjk3Ni5jbGVyay5hY2NvdW50cy5kZXYk';
 
   var configured = PUBLISHABLE_KEY.indexOf('PASTE_') !== 0;
   var LB = (window.LB = { configured: configured, loaded: false, signedIn: false });
