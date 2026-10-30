@@ -1,68 +1,53 @@
-# Lifeboat accounts with Clerk: setup guide
+# Lifeboat site update: home, pricing, sign in, vault
 
-Clerk runs the logins, so people can create an account with a username, email and password, or with Google. New email accounts get a 6-digit code to verify. Forgot-password is built in.
+What changed:
 
-This adds:
+- **Home page (`/`)** explains what Lifeboat does, with **Sign in** and **Get started** buttons.
+- **Pricing page (`/pricing`)** shows the plans. You have to sign in before choosing one. Payments are not set up yet, so choosing a plan says "Payments open soon."
+- **Vault page (`/vault`)** is where people land after signing in. It shows their storage ring, plan, and account, and previews where their folders will go. Uploading is not built yet, and the page says so.
+- Logins run on Clerk. Plans are given out by username in `plans.json`.
 
-- `account.html`: the account page (log in, create account, see your plan, log out)
-- `api/account.js`: tells the page which plan the person has
-- `plans.json`: where you give out plans by username
-- `package.json`: tells Vercel to install Clerk's helper code
+## Files and where they go
 
-Time: about 25 minutes.
+Upload everything in this folder to your GitHub repo, at the top level next to `index.html`, except `api/account.js`:
 
-## 1. Create your Clerk app
-
-1. Sign up at clerk.com (free).
-2. Click Create application. Name it `Lifeboat`.
-3. Under sign-in options, turn on **Email**, **Username**, and **Google**. Then click Create application.
-
-## 2. Check the sign-up settings
-
-In the Clerk dashboard, open Configure, then User & authentication (the page for email, phone, and username).
-
-1. **Email address:** on, required, and set to verify with an **email verification code**.
-2. **Username:** on and required. This makes Google sign-ups pick a username too, which is what your plans match on.
-3. **Password:** on.
-4. Save.
-
-Then open Configure, then Paths (also called Application paths), and set the Home URL and the after sign-in and after sign-up URLs to `https://YOUR-DOMAIN.com/account.html`.
-
-## 3. Copy your keys
-
-Open the API keys page in Clerk. You'll see two keys:
-
-- **Publishable key** (starts with `pk_`): safe to put in the page.
-- **Secret key** (starts with `sk_`): SECRET. It only goes into Vercel.
-
-## 4. Put the keys in place
-
-1. Open `account.html` in Notepad or TextEdit and find this line near the bottom:
-   `var PUBLISHABLE_KEY = 'PASTE_YOUR_CLERK_PUBLISHABLE_KEY_HERE';`
-   Replace the placeholder text with your publishable key, keeping the quotes.
-2. In Vercel, open your project, then Settings, then Environment Variables, and add:
-
-| Key | Value |
+| File | Where |
 | --- | --- |
-| `CLERK_SECRET_KEY` | your Clerk secret key |
+| `index.html`, `pricing.html`, `vault.html`, `account.html` | top level (replace the old ones) |
+| `auth.js`, `site.css`, `plans.json`, `package.json`, `vercel.json` | top level |
+| `api/account.js` | inside the `api` folder, next to `waitlist.js` |
 
-## 5. Upload to GitHub
+To make `api/account.js`: Add file, Create new file, type `api/account.js` as the name, paste in the code, and commit. If you already made it earlier, open it, replace everything with the new code, and commit.
 
-1. Add file, then Upload files: `account.html`, `plans.json`, and `package.json`. If GitHub says package.json already exists, upload it anyway so it replaces the old one.
-2. Add file, then Create new file. Type `api/account.js` as the file name, paste in the contents of `api/account.js`, and commit.
-3. In Vercel, open Deployments and Redeploy so the new settings take effect.
+Keep `api/waitlist.js` as it is, since the waitlist form on the home page still uses it.
 
-## 6. Test it
+## Put your Clerk key in one place
 
-1. Open `https://YOUR-DOMAIN.com/account.html`.
-2. Click Create account, make an account (the page will send you to Clerk's sign-up page), and check you get a 6-digit code by email.
-3. You should land back on your account page, showing your username, email, and Free plan.
-4. Log out, then log in again. Then try Google.
-5. Try Forgot password on the login page.
+Open `auth.js` and find the line near the top:
+
+`var PUBLISHABLE_KEY = 'PASTE_YOUR_CLERK_PUBLISHABLE_KEY_HERE';`
+
+Replace the placeholder with your Clerk publishable key (starts with `pk_test_`), keeping the quotes. Every page uses this one key. You don't need to put a key in any other file.
+
+Your secret key (`sk_test_...`) stays in Vercel only, as `CLERK_SECRET_KEY` under Settings, Environment Variables.
+
+## Tell Clerk where to send people after sign-in
+
+In the Clerk dashboard, open Configure, then Paths (also called Application paths). Set the Home URL and the after sign-in and after sign-up URLs to:
+
+`https://YOUR-DOMAIN.com/vault`
+
+## Redeploy and test
+
+1. In Vercel, open Deployments and Redeploy.
+2. Open your home page. You should see Pricing, Sign in, and Get started at the top.
+3. Click Get started, create an account, and check you land on `/vault`.
+4. Open `/pricing`. Your plan should say "Your plan." Log out and check that choosing a plan asks you to sign in.
+5. Open `/account`. It should send you to `/vault`.
 
 ## Giving someone a plan
 
-Open `plans.json` on GitHub, click the pencil icon, and add the username under `assignments`. For example:
+Open `plans.json` on GitHub, click the pencil icon, and add the username under `assignments`:
 
 ```
 "assignments": {
@@ -71,20 +56,21 @@ Open `plans.json` on GitHub, click the pencil icon, and add the username under `
 }
 ```
 
-- Write usernames in lowercase.
-- Plan names are `free`, `personal`, `family`, or `creator`. Anyone not listed, or with a misspelled plan, is on `free`.
-- Every line except the last ends with a comma, and all the quotation marks stay. A missing comma breaks the file.
-- Click Commit changes. Vercel updates the site in about a minute, and the person's account page shows their plan.
-- You can change the storage amounts or add plans in the `plans` part of the same file.
+- Usernames are lowercase.
+- Plan names are `free`, `personal`, `family`, or `creator`. Anyone not listed is on `free`.
+- Every line except the last ends with a comma, and the quotation marks stay. A missing comma breaks the file.
+- Click Commit changes. Vercel updates in about a minute.
+- You can change storage amounts or add plans in the `plans` part of the same file.
 
-This file only decides what plan the account page shows. Storage limits get enforced when we build the vault, and paid plans from Stripe will set plans automatically later. You can keep using the file to give plans for free.
+This file decides which plan the vault and pricing pages show. It does not charge anyone. Storage limits get enforced when we build uploads, and Stripe will set paid plans later.
 
-## What's not included yet
+## Not built yet
 
-- **Authenticator app and backup codes:** Clerk's free plan doesn't include multi-factor login. It comes with their Pro plan, $25 a month ($20 if billed yearly). Check Clerk's pricing page before you upgrade, and confirm backup codes are included. When you upgrade, you turn it on in the Clerk dashboard under multi-factor authentication, and your account page's "Manage account and security" button will show it. No new code is needed.
+- Uploading, folders, and restoring files (the vault page is a preview)
+- Payments (the pricing page says "Payments open soon")
+- Authenticator app and backup codes, which need Clerk's Pro plan
 
 ## Before real customers
 
-- The keys you're using are **development** keys, meant for testing, and they show a "development mode" banner. For a live site, create a **production** instance in Clerk. It will ask you to add a few DNS records for your domain in Spaceship, and it will ask you to set up your own Google login keys in Google Cloud. Clerk shows you each step.
+- Switch from Clerk's test keys to a production setup, with your domain's DNS records in Spaceship and your own Google login keys. Clerk shows you each step.
 - Add a privacy policy and terms of service.
-- The secret key must never go on GitHub or into the page.
