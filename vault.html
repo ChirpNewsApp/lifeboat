@@ -756,7 +756,7 @@ footer a{margin-left:14px}
     var size = st.storageGB ? (st.storageGB >= 1000 ? (st.storageGB / 1000) + ' TB' : st.storageGB + ' GB') : '1 TB';
     if(st.invite && st.role === 'none'){
       box.appendChild(el('h3', '', '@' + st.invite.from + ' invited you to their family'));
-      box.appendChild(el('p', '', 'Join to share their Family plan storage. Your own files and passwords stay private; only this Family folder is shared with everyone in the family.'));
+      box.appendChild(el('p', '', 'Join to share their Family plan storage, which is split between everyone in the family. Your own files and passwords stay private; only this Family folder is shared.'));
       var acts = el('div', 'acts');
       var yes = el('button', 'btn', 'Accept'); yes.type = 'button';
       yes.addEventListener('click', async function(){ yes.disabled = true; try { var r = await LB.files('fam-accept', {}); say('You joined @' + r.owner + '\'s family.'); refresh(); } catch(err){ yes.disabled = false; handle(err); } });
@@ -767,7 +767,7 @@ footer a{margin-left:14px}
     }
     if(st.role === 'member'){
       box.appendChild(el('h3', '', 'You are in @' + st.owner.name + '\'s family'));
-      box.appendChild(el('p', '', st.active ? 'You share their ' + size + ' of storage. Your own files and passwords stay private.' : 'Sharing is paused because their plan is no longer Family.'));
+      box.appendChild(el('p', '', st.active ? 'Their plan has ' + size + ' in total, split between everyone in the family. Your own files and passwords stay private.' : 'Sharing is paused because their plan is no longer Family.'));
       var ppl = el('div', 'people'); ppl.appendChild(famPerson(st.owner.name, 'Owner'));
       st.members.forEach(function(m){ ppl.appendChild(famPerson(m.name, m.name === ($('d-user').textContent || '') ? 'You' : '')); });
       box.appendChild(ppl);
@@ -778,14 +778,16 @@ footer a{margin-left:14px}
       var total = 1 + st.members.length + st.invites.length;
       box.appendChild(el('h3', '', 'Your family'));
       if(st.role === 'owner' && !st.active) box.appendChild(el('p', 'warn', 'Sharing is paused because your plan is no longer Family. Switch back to Family to turn it on again.'));
-      else box.appendChild(el('p', '', 'Everyone shares your ' + size + ' of storage, up to ' + st.max + ' people including you. Each person\'s own vault stays private; the folder below is shared.'));
-      var list = el('div', 'people'); list.appendChild(famPerson($('d-user').textContent || 'you', 'You, owner'));
-      st.members.forEach(function(m){ list.appendChild(famPerson(m.name, 'Member', twoStep('Remove', 'Yes, remove', async function(){ await LB.files('fam-remove', { username: m.name }); say('Removed @' + m.name + ' from your family.'); }))); });
+      else box.appendChild(el('p', '', 'Your plan has ' + size + ' in total, split between everyone in the family (not ' + size + ' each). Up to ' + st.max + ' people including you. Each person\'s own vault stays private; the folder below is shared.' + (st.usage ? ' Used so far: ' + fmtBytes(st.usage.total) + ' of ' + fmtBytes(st.usage.cap) + '.' : '')));
+      var u = st.usage;
+      var list = el('div', 'people'); list.appendChild(famPerson($('d-user').textContent || 'you', 'You, owner' + (u ? ': ' + fmtBytes(u.owner) : '')));
+      st.members.forEach(function(m, i){ list.appendChild(famPerson(m.name, 'Member' + (u ? ': ' + fmtBytes(u.members[i] || 0) : ''), twoStep('Remove', 'Yes, remove', async function(){ await LB.files('fam-remove', { username: m.name }); say('Removed @' + m.name + ' from your family.'); }))); });
       st.invites.forEach(function(i){
         var c = el('button', 'mini', 'Cancel invite'); c.type = 'button';
         c.addEventListener('click', async function(){ try { await LB.files('fam-cancel', { username: i.name }); say('Invite cancelled.'); refresh(); } catch(err){ handle(err); } });
         list.appendChild(famPerson(i.name, 'Invited', c));
       });
+      if(u) list.appendChild(famPerson('family folder', 'Shared: ' + fmtBytes(u.shared)));
       box.appendChild(list);
       if(total < st.max){
         var f = el('form'); var inp = el('input'); inp.placeholder = 'Their Lifeboat username'; inp.autocomplete = 'off'; inp.setAttribute('aria-label', 'Username to invite');
@@ -801,7 +803,7 @@ footer a{margin-left:14px}
       return;
     }
     box.appendChild(el('h3', '', 'Share with your family'));
-    box.appendChild(el('p', '', 'The Family plan gives you 1 TB to share with up to 5 other people, plus a shared folder for everyone. Each person keeps their own private vault.'));
+    box.appendChild(el('p', '', 'The Family plan gives you 1 TB in total to split between you and up to 5 other people, plus a shared folder for everyone. Each person keeps their own private vault.'));
     var a = el('a', 'btn', 'See the Family plan'); a.href = '/pricing'; box.appendChild(a);
   }
 

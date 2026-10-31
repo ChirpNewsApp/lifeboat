@@ -520,7 +520,15 @@ function famView(cfg, fam, me, invite) {
 
 async function famStatus(res, cfg, keys, userId) {
   const [fam, invite, me] = await Promise.all([familyOf(cfg, keys, userId), readJ(cfg, famKey('invites', userId), null), account.resolvePlan(keys, userId)]);
-  return res.status(200).json(famView(cfg, fam, me, invite));
+  const view = famView(cfg, fam, me, invite);
+  // The owner sees how the shared storage is split between people.
+  if (fam.role === 'owner') {
+    const ids = [userId].concat((fam.group.members || []).map((m) => m.userId));
+    const each = await Promise.all(ids.map((id) => usedTotal(cfg, [id], null)));
+    const shared = await usedBytes(cfg, FAMILY_PREFIX + '/' + userId + '/');
+    view.usage = { owner: each[0], members: each.slice(1), shared, total: each.reduce((s, n) => s + n, 0) + shared, cap: Math.round((fam.ownerPlan.storageGB || 0) * 1e9) };
+  }
+  return res.status(200).json(view);
 }
 
 async function famInvite(res, cfg, keys, userId, body) {
