@@ -141,7 +141,26 @@ body{font-variant-ligatures:no-contextual;font-feature-settings:"calt" 0}
 .n-filter button[aria-pressed="true"]{background:var(--surface);color:var(--ink);box-shadow:0 0 0 1px var(--line)}
 .post{background:var(--surface);border:2px solid var(--line);border-radius:16px;padding:20px 22px;margin-bottom:14px}
 .post.news{border-color:var(--ink);box-shadow:5px 5px 0 var(--ink)}
-.post-top{display:flex;align-items:center;gap:8px;flex-wrap:wrap;font-size:14.5px;color:var(--muted)}
+.post-top{display:flex;align-items:center;gap:12px}
+.av{flex:none;width:44px;height:44px;border-radius:50%;overflow:hidden;display:grid;place-items:center;background:var(--ink);color:var(--bg);font:700 18px "Bricolage Grotesque",sans-serif;text-transform:uppercase}
+.av img{width:100%;height:100%;object-fit:cover;display:block}
+.post-who{display:grid;gap:3px;min-width:0}
+.post-line{display:flex;align-items:center;gap:7px;flex-wrap:wrap;font-size:14px;color:var(--muted)}
+.pics{display:grid;gap:8px;margin-top:14px;grid-template-columns:repeat(2,minmax(0,1fr))}
+.pics.one{grid-template-columns:1fr}
+.pics a{display:block;border-radius:12px;overflow:hidden;border:1.5px solid var(--line);background:var(--tint)}
+.pics img{display:block;width:100%;height:100%;max-height:420px;object-fit:cover}
+.pics.one img{max-height:520px;object-fit:contain;background:var(--tint)}
+.picks{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+.pick{position:relative;width:64px;height:64px;border-radius:10px;overflow:hidden;border:1.5px solid var(--line)}
+.pick img{width:100%;height:100%;object-fit:cover}
+.pick button{position:absolute;top:2px;right:2px;width:22px;height:22px;border-radius:50%;border:0;background:rgba(0,0,0,.65);color:#fff;font-size:14px;line-height:1;cursor:pointer}
+.addpics{margin-top:12px}
+.btn.small{padding:7px 12px;font-size:14.5px;width:auto!important;margin-top:0!important}
+.prof{margin-top:18px;padding-top:16px;border-top:1.5px solid var(--line)}
+.prof h3{font-size:17px;margin-bottom:10px}
+.prof-row{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.prof .av{width:56px;height:56px;font-size:22px}
 .who{display:inline-flex;align-items:center;gap:5px;font-weight:600;color:var(--ink)}
 .vbadge{width:18px;height:18px;flex:none}
 .tag{font-size:12.5px;font-weight:700;padding:2px 9px;border-radius:99px;border:1.5px solid var(--line);color:var(--muted)}
@@ -219,6 +238,11 @@ body{font-variant-ligatures:no-contextual;font-feature-settings:"calt" 0}
           <label for="c-text">Post</label>
           <textarea id="c-text" maxlength="4000" placeholder="What's on your mind?"></textarea>
           <div class="count" id="c-count">0 / 4,000</div>
+          <div class="addpics" id="c-picwrap" hidden>
+            <button class="btn ghost small" type="button" id="c-addpic">Add photos</button>
+            <input type="file" id="c-pics" accept="image/jpeg,image/png,image/webp,image/gif" multiple hidden>
+            <div class="picks" id="c-picks"></div>
+          </div>
           <div id="c-kindwrap" hidden>
             <label for="c-kind">Post as</label>
             <select id="c-kind"><option value="feedback">Feedback</option><option value="news">News from the team</option></select>
@@ -226,6 +250,16 @@ body{font-variant-ligatures:no-contextual;font-feature-settings:"calt" 0}
           <button class="btn" type="submit">Post</button>
         </form>
         <div class="n-msg" id="c-msg" role="status"></div>
+        <div class="prof" id="prof" hidden>
+          <h3>Your profile picture</h3>
+          <div class="prof-row">
+            <span class="av" id="prof-av">?</span>
+            <button class="btn ghost small" type="button" id="prof-up">Upload picture</button>
+            <button class="btn quiet small" type="button" id="prof-rm" hidden style="background:none;border:0;color:var(--bad);font-weight:600;cursor:pointer">Remove</button>
+            <input type="file" id="prof-file" accept="image/jpeg,image/png,image/webp,image/gif" hidden>
+          </div>
+          <div class="n-msg" id="prof-msg" role="status"></div>
+        </div>
         <div class="legend" aria-label="Badges">
           <span><svg class="vbadge" viewBox="0 0 24 24" aria-hidden="true"><path fill="#2F7DF6" d="M12 1.5l2.6 1.9 3.2-.2 1 3 2.6 1.9-1 3 1 3-2.6 1.9-1 3-3.2-.2L12 22.5l-2.6-1.9-3.2.2-1-3L2.6 15.9l1-3-1-3 2.6-1.9 1-3 3.2.2z"/><path d="M7.5 12.3l3 3 6-6.2" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>Blue badge: verified</span>
           <span><svg class="vbadge" viewBox="0 0 24 24" aria-hidden="true"><path fill="#F2B300" d="M12 1.5l2.6 1.9 3.2-.2 1 3 2.6 1.9-1 3 1 3-2.6 1.9-1 3-3.2-.2L12 22.5l-2.6-1.9-3.2.2-1-3L2.6 15.9l1-3-1-3 2.6-1.9 1-3 3.2.2z"/><path d="M7.5 12.3l3 3 6-6.2" fill="none" stroke="#3A2A00" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>Yellow badge: verified (gold)</span>
@@ -269,6 +303,81 @@ body{font-variant-ligatures:no-contextual;font-feature-settings:"calt" 0}
     return d;
   }
 
+  function avatar(name, url){
+    var a = el('span', 'av');
+    if(url){ var im = el('img'); im.src = url; im.alt = ''; im.addEventListener('error', function(){ a.textContent = (name || '?')[0]; }); a.appendChild(im); }
+    else a.textContent = (name || '?')[0];
+    return a;
+  }
+  // Shrink a picture in the browser before uploading. square=true crops to a centered square (profile pictures).
+  function shrink(file, max, square){
+    if(file.type === 'image/gif' && !square) return Promise.resolve(file);
+    return new Promise(function(resolve, reject){
+      var img = new Image(), url = URL.createObjectURL(file);
+      img.onload = function(){
+        var sw = img.naturalWidth, sh = img.naturalHeight, sx = 0, sy = 0;
+        if(square){ var m = Math.min(sw, sh); sx = (sw - m) / 2; sy = (sh - m) / 2; sw = sh = m; }
+        var scale = Math.min(1, max / Math.max(sw, sh)), w = Math.round(sw * scale), h = Math.round(sh * scale);
+        if(!square && scale === 1 && file.size <= 10e6){ URL.revokeObjectURL(url); return resolve(file); }
+        var c = document.createElement('canvas'); c.width = w; c.height = h;
+        c.getContext('2d').drawImage(img, sx, sy, sw, sh, 0, 0, w, h);
+        URL.revokeObjectURL(url);
+        c.toBlob(function(b){ b ? resolve(b) : reject(new Error('Could not read that picture.')); }, 'image/jpeg', 0.88);
+      };
+      img.onerror = function(){ URL.revokeObjectURL(url); reject(new Error('That file is not a picture this browser can read.')); };
+      img.src = url;
+    });
+  }
+  async function uploadPicture(action, blob){
+    var type = blob.type || 'image/jpeg';
+    var link = await api(action, { type: type, size: blob.size });
+    var r = await fetch(link.url, { method: 'PUT', headers: { 'Content-Type': type }, body: blob });
+    if(!r.ok) throw new Error('The picture upload was refused (' + r.status + ').');
+    return link.key;
+  }
+
+  // ---- post photos (admins) ----
+  var chosen = [];
+  function drawPicks(){
+    var box = $('c-picks'); box.textContent = '';
+    chosen.forEach(function(f, i){
+      var d = el('div', 'pick'), im = el('img'); im.src = f.preview; im.alt = ''; d.appendChild(im);
+      var x = el('button', '', '×'); x.type = 'button'; x.setAttribute('aria-label', 'Remove photo ' + (i + 1));
+      x.addEventListener('click', function(){ URL.revokeObjectURL(f.preview); chosen.splice(i, 1); drawPicks(); });
+      d.appendChild(x); box.appendChild(d);
+    });
+    $('c-addpic').hidden = chosen.length >= 4;
+  }
+  $('c-addpic').addEventListener('click', function(){ $('c-pics').click(); });
+  $('c-pics').addEventListener('change', function(){
+    Array.prototype.slice.call(this.files).forEach(function(f){ if(chosen.length < 4) chosen.push({ file: f, preview: URL.createObjectURL(f) }); });
+    this.value = ''; drawPicks();
+  });
+
+  // ---- profile picture (admins) ----
+  function setProf(url, name){
+    var av = $('prof-av'); av.textContent = '';
+    if(url){ var im = el('img'); im.src = url; im.alt = 'Your profile picture'; av.appendChild(im); } else av.textContent = (name || '?')[0];
+    $('prof-rm').hidden = !url; $('prof-up').textContent = url ? 'Change picture' : 'Upload picture';
+  }
+  $('prof-up').addEventListener('click', function(){ $('prof-file').click(); });
+  $('prof-file').addEventListener('change', async function(){
+    var f = this.files[0]; this.value = ''; if(!f) return;
+    say('prof-msg', 'Uploading…');
+    try {
+      var blob = await shrink(f, 400, true);
+      var key = await uploadPicture('avatar-url', blob);
+      var r = await api('avatar-set', { key: key });
+      me.avatar = r.avatar; setProf(r.avatar, me.name);
+      posts.forEach(function(p){ if(p.author.name === me.name) p.author.avatar = r.avatar; }); draw();
+      say('prof-msg', 'Profile picture updated.', 'ok');
+    } catch(err){ say('prof-msg', err.message, 'bad'); }
+  });
+  $('prof-rm').addEventListener('click', async function(){
+    try { await api('avatar-remove'); me.avatar = ''; setProf('', me.name); posts.forEach(function(p){ if(p.author.name === me.name) p.author.avatar = ''; }); draw(); say('prof-msg', 'Profile picture removed.', 'ok'); }
+    catch(err){ say('prof-msg', err.message, 'bad'); }
+  });
+
   function delBtn(p){
     var b = el('button', 'mini del', 'Delete'); b.type = 'button'; var t = null;
     b.addEventListener('click', async function(){
@@ -300,15 +409,25 @@ body{font-variant-ligatures:no-contextual;font-feature-settings:"calt" 0}
     shown.forEach(function(p){
       var a = el('article', 'post' + (p.kind === 'news' ? ' news' : ''));
       var top = el('div', 'post-top');
+      top.appendChild(avatar(p.author.name, p.author.avatar));
+      var whoBox = el('div', 'post-who');
+      var line1 = el('div', 'post-line');
       var who = el('span', 'who', p.author.name);
       if(BADGE[p.author.badge]) who.insertAdjacentHTML('beforeend', BADGE[p.author.badge]);
-      top.appendChild(who);
-      if(p.author.admin) top.appendChild(el('span', 'tag team', 'Team'));
-      top.appendChild(el('span', 'tag' + (p.kind === 'news' ? ' news' : ''), p.kind === 'news' ? 'News' : 'Feedback'));
-      var when = el('time', '', ago(p.created)); when.dateTime = p.created; when.title = new Date(p.created).toLocaleString(); top.appendChild(when);
+      line1.appendChild(who);
+      if(p.author.admin) line1.appendChild(el('span', 'tag team', 'Team'));
+      var line2 = el('div', 'post-line');
+      line2.appendChild(el('span', 'tag' + (p.kind === 'news' ? ' news' : ''), p.kind === 'news' ? 'News' : 'Feedback'));
+      var when = el('time', '', ago(p.created)); when.dateTime = p.created; when.title = new Date(p.created).toLocaleString(); line2.appendChild(when);
+      whoBox.appendChild(line1); whoBox.appendChild(line2); top.appendChild(whoBox);
       a.appendChild(top);
       a.appendChild(el('h2', '', p.title));
       a.appendChild(el('p', 'body', p.text));
+      if(p.images && p.images.length){
+        var g = el('div', 'pics' + (p.images.length === 1 ? ' one' : ''));
+        p.images.forEach(function(u, i){ var l = el('a'); l.href = u; l.target = '_blank'; l.rel = 'noopener'; var im = el('img'); im.src = u; im.alt = 'Photo ' + (i + 1) + ' for ' + p.title; im.loading = 'lazy'; l.appendChild(im); g.appendChild(l); });
+        a.appendChild(g);
+      }
       if(p.canDelete || (me && me.admin)){
         var acts = el('div', 'post-acts');
         if(p.canDelete) acts.appendChild(delBtn(p));
@@ -324,7 +443,7 @@ body{font-variant-ligatures:no-contextual;font-feature-settings:"calt" 0}
   }
 
   async function load(){
-    try { var d = await api('list'); posts = d.posts; me = d.me; draw(); $('c-kindwrap').hidden = !(me && me.admin); }
+    try { var d = await api('list'); posts = d.posts; me = d.me; draw(); var adm = !!(me && me.admin); $('c-kindwrap').hidden = !adm; $('c-picwrap').hidden = !adm; $('prof').hidden = !adm; if(adm) setProf(me.avatar, me.name); }
     catch(err){ $('posts').textContent = ''; $('posts').appendChild(el('p', 'n-empty', err.message)); }
   }
 
@@ -340,8 +459,15 @@ body{font-variant-ligatures:no-contextual;font-feature-settings:"calt" 0}
     e.preventDefault();
     var btn = this.querySelector('button[type=submit]'); btn.disabled = true; btn.textContent = 'Posting…'; say('c-msg', '');
     try {
-      var d = await api('post', { title: $('c-title').value, text: $('c-text').value, kind: $('c-kind').value });
+      var keys = [];
+      for(var i = 0; i < chosen.length; i++){
+        btn.textContent = 'Uploading photo ' + (i + 1) + ' of ' + chosen.length + '…';
+        keys.push(await uploadPicture('image-url', await shrink(chosen[i].file, 2000, false)));
+      }
+      btn.textContent = 'Posting…';
+      var d = await api('post', { title: $('c-title').value, text: $('c-text').value, kind: $('c-kind').value, images: keys });
       posts.unshift(d.post); draw(); this.reset(); $('c-count').textContent = '0 / 4,000'; say('c-msg', 'Posted.', 'ok');
+      chosen.forEach(function(f){ URL.revokeObjectURL(f.preview); }); chosen = []; drawPicks();
     } catch(err){ say('c-msg', err.message, 'bad'); }
     btn.disabled = false; btn.textContent = 'Post';
   });

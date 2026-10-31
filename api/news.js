@@ -7,6 +7,10 @@
 //   { "action": "post", "title": "...", "text": "...", "kind": "feedback" | "news" }
 //   { "action": "delete", "id": "..." }                          your own post, or any post if you are an admin
 //   { "action": "badge", "id": "...", "badge": "blue" | "yellow" | "" }   admins only: badge the post's author
+//   { "action": "avatar-url", "type": "image/jpeg", "size": 12345 }   admins only: link to upload a profile picture
+//   { "action": "avatar-set", "key": "..." } / { "action": "avatar-remove" }   admins only
+//   { "action": "image-url", "type": "image/png", "size": 12345 }   admins only: link to upload one photo for a post
+//   Posts can include "images": [keys from image-url], admins only, up to 4.
 //
 // Posts are stored as small JSON files in the same Backblaze bucket, under news/.
 
@@ -20,10 +24,17 @@ const MAX_TEXT = 4000;
 const MAX_LIST = 100;
 const POST_GAP_SECONDS = 30;          // one post every 30 seconds per person
 const BADGES = ['blue', 'yellow'];
+const MAX_AVATAR_BYTES = 5 * 1000 * 1000;
+const AVATAR_TYPES = { 'image/jpeg': 'jpg', 'image/png': 'png', 'image/webp': 'webp', 'image/gif': 'gif' };
+const AVATAR_KEY = /^news\/avatars\/[a-f0-9]{24}\.(jpg|png|webp|gif)$/;
+const MAX_IMAGES = 4;
+const MAX_IMAGE_BYTES = 10 * 1000 * 1000;
+const IMAGE_KEY = /^news\/img\/[a-f0-9]{24}\.(jpg|png|webp|gif)$/;
 
 const deps = {
   async user(userId, key) { return account._deps.user(userId, key); },
   send(cfg, cmd) { return files._deps.send(cfg, cmd); },
+  sign(cfg, cmd, seconds) { return files._deps.sign(cfg, cmd, seconds); },
   cmd() { return files._deps.cmd(); },
   now() { return Date.now(); },
 };
@@ -64,10 +75,24 @@ async function viewer(req, keys) {
   } catch (e) { return null; }
 }
 
-function publicPost(p, badges, me) {
+// Profile pictures (admins only). Returns a function that gives a short-lived view link per person.
+async function avatarLinks(cfg) {
+  const map = await readJson(cfg, 'news/avatars.json', {});
+  const { GetObjectCommand } = deps.cmd();
+  const cache = {};
+  return async function (userId, username) {
+    if (!isAdmin(username) || !map[userId]) return '';
+    if (!(userId in cache)) cache[userId] = deps.sign(cfg, new GetObjectCommand({ Bucket: cfg.bucket, Key: map[userId] }), 3600).catch(() => '');
+    return cache[userId];
+  };
+}
+
+async function publicPost(cfg, p, badges, me, avatarOf) {
+  const { GetObjectCommand } = deps.cmd();
+  const images = await Promise.all((p.images || []).map((k) => deps.sign(cfg, new GetObjectCommand({ Bucket: cfg.bucket, Key: k }), 3600).catch(() => '')));
   return {
-    id: p.id, title: p.title, text: p.text, kind: p.kind, created: p.created,
-    author: { name: p.username || 'member', badge: badges[p.userId] || '', admin: isAdmin(p.username) },
+    id: p.id, title: p.title, text: p.text, kind: p.kind, created: p.created, images: images.filter(Boolean),
+    author: { name: p.username || 'member', badge: badges[p.userId] || '', admin: isAdmin(p.username), avatar: avatarOf ? await avatarOf(p.userId, p.username) : '' },
     mine: !!(me && me.userId === p.userId),
     canDelete: !!(me && (me.userId === p.userId || me.admin)),
   };
@@ -78,15 +103,16 @@ async function list(req, res, cfg, keys) {
   const { ListObjectsV2Command } = deps.cmd();
   const r = await deps.send(cfg, new ListObjectsV2Command({ Bucket: cfg.bucket, Prefix: 'news/posts/', MaxKeys: MAX_LIST }));
   const keysFound = (r.Contents || []).map((o) => o.Key).filter((k) => k.endsWith('.json'));
-  const [posts, badges] = await Promise.all([
+  const [posts, badges, avatarOf] = await Promise.all([
     Promise.all(keysFound.map((k) => readJson(cfg, k, null))),
     readJson(cfg, 'news/badges.json', {}),
+    avatarLinks(cfg),
   ]);
   if (!me) res.setHeader('Cache-Control', 'public, s-maxage=10, stale-while-revalidate=60');
   return res.status(200).json({
     ok: true,
-    me: me ? { name: me.username, admin: me.admin } : null,
-    posts: posts.filter(Boolean).map((p) => publicPost(p, badges, me)),
+    me: me ? { name: me.username, admin: me.admin, avatar: me.admin ? await avatarOf(me.userId, me.username) : '' } : null,
+    posts: await Promise.all(posts.filter(Boolean).map((p) => publicPost(cfg, p, badges, me, avatarOf))),
   });
 }
 
@@ -100,17 +126,21 @@ async function post(req, res, cfg, keys, body) {
   if (title.length > MAX_TITLE) return res.status(400).json({ ok: false, error: 'Keep the title under ' + MAX_TITLE + ' characters.' });
   if (text.length > MAX_TEXT) return res.status(400).json({ ok: false, error: 'Keep the post under ' + MAX_TEXT.toLocaleString() + ' characters.' });
   const kind = body.kind === 'news' && me.admin ? 'news' : 'feedback';
+  const images = Array.isArray(body.images) ? body.images.map(String) : [];
+  if (images.length && !me.admin) return res.status(403).json({ ok: false, error: 'Only admins can add photos.' });
+  if (images.length > MAX_IMAGES) return res.status(400).json({ ok: false, error: 'Up to ' + MAX_IMAGES + ' photos per post.' });
+  if (images.some((k) => !IMAGE_KEY.test(k))) return res.status(400).json({ ok: false, error: 'One of the photos did not upload properly. Try again.' });
 
   const now = deps.now();
   const rate = await readJson(cfg, 'news/rate/' + me.userId + '.json', null);
   if (rate && now - rate.last < POST_GAP_SECONDS * 1000 && !me.admin) {
     return res.status(429).json({ ok: false, error: 'Wait a few seconds before posting again.' });
   }
-  const p = { id: newId(now), title, text, kind, created: new Date(now).toISOString(), userId: me.userId, username: me.username };
+  const p = { id: newId(now), title, text, kind, images, created: new Date(now).toISOString(), userId: me.userId, username: me.username };
   await writeJson(cfg, postKey(p.id), p);
   await writeJson(cfg, 'news/rate/' + me.userId + '.json', { last: now });
-  const badges = await readJson(cfg, 'news/badges.json', {});
-  return res.status(200).json({ ok: true, post: publicPost(p, badges, me) });
+  const [badges, avatarOf] = await Promise.all([readJson(cfg, 'news/badges.json', {}), avatarLinks(cfg)]);
+  return res.status(200).json({ ok: true, post: await publicPost(cfg, p, badges, me, avatarOf) });
 }
 
 async function remove(req, res, cfg, keys, body) {
@@ -122,6 +152,7 @@ async function remove(req, res, cfg, keys, body) {
   if (p.userId !== me.userId && !me.admin) return res.status(403).json({ ok: false, error: 'You can only delete your own posts.' });
   const { DeleteObjectCommand } = deps.cmd();
   await deps.send(cfg, new DeleteObjectCommand({ Bucket: cfg.bucket, Key: postKey(body.id) }));
+  for (const k of p.images || []) { try { await deps.send(cfg, new DeleteObjectCommand({ Bucket: cfg.bucket, Key: k })); } catch (e) { /* already gone */ } }
   return res.status(200).json({ ok: true });
 }
 
@@ -139,6 +170,38 @@ async function badge(req, res, cfg, keys, body) {
   return res.status(200).json({ ok: true, name: p.username, badge: want });
 }
 
+async function uploadLink(req, res, cfg, keys, body) {
+  const forPost = body.action === 'image-url';
+  const me = await viewer(req, keys);
+  if (!me || !me.admin) return res.status(403).json({ ok: false, error: forPost ? 'Only admins can add photos.' : 'Only admins can upload a profile picture.' });
+  const ext = AVATAR_TYPES[String(body.type || '')];
+  if (!ext) return res.status(400).json({ ok: false, error: 'Use a JPG, PNG, WebP, or GIF picture.' });
+  const size = Number(body.size);
+  const max = forPost ? MAX_IMAGE_BYTES : MAX_AVATAR_BYTES;
+  if (!Number.isFinite(size) || size <= 0 || Math.floor(size) !== size) return res.status(400).json({ ok: false, error: 'Bad picture size.' });
+  if (size > max) return res.status(413).json({ ok: false, error: (forPost ? 'Each photo' : 'Profile pictures') + ' can be up to ' + (max / 1e6) + ' MB.' });
+  const key = (forPost ? 'news/img/' : 'news/avatars/') + crypto.randomBytes(12).toString('hex') + '.' + ext;
+  const { PutObjectCommand } = deps.cmd();
+  const url = await deps.sign(cfg, new PutObjectCommand({ Bucket: cfg.bucket, Key: key, ContentType: body.type, ContentLength: size }), 600);
+  return res.status(200).json({ ok: true, url, key });
+}
+
+async function avatarSet(req, res, cfg, keys, body) {
+  const me = await viewer(req, keys);
+  if (!me || !me.admin) return res.status(403).json({ ok: false, error: 'Only admins can upload a profile picture.' });
+  const remove = body.action === 'avatar-remove';
+  const key = String(body.key || '');
+  if (!remove && !AVATAR_KEY.test(key)) return res.status(400).json({ ok: false, error: 'The picture did not upload properly. Try again.' });
+  const map = await readJson(cfg, 'news/avatars.json', {});
+  const old = map[me.userId];
+  if (remove) delete map[me.userId]; else map[me.userId] = key;
+  await writeJson(cfg, 'news/avatars.json', map);
+  if (old && old !== key) { const { DeleteObjectCommand } = deps.cmd(); try { await deps.send(cfg, new DeleteObjectCommand({ Bucket: cfg.bucket, Key: old })); } catch (e) { /* gone */ } }
+  let avatar = '';
+  if (!remove) { const { GetObjectCommand } = deps.cmd(); avatar = await deps.sign(cfg, new GetObjectCommand({ Bucket: cfg.bucket, Key: key }), 3600); }
+  return res.status(200).json({ ok: true, avatar });
+}
+
 async function handler(req, res) {
   if (req.method !== 'POST') { res.setHeader('Allow', 'POST'); return res.status(405).json({ ok: false, error: 'Use POST.' }); }
   const keys = { clerk: process.env.CLERK_SECRET_KEY || '' };
@@ -152,6 +215,8 @@ async function handler(req, res) {
     if (body.action === 'post') return await post(req, res, cfg, keys, body);
     if (body.action === 'delete') return await remove(req, res, cfg, keys, body);
     if (body.action === 'badge') return await badge(req, res, cfg, keys, body);
+    if (body.action === 'avatar-url' || body.action === 'image-url') return await uploadLink(req, res, cfg, keys, body);
+    if (body.action === 'avatar-set' || body.action === 'avatar-remove') return await avatarSet(req, res, cfg, keys, body);
     return res.status(400).json({ ok: false, error: 'Unknown action.' });
   } catch (err) {
     console.error('Lifeboat news error:', err);
