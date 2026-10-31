@@ -230,7 +230,7 @@ footer a{margin-right:14px}
         <div class="ups" id="ups" aria-live="polite"></div>
         <div class="fm-msg" id="fmmsg" role="status"></div>
         <div class="rows" id="rows"></div>
-        <div id="dbg" hidden style="margin-top:14px"><button class="btn ghost" type="button" id="dbgbtn">Run storage test</button><pre id="dbgout" style="white-space:pre-wrap;word-break:break-word;background:var(--surface);border:2px solid var(--line);border-radius:10px;padding:12px;margin-top:10px;font-size:13px"></pre></div>
+        <div id="dbg" hidden style="margin-top:14px"><button class="btn" type="button" id="corsbtn">Fix upload permissions</button> <button class="btn ghost" type="button" id="dbgbtn">Run storage test</button><pre id="dbgout" style="white-space:pre-wrap;word-break:break-word;background:var(--surface);border:2px solid var(--line);border-radius:10px;padding:12px;margin-top:10px;font-size:13px"></pre></div>
       </section>
 
       <section class="sec" aria-labelledby="nx-h">
@@ -394,6 +394,13 @@ footer a{margin-right:14px}
 
   if(/[?&]debug=1/.test(location.search)){
     $('dbg').hidden = false;
+    $('corsbtn').addEventListener('click', async function(){
+      $('dbgout').textContent = 'Setting the upload rule on your bucket…';
+      try {
+        var r = await LB.files('fix-cors', {});
+        $('dbgout').textContent = (r.fixed ? 'Done. Uploads are allowed from: ' + r.origins.join(', ') + '. Wait a minute, refresh, and try an upload.' : 'Not fixed yet.\n' + (r.next || '') + '\n\n') + (r.fixed ? '' : JSON.stringify(r, null, 2));
+      } catch(err){ $('dbgout').textContent = err.message; }
+    });
     $('dbgbtn').addEventListener('click', async function(){
       $('dbgout').textContent = 'Testing…';
       try { $('dbgout').textContent = JSON.stringify(await LB.files('selftest', {}), null, 2); }

@@ -25,12 +25,12 @@ const LINK_SECONDS = 600;
 
 // Kept in one place so tests can swap them for fakes.
 const deps = {
-  _s3: null,
+  _clients: {},
   async s3(cfg) {
-    if (this._s3) return this._s3;
+    if (this._clients[cfg.keyId]) return this._clients[cfg.keyId];
     const { S3Client } = require('@aws-sdk/client-s3');
     const m = /s3\.([a-z0-9-]+)\.backblazeb2\.com/i.exec(cfg.endpoint);
-    this._s3 = new S3Client({
+    this._clients[cfg.keyId] = new S3Client({
       region: m ? m[1] : 'us-west-004',
       endpoint: cfg.endpoint,
       credentials: { accessKeyId: cfg.keyId, secretAccessKey: cfg.appKey },
@@ -38,7 +38,7 @@ const deps = {
       requestChecksumCalculation: 'WHEN_REQUIRED',
       responseChecksumValidation: 'WHEN_REQUIRED',
     });
-    return this._s3;
+    return this._clients[cfg.keyId];
   },
   async send(cfg, command) {
     return (await this.s3(cfg)).send(command);
@@ -215,6 +215,58 @@ async function selftest(res, cfg, userId) {
   return res.status(200).json(out);
 }
 
+// The Backblaze dashboard's CORS options only allow downloads. Browser uploads need a rule that
+// allows PUT, which can only be set through the API. This sets it for your site's address.
+// Uses B2_ADMIN_KEY_ID / B2_ADMIN_APP_KEY if you add them (a key allowed to change bucket settings),
+// otherwise tries the normal key.
+function siteOrigins(req) {
+  const set = new Set();
+  const add = (raw) => {
+    if (!raw) return;
+    let u; try { u = new URL(/^https?:\/\//.test(raw) ? raw : 'https://' + raw); } catch (e) { return; }
+    const host = u.hostname.toLowerCase();
+    set.add('https://' + host);
+    if (!/\.vercel\.app$/.test(host) && host.split('.').length >= 2) {
+      set.add('https://' + (host.startsWith('www.') ? host.slice(4) : 'www.' + host));
+    }
+  };
+  add(process.env.SITE_URL);
+  add(String(req.headers['x-forwarded-host'] || req.headers.host || '').split(',')[0].trim());
+  return [...set];
+}
+
+async function fixCors(req, res, cfg) {
+  const adminId = String(process.env.B2_ADMIN_KEY_ID || '').trim();
+  const adminKey = String(process.env.B2_ADMIN_APP_KEY || '').trim();
+  const useCfg = adminId && adminKey ? Object.assign({}, cfg, { keyId: adminId, appKey: adminKey }) : cfg;
+  const origins = siteOrigins(req);
+  if (!origins.length) return res.status(400).json({ ok: false, error: 'Could not work out your site address. Set SITE_URL in Vercel.' });
+  const { PutBucketCorsCommand } = deps.cmd();
+  try {
+    await deps.send(useCfg, new PutBucketCorsCommand({
+      Bucket: cfg.bucket,
+      CORSConfiguration: {
+        CORSRules: [{
+          AllowedOrigins: origins,
+          AllowedMethods: ['GET', 'HEAD', 'PUT'],
+          AllowedHeaders: ['*'],
+          ExposeHeaders: ['ETag'],
+          MaxAgeSeconds: 3600,
+        }],
+      },
+    }));
+    return res.status(200).json({ ok: true, fixed: true, origins, usedAdminKey: useCfg !== cfg });
+  } catch (e) {
+    const name = String((e && (e.name || e.Code)) || 'Error');
+    const denied = /AccessDenied|Unauthorized|Forbidden|InvalidAccessKeyId|NotAuthorized/i.test(name + ' ' + (e && e.message));
+    return res.status(200).json({
+      ok: true, fixed: false, origins, usedAdminKey: useCfg !== cfg,
+      reason: name + ': ' + String((e && e.message) || e).slice(0, 200),
+      next: denied ? 'This key is not allowed to change bucket settings. Add a Master Application Key to Vercel as B2_ADMIN_KEY_ID and B2_ADMIN_APP_KEY, redeploy, and press the button again.' : '',
+    });
+  }
+}
+
 async function handler(req, res) {
   if (req.method !== 'POST') {
     res.setHeader('Allow', 'POST');
@@ -241,6 +293,7 @@ async function handler(req, res) {
     if (body.action === 'download-url') return await downloadUrl(res, cfg, userId, body);
     if (body.action === 'delete') return await remove(res, cfg, userId, body);
     if (body.action === 'selftest') return await selftest(res, cfg, userId);
+    if (body.action === 'fix-cors') return await fixCors(req, res, cfg);
     return res.status(400).json({ ok: false, error: 'Unknown action.' });
   } catch (err) {
     const why = String((err && err.name) || 'Error') + ': ' + String((err && err.message) || err).replace(/\s+/g, ' ').slice(0, 160);
