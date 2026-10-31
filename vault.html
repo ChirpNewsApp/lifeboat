@@ -187,6 +187,19 @@ button.nm:hover{text-decoration:underline;text-underline-offset:3px}
 .snapform p{grid-column:1 / -1;color:var(--muted);font-size:13.5px}
 .row.dir .ic{color:var(--signal)}
 
+.fam{margin:0 0 16px;padding:16px 18px;border-radius:12px;background:var(--soft)}
+.fam h3{font-size:18px;margin-bottom:6px}
+.fam p{color:var(--muted);margin:0 0 12px}
+.fam .people{display:grid;gap:8px;margin:10px 0 14px}
+.fam .person{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.fam .person b{font-weight:600}
+.fam .person .tag{font-size:12.5px;font-weight:700;padding:2px 9px;border-radius:99px;border:1.5px solid var(--line-strong);color:var(--muted)}
+.fam .person .mini{margin-left:auto}
+.fam form{display:flex;gap:8px;flex-wrap:wrap}
+.fam form input{flex:1 1 200px;min-width:0;font:inherit;padding:8px 12px;border:1px solid var(--line-strong);border-radius:9px;background:var(--panel);color:var(--ink)}
+.fam .acts{display:flex;gap:8px;flex-wrap:wrap}
+.fam .warn{color:var(--bad);font-weight:600}
+
 /* code gate */
 .gate{max-width:440px;margin:30px auto 10px;text-align:center;background:var(--panel);border:2px solid var(--ink);border-radius:18px;box-shadow:6px 6px 0 var(--ink);padding:30px 26px 24px}
 .gate .ringart{width:58px;height:58px;margin-bottom:10px}
@@ -342,6 +355,7 @@ footer a{margin-left:14px}
         <div class="panel" id="panel">
           <div class="tabs" id="tabs" role="tablist" aria-label="Vault areas">
             <button type="button" role="tab" data-tab="files" aria-selected="true">Files</button>
+            <button type="button" role="tab" data-tab="family" aria-selected="false" tabindex="-1">Family</button>
             <button type="button" role="tab" data-tab="games" aria-selected="false" tabindex="-1">Game saves</button>
             <button type="button" role="tab" data-tab="social" aria-selected="false" tabindex="-1">Social archives</button>
             <button type="button" role="tab" data-tab="sites" aria-selected="false" tabindex="-1">Website backups</button>
@@ -363,6 +377,7 @@ footer a{margin-left:14px}
                 <input type="file" id="filepickany" multiple hidden>
               </div>
             </div>
+            <div class="fam" id="fam" hidden></div>
             <div class="crumbs" id="crumbs" aria-label="Folder path"></div>
             <p class="intro" id="intro" hidden></p>
             <div class="guide" id="guide" hidden></div>
@@ -510,6 +525,7 @@ footer a{margin-left:14px}
   var RING = '<svg class="ringart" viewBox="0 0 100 100" aria-hidden="true"><circle cx="50" cy="50" r="34" fill="none" stroke="var(--line)" stroke-width="22"/><circle cx="50" cy="50" r="34" fill="none" stroke="var(--signal)" stroke-width="22" stroke-dasharray="40.055 13.352" transform="rotate(11.25 50 50)"/><circle cx="50" cy="50" r="46" fill="none" stroke="var(--ink)" stroke-width="3"/><circle cx="50" cy="50" r="22" fill="none" stroke="var(--ink)" stroke-width="3"/></svg>';
 
   function fmtBytes(n){
+    if(n >= 1e12) return (n / 1e12).toFixed(n >= 1e13 ? 0 : 1).replace(/\.0$/, '') + ' TB';
     if(n >= 1e9) return (n / 1e9).toFixed(n >= 1e10 ? 0 : 1).replace(/\.0$/, '') + ' GB';
     if(n >= 1e6) return (n / 1e6).toFixed(n >= 1e7 ? 0 : 1).replace(/\.0$/, '') + ' MB';
     if(n >= 1e3) return Math.round(n / 1e3) + ' KB';
@@ -533,6 +549,7 @@ footer a{margin-left:14px}
   // ---------- the areas (tabs) ----------
   var MODES = {
     files:  { title: 'Your files', kind: 'browse' },
+    family: { title: 'Family', kind: 'browse', family: true },
     games:  { title: 'Game saves', kind: 'snap', icon: ICON_GAME, thing: 'game', things: 'games', nameLabel: 'Game', namePh: 'e.g. Minecraft',
               pick: 'Back up a save folder', again: 'Back up again', folderLabel: 'Choose save folder',
               intro: 'Pick a game\'s save folder. Every backup is kept with its date, so you can go back to any of them and download it as a zip.',
@@ -650,7 +667,7 @@ footer a{margin-left:14px}
     var show = function(id, on){ $(id).hidden = !on; };
     show('pick', false); show('mkdir', false); show('snapnew', false); show('snapagain', false); show('zipbtn', false); show('delall', false);
     $('fm-h').textContent = m.title;
-    if(m.kind === 'browse'){ show('pick', true); show('mkdir', true); show('delall', shown.files || shown.folders); $('pick').lastChild.textContent = 'Upload files'; }
+    if(m.kind === 'browse'){ show('pick', true); show('mkdir', true); show('delall', (shown.files || shown.folders) && (!m.family || famRole === 'owner')); $('pick').lastChild.textContent = 'Upload files'; }
     if(m.kind === 'snap'){
       if(dp === 0){ show('snapnew', true); $('snapnew').lastChild.textContent = m.pick; }
       if(dp === 1){ show('snapagain', true); show('zipbtn', shown.folders > 0); }
@@ -672,7 +689,8 @@ footer a{margin-left:14px}
     if(m.kind === 'snap' && dp === 0){ $('intro').hidden = false; $('intro').textContent = m.intro; }
 
     if(!d.folders.length && !d.files.length){
-      if(m.kind === 'browse') rows.appendChild(cwd ? emptyState('This folder is empty', 'Upload files here, or drag them onto this box.', 'Upload files', pickFiles) : emptyState('Your vault is empty', 'Upload the files you can\'t afford to lose. Drag them onto this box, or pick them from your device.', 'Upload files', pickFiles));
+      if(m.family) rows.appendChild(emptyState(cwd ? 'This folder is empty' : 'Nothing shared yet', 'Files here are shared with everyone in your family. Your own Files tab stays private.', 'Upload files', pickFiles));
+      else if(m.kind === 'browse') rows.appendChild(cwd ? emptyState('This folder is empty', 'Upload files here, or drag them onto this box.', 'Upload files', pickFiles) : emptyState('Your vault is empty', 'Upload the files you can\'t afford to lose. Drag them onto this box, or pick them from your device.', 'Upload files', pickFiles));
       else if(m.kind === 'snap' && dp === 0) rows.appendChild(emptyState('No ' + m.things + ' backed up yet', 'Back up your first ' + m.thing + ' to keep a dated copy you can restore.', m.pick, openSnapForm, m.help));
       else if(m.kind === 'snap') rows.appendChild(emptyState('Nothing here yet', 'Back this ' + m.thing + ' up to keep a dated copy.', m.again, function(){ openSnapForm(); $('snapname').value = cwd.split('/')[0]; }));
       else rows.appendChild(emptyState('No exports saved yet', 'Follow the steps above, then upload the file here.', 'Upload export', pickFiles));
@@ -715,6 +733,78 @@ footer a{margin-left:14px}
     var ol = el('ol'); p.steps.forEach(function(s){ ol.appendChild(el('li', '', s)); }); g.appendChild(ol);
   }
 
+
+  // ---------- family sharing ----------
+  var famRole = 'none';
+  function famPerson(name, tagText, action){
+    var r = el('div', 'person'); r.appendChild(el('b', '', '@' + name));
+    if(tagText) r.appendChild(el('span', 'tag', tagText));
+    if(action) r.appendChild(action);
+    return r;
+  }
+  function twoStep(label, sure, run){
+    var b = el('button', 'mini del', label); b.type = 'button'; var t = null;
+    b.addEventListener('click', async function(){
+      if(!b.classList.contains('armed')){ b.classList.add('armed'); b.textContent = sure; t = setTimeout(function(){ b.classList.remove('armed'); b.textContent = label; }, 5000); return; }
+      clearTimeout(t); b.disabled = true;
+      try { await run(); refresh(); } catch(err){ b.disabled = false; b.classList.remove('armed'); b.textContent = label; handle(err); }
+    });
+    return b;
+  }
+  function drawFam(st){
+    var box = $('fam'); box.textContent = ''; box.hidden = false;
+    var size = st.storageGB ? (st.storageGB >= 1000 ? (st.storageGB / 1000) + ' TB' : st.storageGB + ' GB') : '1 TB';
+    if(st.invite && st.role === 'none'){
+      box.appendChild(el('h3', '', '@' + st.invite.from + ' invited you to their family'));
+      box.appendChild(el('p', '', 'Join to share their Family plan storage. Your own files and passwords stay private; only this Family folder is shared with everyone in the family.'));
+      var acts = el('div', 'acts');
+      var yes = el('button', 'btn', 'Accept'); yes.type = 'button';
+      yes.addEventListener('click', async function(){ yes.disabled = true; try { var r = await LB.files('fam-accept', {}); say('You joined @' + r.owner + '\'s family.'); refresh(); } catch(err){ yes.disabled = false; handle(err); } });
+      var no = el('button', 'btn ghost', 'Decline'); no.type = 'button';
+      no.addEventListener('click', async function(){ try { await LB.files('fam-decline', {}); say('Invite declined.'); refresh(); } catch(err){ handle(err); } });
+      acts.appendChild(yes); acts.appendChild(no); box.appendChild(acts);
+      return;
+    }
+    if(st.role === 'member'){
+      box.appendChild(el('h3', '', 'You are in @' + st.owner.name + '\'s family'));
+      box.appendChild(el('p', '', st.active ? 'You share their ' + size + ' of storage. Your own files and passwords stay private.' : 'Sharing is paused because their plan is no longer Family.'));
+      var ppl = el('div', 'people'); ppl.appendChild(famPerson(st.owner.name, 'Owner'));
+      st.members.forEach(function(m){ ppl.appendChild(famPerson(m.name, m.name === ($('d-user').textContent || '') ? 'You' : '')); });
+      box.appendChild(ppl);
+      box.appendChild(twoStep('Leave family', 'Yes, leave', async function(){ await LB.files('fam-leave', {}); say('You left the family.'); }));
+      return;
+    }
+    if(st.role === 'owner' || st.canStart){
+      var total = 1 + st.members.length + st.invites.length;
+      box.appendChild(el('h3', '', 'Your family'));
+      if(st.role === 'owner' && !st.active) box.appendChild(el('p', 'warn', 'Sharing is paused because your plan is no longer Family. Switch back to Family to turn it on again.'));
+      else box.appendChild(el('p', '', 'Everyone shares your ' + size + ' of storage, up to ' + st.max + ' people including you. Each person\'s own vault stays private; the folder below is shared.'));
+      var list = el('div', 'people'); list.appendChild(famPerson($('d-user').textContent || 'you', 'You, owner'));
+      st.members.forEach(function(m){ list.appendChild(famPerson(m.name, 'Member', twoStep('Remove', 'Yes, remove', async function(){ await LB.files('fam-remove', { username: m.name }); say('Removed @' + m.name + ' from your family.'); }))); });
+      st.invites.forEach(function(i){
+        var c = el('button', 'mini', 'Cancel invite'); c.type = 'button';
+        c.addEventListener('click', async function(){ try { await LB.files('fam-cancel', { username: i.name }); say('Invite cancelled.'); refresh(); } catch(err){ handle(err); } });
+        list.appendChild(famPerson(i.name, 'Invited', c));
+      });
+      box.appendChild(list);
+      if(total < st.max){
+        var f = el('form'); var inp = el('input'); inp.placeholder = 'Their Lifeboat username'; inp.autocomplete = 'off'; inp.setAttribute('aria-label', 'Username to invite');
+        var go = el('button', 'btn', 'Send invite'); go.type = 'submit';
+        f.appendChild(inp); f.appendChild(go);
+        f.addEventListener('submit', async function(e){
+          e.preventDefault(); if(!inp.value.trim()) return; go.disabled = true;
+          try { var r = await LB.files('fam-invite', { username: inp.value.trim() }); say('Invited @' + r.name + (r.emailed ? '. We emailed them a link to accept.' : '. They will see the invite in their vault.')); refresh(); }
+          catch(err){ go.disabled = false; handle(err); }
+        });
+        box.appendChild(f);
+      } else box.appendChild(el('p', '', 'Your family is full.'));
+      return;
+    }
+    box.appendChild(el('h3', '', 'Share with your family'));
+    box.appendChild(el('p', '', 'The Family plan gives you 1 TB to share with up to 5 other people, plus a shared folder for everyone. Each person keeps their own private vault.'));
+    var a = el('a', 'btn', 'See the Family plan'); a.href = '/pricing'; box.appendChild(a);
+  }
+
   // ---------- picture viewer ----------
   var lastFocus = null;
   function viewer(f){
@@ -736,8 +826,21 @@ footer a{margin-left:14px}
 
   async function refresh(){
     if(mode().kind === 'pw'){ return; }
+    $('fam').hidden = true;
     try {
+      if(mode().family){
+        var st = await LB.files('fam-status', {});
+        famRole = st.role; drawFam(st);
+        if(!st.active){
+          ['pick', 'mkdir', 'delall', 'snapnew', 'snapagain', 'zipbtn'].forEach(function(id){ $(id).hidden = true; });
+          LB.files('list', { space: 'files', path: '' }).then(function(x){ quotaBytes = x.quota; usedBytes = x.used; gauge(); if(x.label) $('d-plan').textContent = x.label; }).catch(function(){});
+          $('fm-h').textContent = 'Family'; $('crumbs').textContent = ''; $('rows').textContent = ''; $('cols').hidden = true; $('hint').hidden = true; $('intro').hidden = true; $('guide').hidden = true;
+          return;
+        }
+        $('cols').hidden = false;
+      }
       var d = await call('list', { path: cwd });
+      if(d.label) $('d-plan').textContent = d.label;
       cwd = d.path || ''; quotaBytes = d.quota; usedBytes = d.used;
       shown = { files: d.files.length, folders: d.folders.length };
       $('wipe').hidden = true; $('snapform').hidden = true;

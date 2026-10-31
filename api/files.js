@@ -18,7 +18,12 @@
 //   { "action": "send-code" }                emails a 6-digit code to the account's email
 //   { "action": "verify-code", "code": "123456" }   returns a token that opens the vault for 1 hour
 //
-// Add "space" to any file action to pick the area: files (default), games, social, sites.
+// Add "space" to any file action to pick the area: files (default), games, social, sites, family.
+//
+// Family sharing (Family plan): the owner invites up to 5 people by username. Everyone shares the plan's storage,
+// each person's own vault stays private, and the "family" space is a folder they all share.
+//   { "action": "fam-status" }   { "action": "fam-invite", "username": "..." }   { "action": "fam-cancel", "username": "..." }
+//   { "action": "fam-accept" }   { "action": "fam-decline" }   { "action": "fam-remove", "username": "..." }   { "action": "fam-leave" }
 //
 // Environment variables (set in Vercel, see STORAGE-SETUP.md):
 //   B2_KEY_ID, B2_APP_KEY   SECRET.  A Backblaze application key limited to your bucket.
@@ -47,6 +52,8 @@ const CODE_MINUTES = 10;
 const CODE_RESEND_SECONDS = 45;
 const CODE_MAX_TRIES = 5;
 const PASS_HOURS = 1;
+const FAMILY_MAX = 6;                 // the owner plus 5 people
+const FAMILY_PREFIX = 'f';           // the shared family folder: f/<ownerId>/
 
 // Kept in one place so tests can swap them for fakes.
 const deps = {
@@ -82,6 +89,16 @@ const deps = {
   async saveCodeState(userId, state, secretKey) {
     const { createClerkClient } = require('@clerk/backend');
     await createClerkClient({ secretKey }).users.updateUserMetadata(userId, { privateMetadata: { vaultCode: state } });
+  },
+  async user(userId, secretKey) { return account._deps.user(userId, secretKey); },
+  async findUser(username, secretKey) {
+    const { createClerkClient } = require('@clerk/backend');
+    const r = await createClerkClient({ secretKey }).users.getUserList({ username: [String(username)] });
+    const list = Array.isArray(r) ? r : (r && r.data) || [];
+    const u = list[0];
+    if (!u) return null;
+    const primary = (u.emailAddresses || []).find((e) => e.id === u.primaryEmailAddressId) || (u.emailAddresses || [])[0];
+    return { userId: u.id, username: u.username || '', email: primary ? primary.emailAddress : '' };
   },
   async sendEmail(to, subject, text, html) {
     const key = process.env.RESEND_API_KEY, from = process.env.FROM_EMAIL;
@@ -128,9 +145,13 @@ function cleanPath(raw, allowEmpty) {
 }
 function areaOf(userId, space) { return (SPACES[space || 'files'] || 'u') + '/' + userId + '/'; }
 
-// How many bytes this person stores across every area (files, game saves, social, sites, passwords).
-async function usedTotal(cfg, userId) {
-  const prefixes = Object.values(SPACES).concat(PASSWORD_PREFIX).map((p) => p + '/' + userId + '/');
+// How many bytes these people store across every area (files, game saves, social, sites, passwords),
+// plus the shared family folder when there is one. A Family plan pools everyone's storage.
+async function usedTotal(cfg, userIds, familyOwner) {
+  const ids = Array.isArray(userIds) ? userIds : [userIds];
+  const prefixes = [];
+  ids.forEach((id) => Object.values(SPACES).concat(PASSWORD_PREFIX).forEach((p) => prefixes.push(p + '/' + id + '/')));
+  if (familyOwner) prefixes.push(FAMILY_PREFIX + '/' + familyOwner + '/');
   const parts = await Promise.all(prefixes.map((p) => usedBytes(cfg, p)));
   return parts.reduce((s, n) => s + n, 0);
 }
@@ -148,9 +169,59 @@ async function usedBytes(cfg, area) {
   return total;
 }
 
-async function quotaBytes(keys, userId) {
+// ---- family groups (stored as small JSON files in the bucket, under fam/) ----
+function famKey(kind, id) { return 'fam/' + kind + '/' + id + '.json'; }   // kind: groups, members, invites
+async function readJ(cfg, key, fallback) {
+  const { GetObjectCommand } = deps.cmd();
+  try { const r = await deps.send(cfg, new GetObjectCommand({ Bucket: cfg.bucket, Key: key })); return JSON.parse(await r.Body.transformToString()); }
+  catch (e) { if (e && (e.name === 'NoSuchKey' || (e.$metadata && e.$metadata.httpStatusCode === 404))) return fallback; throw e; }
+}
+async function writeJ(cfg, key, data) {
+  const { PutObjectCommand } = deps.cmd();
+  await deps.send(cfg, new PutObjectCommand({ Bucket: cfg.bucket, Key: key, Body: JSON.stringify(data), ContentType: 'application/json' }));
+}
+async function delJ(cfg, key) {
+  const { DeleteObjectCommand } = deps.cmd();
+  try { await deps.send(cfg, new DeleteObjectCommand({ Bucket: cfg.bucket, Key: key })); } catch (e) { /* gone */ }
+}
+function isFamilyPlan(plan) { return String(plan || '').indexOf('family') === 0; }
+
+// Which family (if any) this person belongs to, and whether its owner still has a Family plan.
+async function familyOf(cfg, keys, userId) {
+  let ownerId = null, role = 'none';
+  const own = await readJ(cfg, famKey('groups', userId), null);
+  if (own) { ownerId = userId; role = 'owner'; }
+  else {
+    const m = await readJ(cfg, famKey('members', userId), null);
+    if (m && m.owner) { ownerId = m.owner; role = 'member'; }
+  }
+  if (!ownerId) return { role: 'none', active: false };
+  const group = role === 'owner' ? own : await readJ(cfg, famKey('groups', ownerId), null);
+  if (!group || (role === 'member' && !(group.members || []).some((x) => x.userId === userId))) return { role: 'none', active: false };
+  const ownerPlan = await account.resolvePlan(keys, ownerId);
+  return { role, ownerId, group, ownerPlan, active: isFamilyPlan(ownerPlan.plan) };
+}
+
+// Storage limit for this person. Family members use the owner's plan, and the whole family shares it.
+async function quotaBytes(keys, userId, cfg) {
   const plan = await account.resolvePlan(keys, userId);
-  return { bytes: Math.round(plan.storageGB * 1e9), plan };
+  let out = { bytes: Math.round(plan.storageGB * 1e9), plan, pool: [userId], familyOwner: null };
+  if (!cfg) return out;
+  const fam = await familyOf(cfg, keys, userId);
+  if (fam.active) {
+    const pool = [fam.ownerId].concat((fam.group.members || []).map((m) => m.userId));
+    const others = pool.length - 1;
+    const label = fam.role === 'owner' ? fam.ownerPlan.label + (others ? ', shared with ' + others + (others === 1 ? ' person' : ' people') : '') : 'Family (shared by @' + (fam.group.ownerName || 'owner') + ')';
+    if (fam.role === 'owner' || fam.ownerPlan.storageGB >= plan.storageGB) {
+      out = { bytes: Math.round(fam.ownerPlan.storageGB * 1e9), plan: Object.assign({}, fam.ownerPlan, { label }), pool, familyOwner: fam.ownerId };
+    }
+  }
+  return out;
+}
+async function usage(cfg, keys, userId) {
+  const q = await quotaBytes(keys, userId, cfg);
+  const used = await usedTotal(cfg, q.pool, q.familyOwner);
+  return { used, q };
 }
 
 async function list(res, cfg, keys, userId, body) {
@@ -183,7 +254,7 @@ async function list(res, cfg, keys, userId, body) {
     try { f.preview = await deps.sign(cfg, new GetObjectCommand({ Bucket: cfg.bucket, Key: prefix + f.name }), PREVIEW_SECONDS); } catch (e) { /* no preview */ }
   }));
 
-  const [used, q] = await Promise.all([usedTotal(cfg, userId), quotaBytes(keys, userId)]);
+  const { used, q } = await usage(cfg, keys, userId);
   return res.status(200).json({ ok: true, path, folders, files, used, quota: q.bytes, label: q.plan.label });
 }
 
@@ -195,7 +266,7 @@ async function uploadUrl(res, cfg, keys, userId, body) {
   if (size > MAX_FILE_BYTES) return res.status(413).json({ ok: false, code: 'too_big', error: 'That file is bigger than 4 GB, which is the most for one file.' });
 
   const area = body._area;
-  const [used, q] = await Promise.all([usedTotal(cfg, userId), quotaBytes(keys, userId)]);
+  const { used, q } = await usage(cfg, keys, userId);
   if (used + size > q.bytes) return res.status(413).json({ ok: false, code: 'full', error: 'Not enough space left on your plan. Delete something or upgrade.' });
 
   const type = String(body.type || 'application/octet-stream').slice(0, 120).replace(/[^\x20-\x7e]/g, '') || 'application/octet-stream';
@@ -227,6 +298,7 @@ async function downloadUrl(res, cfg, userId, body) {
 
 // Delete everything inside a folder but keep the folder. With path "" it empties the whole vault.
 async function removeAll(res, cfg, userId, body) {
+  if (body._family && body._family.role !== 'owner') return res.status(403).json({ ok: false, error: 'Only the family owner can delete everything in the family folder.' });
   const path = cleanPath(body.path, true);
   if (path === null) return res.status(400).json({ ok: false, error: 'That folder name is not allowed.' });
   const { DeleteObjectsCommand, ListObjectsV2Command } = deps.cmd();
@@ -290,7 +362,7 @@ async function uploadUrls(res, cfg, keys, userId, body) {
     clean.push({ path, size, type });
     total += size;
   }
-  const [used, q] = await Promise.all([usedTotal(cfg, userId), quotaBytes(keys, userId)]);
+  const { used, q } = await usage(cfg, keys, userId);
   if (used + total > q.bytes) return res.status(413).json({ ok: false, code: 'full', error: 'Not enough space left on your plan for this backup. Delete something or upgrade.' });
   const { PutObjectCommand } = deps.cmd();
   const items = await Promise.all(clean.map(async (f) => ({
@@ -431,6 +503,122 @@ async function verifyCode(res, keys, userId, body) {
   return res.status(200).json({ ok: true, token: makePass(userId, exp), expires: exp });
 }
 
+// ---- family actions ----
+function famView(cfg, fam, me, invite) {
+  const g = fam.group || {};
+  return {
+    ok: true,
+    role: fam.role, active: !!fam.active, max: FAMILY_MAX,
+    owner: fam.role === 'none' ? null : { name: g.ownerName || '' },
+    members: fam.role === 'none' ? [] : (g.members || []).map((m) => ({ name: m.username, joined: m.joined })),
+    invites: fam.role === 'owner' ? (g.invites || []).map((i) => ({ name: i.username, created: i.created })) : [],
+    invite: invite ? { from: invite.ownerName, created: invite.created } : null,
+    canStart: fam.role === 'none' && isFamilyPlan(me.plan),
+    storageGB: fam.ownerPlan ? fam.ownerPlan.storageGB : null,
+  };
+}
+
+async function famStatus(res, cfg, keys, userId) {
+  const [fam, invite, me] = await Promise.all([familyOf(cfg, keys, userId), readJ(cfg, famKey('invites', userId), null), account.resolvePlan(keys, userId)]);
+  return res.status(200).json(famView(cfg, fam, me, invite));
+}
+
+async function famInvite(res, cfg, keys, userId, body) {
+  const name = String(body.username || '').trim().replace(/^@/, '');
+  if (!/^[A-Za-z0-9_.-]{1,64}$/.test(name)) return res.status(400).json({ ok: false, error: 'Type their Lifeboat username.' });
+  const me = await deps.user(userId, keys.clerk);
+  const myPlan = await account.resolvePlan(keys, userId);
+  let fam = await familyOf(cfg, keys, userId);
+  if (fam.role === 'member') return res.status(400).json({ ok: false, error: 'You are in someone else\'s family. Leave it first to start your own.' });
+  if (!isFamilyPlan(myPlan.plan)) return res.status(403).json({ ok: false, code: 'need_family', error: 'Inviting people needs the Family plan.' });
+  const group = fam.group || { owner: userId, ownerName: me.username, members: [], invites: [], created: new Date().toISOString() };
+  group.ownerName = me.username;
+  if (1 + group.members.length + group.invites.length >= FAMILY_MAX) return res.status(400).json({ ok: false, error: 'Your family is full. A Family plan is for up to ' + FAMILY_MAX + ' people, including you.' });
+  const target = await deps.findUser(name, keys.clerk);
+  if (!target) return res.status(404).json({ ok: false, error: 'No Lifeboat account has the username "' + name + '".' });
+  if (target.userId === userId) return res.status(400).json({ ok: false, error: 'That is you.' });
+  if (group.members.some((m) => m.userId === target.userId)) return res.status(400).json({ ok: false, error: target.username + ' is already in your family.' });
+  if (group.invites.some((i) => i.userId === target.userId)) return res.status(400).json({ ok: false, error: 'You already invited ' + target.username + '.' });
+  const theirs = await familyOf(cfg, keys, target.userId);
+  if (theirs.role === 'member') return res.status(400).json({ ok: false, error: target.username + ' is already in another family.' });
+  if (theirs.role === 'owner' && (theirs.group.members || []).length) return res.status(400).json({ ok: false, error: target.username + ' runs their own family.' });
+  const now = new Date().toISOString();
+  group.invites.push({ userId: target.userId, username: target.username, created: now });
+  await writeJ(cfg, famKey('groups', userId), group);
+  await writeJ(cfg, famKey('invites', target.userId), { owner: userId, ownerName: me.username, created: now });
+  let emailed = false;
+  if (target.email) {
+    try {
+      await deps.sendEmail(target.email, me.username + ' invited you to their Lifeboat family',
+        me.username + ' invited you to share their Lifeboat Family plan.\n\nOpen your vault at https://www.lifeboatrecovery.com/vault#family to accept. Your own files and passwords stay private; only the Family folder is shared.\n\nLifeboat',
+        '<div style="font-family:Arial,sans-serif;color:#0A3340;max-width:480px"><p style="font-size:16px"><b>' + String(me.username).replace(/[<>&"]/g, '') + '</b> invited you to share their Lifeboat Family plan.</p><p><a href="https://www.lifeboatrecovery.com/vault#family" style="display:inline-block;background:#FF5B2E;color:#fff;padding:10px 16px;border-radius:8px;text-decoration:none;font-weight:bold">Open your vault to accept</a></p><p style="font-size:14px;color:#4F6E77">Your own files and passwords stay private. Only the Family folder is shared.</p></div>');
+      emailed = true;
+    } catch (e) { /* the invite still shows in their vault */ }
+  }
+  return res.status(200).json({ ok: true, name: target.username, emailed });
+}
+
+async function famCancel(res, cfg, keys, userId, body) {
+  const group = await readJ(cfg, famKey('groups', userId), null);
+  if (!group) return res.status(400).json({ ok: false, error: 'You have no family invites.' });
+  const name = String(body.username || '').replace(/^@/, '').toLowerCase();
+  const inv = (group.invites || []).filter((i) => String(i.username).toLowerCase() === name)[0];
+  if (!inv) return res.status(404).json({ ok: false, error: 'That invite is already gone.' });
+  group.invites = group.invites.filter((i) => i !== inv);
+  await writeJ(cfg, famKey('groups', userId), group);
+  await delJ(cfg, famKey('invites', inv.userId));
+  return res.status(200).json({ ok: true });
+}
+
+async function famAccept(res, cfg, keys, userId) {
+  const invite = await readJ(cfg, famKey('invites', userId), null);
+  if (!invite) return res.status(404).json({ ok: false, error: 'You have no family invite.' });
+  const mine = await familyOf(cfg, keys, userId);
+  if (mine.role === 'member') return res.status(400).json({ ok: false, error: 'You are already in a family. Leave it first.' });
+  if (mine.role === 'owner' && (mine.group.members || []).length) return res.status(400).json({ ok: false, error: 'You run your own family. Remove its members first.' });
+  const group = await readJ(cfg, famKey('groups', invite.owner), null);
+  const pending = group && (group.invites || []).filter((i) => i.userId === userId)[0];
+  if (!pending) { await delJ(cfg, famKey('invites', userId)); return res.status(404).json({ ok: false, error: 'That invite was cancelled.' }); }
+  if (1 + (group.members || []).length > FAMILY_MAX - 1) return res.status(400).json({ ok: false, error: 'That family is already full.' });
+  if (mine.role === 'owner') await delJ(cfg, famKey('groups', userId));   // an empty family of their own
+  group.invites = group.invites.filter((i) => i !== pending);
+  group.members = (group.members || []).concat({ userId, username: pending.username, joined: new Date().toISOString() });
+  await writeJ(cfg, famKey('groups', invite.owner), group);
+  await writeJ(cfg, famKey('members', userId), { owner: invite.owner });
+  await delJ(cfg, famKey('invites', userId));
+  return res.status(200).json({ ok: true, owner: group.ownerName });
+}
+
+async function famDecline(res, cfg, userId) {
+  const invite = await readJ(cfg, famKey('invites', userId), null);
+  if (!invite) return res.status(200).json({ ok: true });
+  const group = await readJ(cfg, famKey('groups', invite.owner), null);
+  if (group) { group.invites = (group.invites || []).filter((i) => i.userId !== userId); await writeJ(cfg, famKey('groups', invite.owner), group); }
+  await delJ(cfg, famKey('invites', userId));
+  return res.status(200).json({ ok: true });
+}
+
+async function famRemove(res, cfg, keys, userId, body) {
+  const group = await readJ(cfg, famKey('groups', userId), null);
+  if (!group) return res.status(400).json({ ok: false, error: 'You do not run a family.' });
+  const name = String(body.username || '').replace(/^@/, '').toLowerCase();
+  const m = (group.members || []).filter((x) => String(x.username).toLowerCase() === name)[0];
+  if (!m) return res.status(404).json({ ok: false, error: 'They are not in your family.' });
+  group.members = group.members.filter((x) => x !== m);
+  await writeJ(cfg, famKey('groups', userId), group);
+  await delJ(cfg, famKey('members', m.userId));
+  return res.status(200).json({ ok: true });
+}
+
+async function famLeave(res, cfg, keys, userId) {
+  const m = await readJ(cfg, famKey('members', userId), null);
+  if (!m) return res.status(400).json({ ok: false, error: 'You are not in a family.' });
+  const group = await readJ(cfg, famKey('groups', m.owner), null);
+  if (group) { group.members = (group.members || []).filter((x) => x.userId !== userId); await writeJ(cfg, famKey('groups', m.owner), group); }
+  await delJ(cfg, famKey('members', userId));
+  return res.status(200).json({ ok: true });
+}
+
 // A self-check you can run from /vault?debug=1. It tests the signed upload from the server side
 // (so CORS plays no part) and reads the bucket's CORS rules, then reports what it found.
 async function selftest(res, cfg, userId) {
@@ -529,9 +717,25 @@ async function handler(req, res) {
     if (body.action === 'verify-code') return await verifyCode(res, keys, userId, body);
     if (!passOk(req.headers['x-vault-access'], userId)) return res.status(403).json({ ok: false, code: 'need_code', error: 'Enter the code we email you to open your vault.' });
 
+    if (body.action === 'fam-status') return await famStatus(res, cfg, keys, userId);
+    if (body.action === 'fam-invite') return await famInvite(res, cfg, keys, userId, body);
+    if (body.action === 'fam-cancel') return await famCancel(res, cfg, keys, userId, body);
+    if (body.action === 'fam-accept') return await famAccept(res, cfg, keys, userId);
+    if (body.action === 'fam-decline') return await famDecline(res, cfg, userId);
+    if (body.action === 'fam-remove') return await famRemove(res, cfg, keys, userId, body);
+    if (body.action === 'fam-leave') return await famLeave(res, cfg, keys, userId);
+
     const space = body.space || 'files';
-    if (!SPACES[space]) return res.status(400).json({ ok: false, error: 'Unknown area.' });
-    body._area = areaOf(userId, space);
+    if (space === 'family') {
+      const fam = await familyOf(cfg, keys, userId);
+      if (!fam.active) return res.status(403).json({ ok: false, code: 'no_family', error: 'The Family folder needs a Family plan you own or have joined.' });
+      if (['pw-load', 'pw-save', 'pw-delete', 'selftest', 'fix-cors'].indexOf(body.action) !== -1) return res.status(400).json({ ok: false, error: 'Unknown area.' });
+      body._area = FAMILY_PREFIX + '/' + fam.ownerId + '/';
+      body._family = fam;
+    } else {
+      if (!SPACES[space]) return res.status(400).json({ ok: false, error: 'Unknown area.' });
+      body._area = areaOf(userId, space);
+    }
 
     if (body.action === 'list') return await list(res, cfg, keys, userId, body);
     if (body.action === 'upload-url') return await uploadUrl(res, cfg, keys, userId, body);
