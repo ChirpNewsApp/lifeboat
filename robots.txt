@@ -1,0 +1,7 @@
+User-agent: *
+Allow: /
+Disallow: /vault
+Disallow: /account
+Disallow: /api/
+
+Sitemap: https://www.lifeboatrecovery.com/sitemap.xml
