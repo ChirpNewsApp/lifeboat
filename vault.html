@@ -26,6 +26,7 @@
 }
 *{box-sizing:border-box}
 [hidden]{display:none!important}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
 body{margin:0;background:var(--bg);color:var(--ink);font-family:"Instrument Sans",system-ui,sans-serif;font-size:15.5px;line-height:1.5;-webkit-font-smoothing:antialiased;font-variant-ligatures:no-contextual;font-feature-settings:"calt" 0}
 h1,h2,h3{font-family:"Bricolage Grotesque","Instrument Sans",system-ui,sans-serif;margin:0;line-height:1.1}
 p{margin:0}
@@ -62,7 +63,7 @@ button{font:inherit;color:inherit}
 .mini.del.armed{background:var(--bad);border-color:var(--bad);color:#fff}
 
 /* app layout */
-.shell{display:grid;grid-template-columns:286px minmax(0,1fr);grid-template-areas:"store files" "acct files" "soon files";grid-template-rows:auto auto 1fr;gap:18px 34px;align-items:start;padding:10px 0 30px}
+.shell{display:grid;grid-template-columns:286px minmax(0,1fr);grid-template-areas:"store files" "acct files";grid-template-rows:auto 1fr;gap:18px 34px;align-items:start;padding:10px 0 30px}
 .store{grid-area:store}.acct{grid-area:acct}.soon{grid-area:soon}.files{grid-area:files;min-width:0}
 .side h2{font-size:16px;font-weight:700;margin-bottom:12px}
 .side{padding:4px 2px}
@@ -157,6 +158,75 @@ button.nm:hover{text-decoration:underline;text-underline-offset:3px}
 .panel.dragging .drop{display:grid}
 .drop span{pointer-events:none}
 
+
+/* tabs */
+.tabs{display:flex;gap:4px;margin:-6px -6px 16px;padding:4px;border-radius:12px;background:var(--soft);overflow-x:auto;scrollbar-width:none}
+.tabs::-webkit-scrollbar{display:none}
+.tabs button{flex:none;border:0;background:transparent;padding:8px 14px;border-radius:9px;font-weight:600;font-size:14.5px;color:var(--muted);cursor:pointer;white-space:nowrap}
+.tabs button:hover{color:var(--ink)}
+.tabs button[aria-selected="true"]{background:var(--panel);color:var(--ink);box-shadow:0 0 0 1px var(--line-strong)}
+.intro{color:var(--muted);margin:-6px 0 16px;max-width:46em}
+.help{color:var(--muted);font-size:13.5px;margin:12px auto 0;max-width:40em}
+.empty .help{margin-top:18px}
+.guide{margin:0 0 16px;padding:14px 18px;border-radius:12px;background:var(--soft)}
+.guide h3{font-size:17px;margin-bottom:8px}
+.guide ol{margin:0;padding-left:20px}
+.guide li{margin:5px 0}
+.plats{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:10px;padding-top:4px}
+.plat{display:flex;gap:12px;align-items:center;text-align:left;border:1px solid var(--line);background:var(--panel);border-radius:12px;padding:12px 14px;cursor:pointer}
+.plat:hover{border-color:var(--ink)}
+.plat .ic{width:24px;height:24px;color:var(--muted);flex:none}
+.plat.has .ic{color:var(--signal)}
+.plat-t b{display:block}
+.plat-t span{font-size:13.5px;color:var(--muted)}
+.plat.has .plat-t span{color:var(--ok);font-weight:600}
+.snapform{display:grid;grid-template-columns:auto minmax(0,1fr);gap:10px 12px;align-items:center;margin:0 0 14px;padding:14px;border-radius:12px;background:var(--soft)}
+.snapform label{font-weight:600}
+.snapform input{min-width:0;font:inherit;padding:8px 12px;border:1px solid var(--line-strong);border-radius:9px;background:var(--panel);color:var(--ink)}
+.snapform .acts{grid-column:1 / -1;display:flex;gap:8px;flex-wrap:wrap}
+.snapform p{grid-column:1 / -1;color:var(--muted);font-size:13.5px}
+.row.dir .ic{color:var(--signal)}
+
+/* code gate */
+.gate{max-width:440px;margin:30px auto 10px;text-align:center;background:var(--panel);border:2px solid var(--ink);border-radius:18px;box-shadow:6px 6px 0 var(--ink);padding:30px 26px 24px}
+.gate .ringart{width:58px;height:58px;margin-bottom:10px}
+.gate h1{font-size:28px;font-weight:800;letter-spacing:-.02em}
+.gate p{color:var(--muted);margin:8px 0 18px}
+.gate form{display:flex;gap:8px;justify-content:center;flex-wrap:wrap}
+.gate input{width:190px;font:700 26px "Bricolage Grotesque",sans-serif;letter-spacing:.32em;text-align:center;padding:8px 10px;border:2px solid var(--line-strong);border-radius:12px;background:var(--bg);color:var(--ink)}
+.gate input:focus{border-color:var(--ink);outline:none}
+.gate .fm-msg{margin:14px 0 6px;min-height:1.4em}
+.gate .btn.quiet{margin-top:4px}
+
+/* passwords */
+#pwview .intro{margin-top:2px}
+.pwbox{max-width:480px}
+.pwbox h3{font-size:19px;margin-bottom:6px}
+.pwbox p{color:var(--muted);margin-bottom:14px}
+.field{display:grid;gap:5px;margin-bottom:12px}
+.field label{font-weight:600;font-size:14.5px}
+.field input,.field textarea{font:inherit;padding:9px 12px;border:1px solid var(--line-strong);border-radius:9px;background:var(--panel);color:var(--ink);min-width:0;width:100%}
+.field input:focus,.field textarea:focus{border-color:var(--ink);outline:none}
+.field textarea{min-height:70px;resize:vertical}
+.inline{display:flex;gap:8px}
+.inline input{flex:1}
+.check{display:flex;gap:10px;align-items:flex-start;font-size:14.5px;margin:4px 0 16px;padding:12px 14px;border-radius:10px;background:var(--signal-soft)}
+.check input{margin-top:4px;flex:none}
+.pwtop{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:12px}
+.pwtop input{flex:1 1 220px;min-width:0;font:inherit;padding:8px 12px;border:1px solid var(--line-strong);border-radius:9px;background:var(--panel);color:var(--ink)}
+#pwcount{color:var(--muted);font-size:13.5px;width:100%}
+.pwform{margin:0 0 16px;padding:16px;border-radius:12px;background:var(--soft)}
+.pwform h3{font-size:17px;margin-bottom:10px}
+.pwform .two{display:grid;grid-template-columns:1fr 1fr;gap:0 12px}
+.pwform .acts{display:flex;gap:8px;flex-wrap:wrap}
+.row.pwrow{grid-template-columns:38px minmax(0,1fr) 120px auto}
+.row.pwrow .ic{color:var(--signal)}
+.sub2{color:var(--muted);font-size:13.5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.secret{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:14px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pwreset{margin-top:14px;padding:14px;border-radius:12px;background:var(--signal-soft)}
+.pwreset p{color:var(--ink);font-weight:600;margin-bottom:10px}
+.linkbtn{background:none;border:0;padding:0;color:var(--muted);text-decoration:underline;text-underline-offset:3px;cursor:pointer;font-size:14px;margin-top:12px}
+
 /* loading / error */
 .state{padding:70px 0;text-align:center}
 .state h1{font-size:30px;margin-bottom:10px}
@@ -184,12 +254,17 @@ footer a{margin-left:14px}
   .date,.cols span:nth-child(4){display:none}
 }
 @media (max-width:860px){
-  .shell{grid-template-columns:1fr;grid-template-areas:"store" "files" "acct" "soon";gap:22px}
+  .shell{grid-template-columns:1fr;grid-template-areas:"store" "files" "acct";gap:22px}
   .store .gauge svg{width:92px;height:92px}
   .side .acts{flex-direction:row;flex-wrap:wrap}
   .side .acts .btn{width:auto}
 }
 @media (max-width:560px){
+  .pwform .two{grid-template-columns:1fr}
+  .row.pwrow{grid-template-columns:38px minmax(0,1fr) auto}
+  .secret{display:none}
+  .snapform{grid-template-columns:1fr}
+  .gate{padding:24px 16px 20px}
   .wrap{padding:0 16px}
   .navlink,.me span{display:none}
   .me{padding:5px}
@@ -228,6 +303,20 @@ footer a{margin-left:14px}
       <div class="acts"><button class="btn" type="button" onclick="location.reload()">Try again</button><a class="btn ghost" href="/">Back to home</a></div>
     </div>
 
+
+    <section id="gate" class="gate" hidden aria-labelledby="gate-h">
+      <svg class="ringart" viewBox="0 0 100 100" aria-hidden="true"><circle cx="50" cy="50" r="34" fill="none" stroke="var(--line)" stroke-width="22"/><circle cx="50" cy="50" r="34" fill="none" stroke="var(--signal)" stroke-width="22" stroke-dasharray="40.055 13.352" transform="rotate(11.25 50 50)"/><circle cx="50" cy="50" r="46" fill="none" stroke="var(--ink)" stroke-width="3"/><circle cx="50" cy="50" r="22" fill="none" stroke="var(--ink)" stroke-width="3"/></svg>
+      <h1 id="gate-h">Check your email</h1>
+      <p id="gatetext">We're sending a 6-digit code to your email. Enter it to open your vault.</p>
+      <form id="gateform" autocomplete="off">
+        <label class="sr" for="gatecode">6-digit code</label>
+        <input id="gatecode" inputmode="numeric" autocomplete="one-time-code" maxlength="6" placeholder="······">
+        <button class="btn" type="submit">Open vault</button>
+      </form>
+      <p class="fm-msg" id="gatemsg" role="status"></p>
+      <button class="btn quiet" type="button" id="gateresend">Send a new code</button>
+    </section>
+
     <div id="app" class="shell" hidden>
       <section class="side store" aria-labelledby="st-h">
         <h2 id="st-h">Storage</h2>
@@ -250,43 +339,124 @@ footer a{margin-left:14px}
       <section class="files" aria-labelledby="fm-h">
         <p class="thanks" id="thanks" hidden><strong>Payment received.</strong> Your new plan shows up here in a moment.</p>
         <div class="panel" id="panel">
-          <div class="bar">
-            <h1 id="fm-h">Your files</h1>
-            <div class="tools">
-              <button class="btn" type="button" id="pick"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 16V4M6 10l6-6 6 6M5 20h14"/></svg>Upload files</button>
-              <button class="btn ghost" type="button" id="mkdir">New folder</button>
-              <button class="btn quiet danger" type="button" id="delall" hidden>Delete all</button>
-              <input type="file" id="file" multiple hidden>
+          <div class="tabs" id="tabs" role="tablist" aria-label="Vault areas">
+            <button type="button" role="tab" data-tab="files" aria-selected="true">Files</button>
+            <button type="button" role="tab" data-tab="games" aria-selected="false" tabindex="-1">Game saves</button>
+            <button type="button" role="tab" data-tab="social" aria-selected="false" tabindex="-1">Social archives</button>
+            <button type="button" role="tab" data-tab="sites" aria-selected="false" tabindex="-1">Website backups</button>
+            <button type="button" role="tab" data-tab="passwords" aria-selected="false" tabindex="-1">Passwords</button>
+          </div>
+
+          <div id="browser">
+            <div class="bar">
+              <h1 id="fm-h">Your files</h1>
+              <div class="tools">
+                <button class="btn" type="button" id="pick"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 16V4M6 10l6-6 6 6M5 20h14"/></svg>Upload files</button>
+                <button class="btn" type="button" id="snapnew" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>Back up</button>
+                <button class="btn" type="button" id="snapagain" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>Back up again</button>
+                <button class="btn ghost" type="button" id="zipbtn" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4v12M6 10l6 6 6-6M5 20h14"/></svg>Download as zip</button>
+                <button class="btn ghost" type="button" id="mkdir">New folder</button>
+                <button class="btn quiet danger" type="button" id="delall" hidden>Delete all</button>
+                <input type="file" id="file" multiple hidden>
+                <input type="file" id="folderpick" webkitdirectory directory multiple hidden>
+                <input type="file" id="filepickany" multiple hidden>
+              </div>
+            </div>
+            <div class="crumbs" id="crumbs" aria-label="Folder path"></div>
+            <p class="intro" id="intro" hidden></p>
+            <div class="guide" id="guide" hidden></div>
+
+            <form class="newdir" id="newdir" hidden>
+              <label for="dirname">Folder name</label>
+              <input id="dirname" type="text" maxlength="200" autocomplete="off" placeholder="e.g. Photos">
+              <button class="btn" type="submit">Create</button>
+              <button class="btn ghost" type="button" id="dircancel">Cancel</button>
+            </form>
+            <form class="snapform" id="snapform" hidden>
+              <label for="snapname" id="snaplabel">Name</label>
+              <input id="snapname" type="text" maxlength="80" autocomplete="off">
+              <div class="acts">
+                <button class="btn" type="button" id="snapfolder">Choose folder</button>
+                <button class="btn ghost" type="button" id="snapfiles" hidden>Choose files instead</button>
+                <button class="btn quiet" type="button" id="snapcancel">Cancel</button>
+              </div>
+              <p id="snaphelp"></p>
+            </form>
+            <div class="wipe" id="wipe" hidden role="alert">
+              <p id="wipetext"></p>
+              <div class="acts">
+                <button class="btn wipe-yes" type="button" id="wipeyes">Yes, delete everything</button>
+                <button class="btn ghost" type="button" id="wipeno">Cancel</button>
+              </div>
+            </div>
+            <div class="ups" id="ups" aria-live="polite"></div>
+            <div class="fm-msg" id="fmmsg" role="status"></div>
+
+            <div class="cols" id="cols" aria-hidden="true"><span></span><span>Name</span><span>Size</span><span>Added</span><span></span></div>
+            <div id="rows"></div>
+            <p class="hint" id="hint">Tip: drag files onto this box to upload them.</p>
+
+            <div id="dbg" hidden>
+              <div class="acts"><button class="btn" type="button" id="corsbtn">Fix upload permissions</button><button class="btn ghost" type="button" id="dbgbtn">Run storage test</button></div>
+              <pre id="dbgout"></pre>
             </div>
           </div>
-          <div class="crumbs" id="crumbs" aria-label="Folder path"></div>
 
-          <form class="newdir" id="newdir" hidden>
-            <label for="dirname">Folder name</label>
-            <input id="dirname" type="text" maxlength="200" autocomplete="off" placeholder="e.g. Photos">
-            <button class="btn" type="submit">Create</button>
-            <button class="btn ghost" type="button" id="dircancel">Cancel</button>
-          </form>
-          <div class="wipe" id="wipe" hidden role="alert">
-            <p id="wipetext"></p>
-            <div class="acts">
-              <button class="btn wipe-yes" type="button" id="wipeyes">Yes, delete everything</button>
-              <button class="btn ghost" type="button" id="wipeno">Cancel</button>
+          <div id="pwview" hidden>
+            <div class="bar"><h1>Passwords</h1></div>
+            <p class="intro">Locked with a master password only you know. Your logins are encrypted on this device before they are saved, so nobody else can read them, not even Lifeboat.</p>
+            <div class="fm-msg" id="pwmsg" role="status"></div>
+
+            <div id="pwloading"><p class="help" style="margin:20px 0">Loading…</p></div>
+
+            <div id="pwsetup" class="pwbox" hidden>
+              <h3>Create your password vault</h3>
+              <p>Pick a master password. You will type it each time you open your passwords.</p>
+              <form id="pwsetupform">
+                <div class="field"><label for="pwnew1">Master password</label><input id="pwnew1" type="password" autocomplete="new-password"></div>
+                <div class="field"><label for="pwnew2">Type it again</label><input id="pwnew2" type="password" autocomplete="new-password"></div>
+                <label class="check"><input type="checkbox" id="pwok"><span>I understand Lifeboat cannot reset this password. If I forget it, my saved passwords are gone for good.</span></label>
+                <button class="btn" type="submit">Create password vault</button>
+              </form>
+            </div>
+
+            <div id="pwlocked" class="pwbox" hidden>
+              <h3>Your passwords are locked</h3>
+              <form id="pwunlockform">
+                <div class="field"><label for="pwmaster">Master password</label><input id="pwmaster" type="password" autocomplete="current-password"></div>
+                <button class="btn" type="submit">Unlock</button>
+              </form>
+              <button class="linkbtn" type="button" id="pwforgot">Forgot your master password?</button>
+              <div class="pwreset" id="pwreset" hidden>
+                <p>Nobody can recover it, including Lifeboat. The only way forward is to delete your saved passwords and start a new password vault.</p>
+                <div class="acts" style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn wipe-yes" type="button" id="pwresetyes">Delete my saved passwords</button><button class="btn ghost" type="button" id="pwresetno">Cancel</button></div>
+              </div>
+            </div>
+
+            <div id="pwopen" hidden>
+              <div class="pwtop">
+                <label class="sr" for="pwsearch">Search passwords</label>
+                <input id="pwsearch" type="search" placeholder="Search by name, site, or username" autocomplete="off">
+                <button class="btn" type="button" id="pwadd"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>Add a password</button>
+                <button class="btn ghost" type="button" id="pwlock">Lock</button>
+                <span id="pwcount"></span>
+              </div>
+              <form class="pwform" id="pwform" hidden autocomplete="off">
+                <h3 id="pwformh">Add a login</h3>
+                <div class="two">
+                  <div class="field"><label for="pwname">Name</label><input id="pwname" type="text" placeholder="e.g. Discord"></div>
+                  <div class="field"><label for="pwurl">Website (optional)</label><input id="pwurl" type="text" placeholder="e.g. discord.com"></div>
+                </div>
+                <div class="field"><label for="pwuser">Username or email</label><input id="pwuser" type="text" autocomplete="off"></div>
+                <div class="field"><label for="pwpass">Password</label><div class="inline"><input id="pwpass" type="password" autocomplete="new-password"><button class="btn ghost" type="button" id="pwpeek">Show</button><button class="btn ghost" type="button" id="pwgen">Generate</button></div></div>
+                <div class="field"><label for="pwnotes">Notes (optional)</label><textarea id="pwnotes" placeholder="Recovery codes, security questions…"></textarea></div>
+                <div class="acts"><button class="btn" type="submit">Save</button><button class="btn ghost" type="button" id="pwcancel">Cancel</button></div>
+              </form>
+              <div id="pwlist"></div>
             </div>
           </div>
-          <div class="ups" id="ups" aria-live="polite"></div>
-          <div class="fm-msg" id="fmmsg" role="status"></div>
-
-          <div class="cols" aria-hidden="true"><span></span><span>Name</span><span>Size</span><span>Added</span><span></span></div>
-          <div id="rows"></div>
-          <p class="hint">Tip: drag files onto this box to upload them.</p>
 
           <div class="drop" id="drop"><span>Drop to upload</span></div>
-
-          <div id="dbg" hidden>
-            <div class="acts"><button class="btn" type="button" id="corsbtn">Fix upload permissions</button><button class="btn ghost" type="button" id="dbgbtn">Run storage test</button></div>
-            <pre id="dbgout"></pre>
-          </div>
         </div>
       </section>
 
@@ -301,14 +471,6 @@ footer a{margin-left:14px}
         </div>
       </section>
 
-      <section class="side soon" aria-labelledby="nx-h">
-        <h2 id="nx-h">Coming soon</h2>
-        <ul>
-          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round" aria-hidden="true"><rect x="2.5" y="7" width="19" height="10" rx="5"/><path d="M8 10v4M6 12h4"/><circle cx="16" cy="11" r="1"/></svg><span><b>Game saves</b>Saves, keybinds, and settings</span></li>
-          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" aria-hidden="true"><path d="M4 5h16a1 1 0 0 1 1 1v9a1 1 0 0 1-1 1H10l-5 4v-4H4a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1z"/></svg><span><b>Social archives</b>Posts and follower lists</span></li>
-          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c3 3.2 3 14.8 0 18M12 3c-3 3.2-3 14.8 0 18"/></svg><span><b>Website backups</b>Files and databases</span></li>
-        </ul>
-      </section>
     </div>
   </main>
 
@@ -332,15 +494,19 @@ footer a{margin-left:14px}
 <script>
 (function(){
   var $ = function(id){ return document.getElementById(id); };
-  var C = 2 * Math.PI * 70;   // length of the ring
+  var C = 2 * Math.PI * 70;   // length of the storage ring
 
-  function fail(){ $('loading').hidden = true; $('app').hidden = true; $('err').hidden = false; }
+  function fail(){ $('loading').hidden = true; $('app').hidden = true; $('gate').hidden = true; $('err').hidden = false; }
 
-
-  // ---------- file manager ----------
-  var cwd = '', quotaBytes = 0, usedBytes = 0, shown = { files: 0, folders: 0 };
+  // ---------- small helpers ----------
   var ICON_DIR = '<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" aria-hidden="true"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>';
   var ICON_FILE = '<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" aria-hidden="true"><path d="M6 3h8l5 5v13H6z"/><path d="M14 3v5h5"/></svg>';
+  var ICON_CLOCK = '<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>';
+  var ICON_GAME = '<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round" aria-hidden="true"><rect x="2.5" y="7" width="19" height="10" rx="5"/><path d="M8 10v4M6 12h4"/><circle cx="16" cy="11" r="1"/></svg>';
+  var ICON_SITE = '<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c3 3.2 3 14.8 0 18M12 3c-3 3.2-3 14.8 0 18"/></svg>';
+  var ICON_CHAT = '<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" aria-hidden="true"><path d="M4 5h16a1 1 0 0 1 1 1v9a1 1 0 0 1-1 1H10l-5 4v-4H4a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1z"/></svg>';
+  var ICON_KEY = '<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="8" cy="15" r="4"/><path d="M11 12l9-9M16 7l3 3M14 9l2 2"/></svg>';
+  var RING = '<svg class="ringart" viewBox="0 0 100 100" aria-hidden="true"><circle cx="50" cy="50" r="34" fill="none" stroke="var(--line)" stroke-width="22"/><circle cx="50" cy="50" r="34" fill="none" stroke="var(--signal)" stroke-width="22" stroke-dasharray="40.055 13.352" transform="rotate(11.25 50 50)"/><circle cx="50" cy="50" r="46" fill="none" stroke="var(--ink)" stroke-width="3"/><circle cx="50" cy="50" r="22" fill="none" stroke="var(--ink)" stroke-width="3"/></svg>';
 
   function fmtBytes(n){
     if(n >= 1e9) return (n / 1e9).toFixed(n >= 1e10 ? 0 : 1).replace(/\.0$/, '') + ' GB';
@@ -350,7 +516,47 @@ footer a{margin-left:14px}
   }
   function fmtDate(s){ if(!s) return ''; try { return new Date(s).toLocaleDateString(undefined, { month:'short', day:'numeric', year:'numeric' }); } catch(e){ return ''; } }
   function join(a, b){ return a ? a + '/' + b : b; }
+  function el(tag, cls, text){ var e = document.createElement(tag); if(cls) e.className = cls; if(text !== undefined) e.textContent = text; return e; }
   function say(msg, bad){ var m = $('fmmsg'); m.textContent = msg || ''; m.className = 'fm-msg' + (bad ? ' bad' : ''); }
+  function plural(n, one, many){ return n.toLocaleString() + ' ' + (n === 1 ? one : many); }
+  function pad(n){ return (n < 10 ? '0' : '') + n; }
+  // Backup folders are named by date, like "2026-10-31 at 14.05.09"
+  function stampNow(){ var d = new Date(); return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate()) + ' at ' + pad(d.getHours()) + '.' + pad(d.getMinutes()) + '.' + pad(d.getSeconds()); }
+  function stampLabel(name){
+    var m = /^(\d{4})-(\d\d)-(\d\d) at (\d\d)\.(\d\d)\.(\d\d)$/.exec(name);
+    if(!m) return null;
+    var d = new Date(+m[1], +m[2] - 1, +m[3], +m[4], +m[5], +m[6]);
+    return d.toLocaleString(undefined, { weekday:'short', month:'short', day:'numeric', year:'numeric', hour:'numeric', minute:'2-digit' });
+  }
+
+  // ---------- the areas (tabs) ----------
+  var MODES = {
+    files:  { title: 'Your files', kind: 'browse' },
+    games:  { title: 'Game saves', kind: 'snap', icon: ICON_GAME, thing: 'game', things: 'games', nameLabel: 'Game', namePh: 'e.g. Minecraft',
+              pick: 'Back up a save folder', again: 'Back up again', folderLabel: 'Choose save folder',
+              intro: 'Pick a game\'s save folder. Every backup is kept with its date, so you can go back to any of them and download it as a zip.',
+              help: 'Where are my saves? Minecraft Java: %APPDATA%\\.minecraft\\saves on Windows, or ~/Library/Application Support/minecraft/saves on Mac. Many PC games use Documents\\My Games or Saved Games. If you are not sure, search for your game\'s name plus "save file location".' },
+    sites:  { title: 'Website backups', kind: 'snap', icon: ICON_SITE, thing: 'website', things: 'websites', nameLabel: 'Website', namePh: 'e.g. mysite.com',
+              pick: 'Back up a website', again: 'Back up again', folderLabel: 'Choose site folder', allowFiles: true,
+              intro: 'Upload your site\'s files, or a zip or database export from your host. Every backup is kept with its date, and you can download any of them as a zip.',
+              help: 'Most hosts have a backup or export button in their control panel (cPanel: Backup; WordPress: a backup plugin or Tools > Export). Download that file, then add it here.' },
+    social: { title: 'Social archives', kind: 'social' },
+    passwords: { title: 'Passwords', kind: 'pw' }
+  };
+  var PLATFORMS = [
+    { id: 'Instagram', steps: ['Open Instagram, go to your profile, tap the menu, then Accounts Center.', 'Tap Your information and permissions, then Download your information.', 'Choose Download or transfer information, pick your account, then All available information.', 'Choose Download to device, set the date range to All time, and tap Create files.', 'Instagram tells you when the file is ready, which can take a few days. Download it and upload the zip here.'] },
+    { id: 'TikTok', steps: ['Go to your profile, tap the menu, then Settings and privacy.', 'Tap Account, then Download your data.', 'Pick what to include and the file format (JSON keeps the most detail), then tap Request data.', 'When the Download data tab says Ready, download the file and upload it here.'] },
+    { id: 'Discord', steps: ['Open User Settings (the gear), then Data & Privacy.', 'Under Request all of my Data, choose Request Data.', 'Discord emails you a download link when it is ready. This can take up to 30 days.', 'Download the zip and upload it here.'] },
+    { id: 'X (Twitter)', steps: ['Open More, then Settings and privacy, then Your account.', 'Choose Download an archive of your data and confirm your password.', 'Tap Request archive. X tells you when it is ready, which often takes a day or more.', 'Download the zip and upload it here.'] },
+    { id: 'Snapchat', steps: ['Open Settings (the gear) and find My Data, or go to accounts.snapchat.com and sign in.', 'Choose what to include and the date range, then Submit.', 'Snapchat emails you a link when the file is ready.', 'Download the zip and upload it here.'] },
+    { id: 'YouTube and Google', steps: ['Go to takeout.google.com and sign in.', 'Pick what to include, such as YouTube, Photos, or Drive, then Next step.', 'Choose Send download link via email, the .zip file type, and Create export.', 'When Google emails you, download the files and upload them here.'] },
+    { id: 'Facebook', steps: ['Open the menu, then Settings and privacy, then Accounts Center.', 'Tap Your information and permissions, then Download your information.', 'Choose your account, All available information, Download to device, and the date range All time.', 'Facebook tells you when it is ready. Download the file and upload it here.'] },
+    { id: 'Other', steps: ['Keep any other export, screenshot, or list you would need to rebuild an account, like recovery codes for another app or your follower list.'] }
+  ];
+
+  var space = 'files', cwd = '', quotaBytes = 0, usedBytes = 0, shown = { files: 0, folders: 0 };
+  function mode(){ return MODES[space]; }
+  function depth(){ return cwd ? cwd.split('/').length : 0; }
 
   function gauge(){
     var share = quotaBytes ? Math.min(usedBytes / quotaBytes, 1) : 0;
@@ -364,21 +570,23 @@ footer a{margin-left:14px}
     var box = $('crumbs'); box.textContent = '';
     var parts = cwd ? cwd.split('/') : [];
     function add(label, path){
-      var b = document.createElement('button'); b.type = 'button'; b.textContent = label;
+      var b = el('button', '', label); b.type = 'button';
       b.addEventListener('click', function(){ open(path); }); box.appendChild(b);
     }
-    add('My files', '');
+    add(space === 'files' ? 'My files' : mode().title, '');
     var acc = '';
-    parts.forEach(function(p){ var s = document.createElement('span'); s.textContent = '/'; box.appendChild(s); acc = join(acc, p); add(p, acc); });
+    parts.forEach(function(p, i){
+      box.appendChild(el('span', '', '/')); acc = join(acc, p);
+      add(mode().kind === 'snap' && i === 1 ? (stampLabel(p) || p) : p, acc);
+    });
   }
 
   function mini(label, cls, fn){
-    var b = document.createElement('button'); b.type = 'button'; b.className = 'mini' + (cls ? ' ' + cls : ''); b.textContent = label; b.addEventListener('click', fn); return b;
+    var b = el('button', 'mini' + (cls ? ' ' + cls : ''), label); b.type = 'button'; b.addEventListener('click', fn); return b;
   }
   // Delete asks on the page itself: first click turns the button into "Yes, delete" for 5 seconds.
-  // (Pop-up confirm boxes are blocked in some browsers, which silently cancelled deletes.)
   function delBtn(what, run){
-    var b = document.createElement('button'); b.type = 'button'; b.className = 'mini del'; b.textContent = 'Delete';
+    var b = el('button', 'mini del', 'Delete'); b.type = 'button';
     var timer = null;
     b.addEventListener('click', async function(){
       if(!b.classList.contains('armed')){
@@ -387,62 +595,131 @@ footer a{margin-left:14px}
         return;
       }
       clearTimeout(timer); b.disabled = true; b.textContent = 'Deleting…'; say('Deleting…');
-      try { await run(); say(''); refresh(); } catch(err){ b.disabled = false; b.classList.remove('armed'); b.textContent = 'Delete'; say(err.message, true); }
+      try { await run(); say(''); refresh(); } catch(err){ b.disabled = false; b.classList.remove('armed'); b.textContent = 'Delete'; handle(err); }
     });
     return b;
   }
+  function cell(cls, text){ return el('span', cls, text || ''); }
+  function nameCell(node, sub){ var c = el('div', 'namecell'); c.appendChild(node); if(sub) c.appendChild(cell('sub', sub)); return c; }
+  function call(action, extra){ return LB.files(action, Object.assign({ space: space }, extra || {})); }
+  function download(path){ return call('download-url', { path: path }).then(function(x){ location.href = x.url; }); }
 
-  var RING = '<svg viewBox="0 0 100 100" aria-hidden="true"><circle cx="50" cy="50" r="34" fill="none" stroke="var(--line)" stroke-width="22"/><circle cx="50" cy="50" r="34" fill="none" stroke="var(--signal)" stroke-width="22" stroke-dasharray="40.055 13.352" transform="rotate(11.25 50 50)"/><circle cx="50" cy="50" r="46" fill="none" stroke="var(--ink)" stroke-width="3"/><circle cx="50" cy="50" r="22" fill="none" stroke="var(--ink)" stroke-width="3"/></svg>';
-  function cell(cls, text){ var s = document.createElement('span'); s.className = cls; s.textContent = text || ''; return s; }
-  function nameCell(el, sub){ var c = document.createElement('div'); c.className = 'namecell'; c.appendChild(el); if(sub) c.appendChild(cell('sub', sub)); return c; }
-
-  function draw(d){
-    var rows = $('rows'); rows.textContent = '';
-    if(!d.folders.length && !d.files.length){
-      var e = document.createElement('div'); e.className = 'empty';
-      e.insertAdjacentHTML('beforeend', RING);
-      var h = document.createElement('h3'); h.textContent = cwd ? 'This folder is empty' : 'Your vault is empty';
-      var p = document.createElement('p'); p.textContent = cwd ? 'Upload files here, or drag them onto this box.' : 'Upload the files you can\'t afford to lose. Drag them onto this box, or pick them from your device.';
-      var b = document.createElement('button'); b.type = 'button'; b.className = 'btn'; b.textContent = 'Upload files'; b.addEventListener('click', function(){ $('file').click(); });
-      e.appendChild(h); e.appendChild(p); e.appendChild(b); rows.appendChild(e); return;
-    }
-    d.folders.forEach(function(name){
-      var r = document.createElement('div'); r.className = 'row dir'; r.insertAdjacentHTML('beforeend', ICON_DIR);
-      var n = document.createElement('button'); n.type = 'button'; n.className = 'nm'; n.textContent = name; n.title = 'Open ' + name; n.addEventListener('click', function(){ open(join(cwd, name)); });
-      var act = document.createElement('span'); act.className = 'act';
-      act.appendChild(delBtn('the folder "' + name + '" and everything inside it', function(){ return LB.files('delete', { path: join(cwd, name), folder: true }); }));
-      r.appendChild(nameCell(n, 'Folder')); r.appendChild(cell('size', '')); r.appendChild(cell('date', '')); r.appendChild(act); rows.appendChild(r);
-    });
-    d.files.forEach(function(f){
-      var r = document.createElement('div'); r.className = 'row';
-      var n;
-      if(f.preview){
-        var th = document.createElement('button'); th.type = 'button'; th.className = 'thumb'; th.setAttribute('aria-label', 'Preview ' + f.name);
-        var im = document.createElement('img'); im.src = f.preview; im.alt = ''; im.loading = 'lazy'; im.decoding = 'async';
-        im.addEventListener('error', function(){ th.replaceWith(document.createRange().createContextualFragment(ICON_FILE)); });
-        th.appendChild(im); th.addEventListener('click', function(){ viewer(f); }); r.appendChild(th);
-        n = document.createElement('button'); n.type = 'button'; n.className = 'nm'; n.textContent = f.name; n.title = f.name;
-        n.addEventListener('click', function(){ viewer(f); });
-      } else {
-        r.insertAdjacentHTML('beforeend', ICON_FILE);
-        n = document.createElement('span'); n.className = 'nm'; n.textContent = f.name; n.title = f.name;
-      }
-      var date = fmtDate(f.modified);
-      var act = document.createElement('span'); act.className = 'act';
-      act.appendChild(mini('Download', '', async function(){
-        try { var x = await LB.files('download-url', { path: join(cwd, f.name) }); location.href = x.url; } catch(err){ say(err.message, true); }
-      }));
-      act.appendChild(delBtn('"' + f.name + '"', function(){ return LB.files('delete', { path: join(cwd, f.name) }); }));
-      r.appendChild(nameCell(n, fmtBytes(f.size) + (date ? ', ' + date : ''))); r.appendChild(cell('size', fmtBytes(f.size))); r.appendChild(cell('date', date)); r.appendChild(act); rows.appendChild(r);
-    });
+  function emptyState(title, text, btnLabel, onClick, extra){
+    var e = el('div', 'empty'); e.insertAdjacentHTML('beforeend', RING);
+    e.appendChild(el('h3', '', title)); e.appendChild(el('p', '', text));
+    if(btnLabel){ var b = el('button', 'btn', btnLabel); b.type = 'button'; b.addEventListener('click', onClick); e.appendChild(b); }
+    if(extra) e.appendChild(el('p', 'help', extra));
+    return e;
   }
 
-  // Full-size picture viewer
+  function fileRow(f){
+    var r = el('div', 'row'), n;
+    if(f.preview){
+      var th = el('button', 'thumb'); th.type = 'button'; th.setAttribute('aria-label', 'Preview ' + f.name);
+      var im = el('img'); im.src = f.preview; im.alt = ''; im.loading = 'lazy'; im.decoding = 'async';
+      im.addEventListener('error', function(){ th.replaceWith(document.createRange().createContextualFragment(ICON_FILE)); });
+      th.appendChild(im); th.addEventListener('click', function(){ viewer(f); }); r.appendChild(th);
+      n = el('button', 'nm', f.name); n.type = 'button'; n.title = f.name; n.addEventListener('click', function(){ viewer(f); });
+    } else {
+      r.insertAdjacentHTML('beforeend', ICON_FILE);
+      n = el('span', 'nm', f.name); n.title = f.name;
+    }
+    var date = fmtDate(f.modified);
+    var act = el('span', 'act');
+    act.appendChild(mini('Download', '', function(){ download(join(cwd, f.name)).catch(handle); }));
+    act.appendChild(delBtn('"' + f.name + '"', function(){ return call('delete', { path: join(cwd, f.name) }); }));
+    r.appendChild(nameCell(n, fmtBytes(f.size) + (date ? ', ' + date : ''))); r.appendChild(cell('size', fmtBytes(f.size))); r.appendChild(cell('date', date)); r.appendChild(act);
+    return r;
+  }
+  function folderRow(name, opts){
+    opts = opts || {};
+    var r = el('div', 'row dir'); r.insertAdjacentHTML('beforeend', opts.icon || ICON_DIR);
+    var label = opts.label || name;
+    var n = el('button', 'nm', label); n.type = 'button'; n.title = 'Open ' + label; n.addEventListener('click', function(){ open(join(cwd, name)); });
+    var act = el('span', 'act');
+    if(opts.zip) act.appendChild(mini('Download zip', '', function(){ zipFolder(join(cwd, name), opts.zipName || name); }));
+    act.appendChild(delBtn(opts.delWhat || ('the folder "' + label + '" and everything inside it'), function(){ return call('delete', { path: join(cwd, name), folder: true }); }));
+    r.appendChild(nameCell(n, opts.sub || 'Folder')); r.appendChild(cell('size', '')); r.appendChild(cell('date', '')); r.appendChild(act);
+    return r;
+  }
+
+  // ---------- toolbar per area and folder depth ----------
+  function tools(){
+    var m = mode(), dp = depth();
+    var show = function(id, on){ $(id).hidden = !on; };
+    show('pick', false); show('mkdir', false); show('snapnew', false); show('snapagain', false); show('zipbtn', false); show('delall', false);
+    $('fm-h').textContent = m.title;
+    if(m.kind === 'browse'){ show('pick', true); show('mkdir', true); show('delall', shown.files || shown.folders); $('pick').lastChild.textContent = 'Upload files'; }
+    if(m.kind === 'snap'){
+      if(dp === 0){ show('snapnew', true); $('snapnew').lastChild.textContent = m.pick; }
+      if(dp === 1){ show('snapagain', true); show('zipbtn', shown.folders > 0); }
+      if(dp >= 2){ show('zipbtn', true); }
+    }
+    if(m.kind === 'social' && dp >= 1){ show('pick', true); $('pick').lastChild.textContent = 'Upload export'; show('delall', shown.files || shown.folders); }
+    $('zipbtn').lastChild.textContent = dp === 1 && m.kind === 'snap' ? 'Download all as zip' : 'Download as zip';
+    $('hint').hidden = !(m.kind === 'browse' || (m.kind === 'social' && dp >= 1));
+    $('cols').hidden = m.kind === 'social' && dp === 0;
+  }
+
+  // ---------- drawing ----------
+  function draw(d){
+    var rows = $('rows'), m = mode(), dp = depth(); rows.textContent = '';
+    $('guide').hidden = true; $('intro').hidden = true;
+
+    if(m.kind === 'social' && dp === 0){ return drawPlatforms(d); }
+    if(m.kind === 'social' && dp === 1){ drawGuide(cwd); }
+    if(m.kind === 'snap' && dp === 0){ $('intro').hidden = false; $('intro').textContent = m.intro; }
+
+    if(!d.folders.length && !d.files.length){
+      if(m.kind === 'browse') rows.appendChild(cwd ? emptyState('This folder is empty', 'Upload files here, or drag them onto this box.', 'Upload files', pickFiles) : emptyState('Your vault is empty', 'Upload the files you can\'t afford to lose. Drag them onto this box, or pick them from your device.', 'Upload files', pickFiles));
+      else if(m.kind === 'snap' && dp === 0) rows.appendChild(emptyState('No ' + m.things + ' backed up yet', 'Back up your first ' + m.thing + ' to keep a dated copy you can restore.', m.pick, openSnapForm, m.help));
+      else if(m.kind === 'snap') rows.appendChild(emptyState('Nothing here yet', 'Back this ' + m.thing + ' up to keep a dated copy.', m.again, function(){ openSnapForm(); $('snapname').value = cwd.split('/')[0]; }));
+      else rows.appendChild(emptyState('No exports saved yet', 'Follow the steps above, then upload the file here.', 'Upload export', pickFiles));
+      return;
+    }
+    d.folders.forEach(function(name){
+      if(m.kind === 'snap' && dp === 0) rows.appendChild(folderRow(name, { icon: m.icon, sub: 'Open to see its backups', delWhat: 'every backup of "' + name + '"' }));
+      else if(m.kind === 'snap' && dp === 1){
+        var label = stampLabel(name);
+        rows.appendChild(folderRow(name, { icon: ICON_CLOCK, label: label || name, sub: label ? 'Backup' : 'Folder', zip: true, zipName: cwd.split('/')[0] + ' ' + name, delWhat: 'the backup from ' + (label || name) }));
+      }
+      else rows.appendChild(folderRow(name));
+    });
+    d.files.forEach(function(f){ rows.appendChild(fileRow(f)); });
+  }
+
+  function drawPlatforms(d){
+    var rows = $('rows');
+    var intro = $('intro'); intro.hidden = false;
+    intro.textContent = 'If an account gets hacked or deleted, your data export is how you rebuild it. Pick an app for the steps to download your data, then keep the file here.';
+    var saved = {}; d.folders.forEach(function(f){ saved[f] = true; });
+    var grid = el('div', 'plats');
+    PLATFORMS.forEach(function(p){
+      var b = el('button', 'plat'); b.type = 'button';
+      b.insertAdjacentHTML('beforeend', ICON_CHAT);
+      var t = el('span', 'plat-t'); t.appendChild(el('b', '', p.id)); t.appendChild(el('span', '', saved[p.id] ? 'Export saved' : 'No export yet'));
+      if(saved[p.id]) b.classList.add('has');
+      b.appendChild(t);
+      b.addEventListener('click', function(){ open(p.id); });
+      grid.appendChild(b);
+    });
+    rows.appendChild(grid);
+    rows.appendChild(el('p', 'help', 'App menus change from time to time. If a step looks different, search the app\'s settings for "Download your data".'));
+  }
+  function drawGuide(id){
+    var p = PLATFORMS.filter(function(x){ return x.id === id; })[0];
+    var g = $('guide'); g.textContent = ''; if(!p) return;
+    g.hidden = false;
+    g.appendChild(el('h3', '', id === 'Other' ? 'Other exports' : 'How to download your ' + id + ' data'));
+    var ol = el('ol'); p.steps.forEach(function(s){ ol.appendChild(el('li', '', s)); }); g.appendChild(ol);
+  }
+
+  // ---------- picture viewer ----------
   var lastFocus = null;
   function viewer(f){
     lastFocus = document.activeElement;
     $('lbimg').src = f.preview; $('lbimg').alt = f.name; $('lbname').textContent = f.name;
-    $('lbdl').onclick = async function(){ try { var x = await LB.files('download-url', { path: join(cwd, f.name) }); location.href = x.url; } catch(err){ say(err.message, true); } };
+    $('lbdl').onclick = function(){ download(join(cwd, f.name)).catch(handle); };
     $('lb').hidden = false; document.body.style.overflow = 'hidden'; $('lbclose').focus();
   }
   function closeViewer(){ $('lb').hidden = true; $('lbimg').removeAttribute('src'); document.body.style.overflow = ''; if(lastFocus) lastFocus.focus(); }
@@ -450,109 +727,433 @@ footer a{margin-left:14px}
   $('lb').addEventListener('click', function(e){ if(e.target === this) closeViewer(); });
   document.addEventListener('keydown', function(e){ if(e.key === 'Escape' && !$('lb').hidden) closeViewer(); });
 
+  // ---------- errors: an expired vault pass sends you back to the code screen ----------
+  function handle(err){
+    if(err && err.code === 'need_code'){ LB.clearVaultPass(); showGate(); return; }
+    say(err && err.message ? err.message : 'Something went wrong.', true);
+  }
+
   async function refresh(){
+    if(mode().kind === 'pw'){ return; }
     try {
-      var d = await LB.files('list', { path: cwd });
+      var d = await call('list', { path: cwd });
       cwd = d.path || ''; quotaBytes = d.quota; usedBytes = d.used;
       shown = { files: d.files.length, folders: d.folders.length };
-      $('delall').hidden = !(shown.files || shown.folders);
-      $('wipe').hidden = true;
-      crumbs(); gauge(); draw(d);
+      $('wipe').hidden = true; $('snapform').hidden = true;
+      crumbs(); tools(); gauge(); draw(d);
     } catch(err){
-      $('rows').textContent = ''; var e = document.createElement('div'); e.className = 'empty';
-      e.textContent = err.code === 'no_storage' ? 'File storage is not switched on yet.' : err.message; $('rows').appendChild(e);
-      $('gmsg').textContent = '';
+      if(err && err.code === 'need_code'){ return handle(err); }
+      $('rows').textContent = ''; var e = el('div', 'empty', err.code === 'no_storage' ? 'File storage is not switched on yet.' : err.message); $('rows').appendChild(e);
     }
   }
   function open(path){ cwd = path; say(''); refresh(); }
 
+  // ---------- tabs ----------
+  function setTab(name, keepPath){
+    if(!MODES[name]) name = 'files';
+    space = name; if(!keepPath) cwd = '';
+    document.querySelectorAll('#tabs [data-tab]').forEach(function(b){ var on = b.getAttribute('data-tab') === name; b.setAttribute('aria-selected', on ? 'true' : 'false'); b.tabIndex = on ? 0 : -1; });
+    var pw = mode().kind === 'pw';
+    $('browser').hidden = pw; $('pwview').hidden = !pw;
+    say(''); $('newdir').hidden = true; $('wipe').hidden = true; $('snapform').hidden = true;
+    try { history.replaceState(null, '', name === 'files' ? location.pathname + location.search : '#' + name); } catch(e){}
+    if(pw) pwShow(); else refresh();
+  }
+  document.querySelectorAll('#tabs [data-tab]').forEach(function(b){
+    b.addEventListener('click', function(){ setTab(b.getAttribute('data-tab')); });
+    b.addEventListener('keydown', function(e){
+      var all = Array.prototype.slice.call(document.querySelectorAll('#tabs [data-tab]')), i = all.indexOf(b);
+      if(e.key === 'ArrowRight' || e.key === 'ArrowLeft'){ e.preventDefault(); var n = all[(i + (e.key === 'ArrowRight' ? 1 : all.length - 1)) % all.length]; n.focus(); n.click(); }
+    });
+  });
+
+  // ---------- uploads ----------
   function putFile(url, file, type, bar){
     return new Promise(function(resolve, reject){
       var x = new XMLHttpRequest(); x.open('PUT', url);
       x.setRequestHeader('Content-Type', type);
-      x.upload.onprogress = function(e){ if(e.lengthComputable) bar.style.width = Math.round(e.loaded / e.total * 100) + '%'; };
+      if(bar) x.upload.onprogress = function(e){ if(e.lengthComputable) bar(e.loaded, e.total); };
       x.onload = function(){ x.status >= 200 && x.status < 300 ? resolve() : reject(new Error('The upload was refused (' + x.status + ').')); };
-      x.onerror = function(){
-        var host = ''; try { host = new URL(url).host; } catch(e){}
-        reject(new Error('The upload could not reach storage' + (host ? ' (' + host + ')' : '') + '. This is usually the bucket CORS rule or the endpoint region. Press F12, open Console, and read the red line.'));
-      };
+      x.onerror = function(){ reject(new Error('The upload could not reach storage. Check your connection and try again.')); };
       x.send(file);
     });
   }
+  function progressItem(label){
+    var item = el('div', 'up'), b = el('b', '', label), track = el('div', 'track'), bar = el('i');
+    track.appendChild(bar); item.appendChild(b); item.appendChild(track); $('ups').appendChild(item);
+    return { set: function(share, text){ bar.style.width = Math.round(Math.min(share, 1) * 100) + '%'; if(text) b.textContent = text; }, fail: function(text){ item.classList.add('bad'); b.textContent = text; }, done: function(text){ bar.style.width = '100%'; b.textContent = text; setTimeout(function(){ item.remove(); }, 3000); } };
+  }
 
-  var uploading = false;
+  var busy = false;
+  // A few files: one link each, with a progress bar per file.
   async function uploadAll(list){
-    if(uploading){ say('Wait for the current uploads to finish.', true); return; }
-    uploading = true; say('');
-    var box = $('ups');
+    if(busy){ say('Wait for the current upload to finish.', true); return; }
+    busy = true; say('');
     for(var i = 0; i < list.length; i++){
-      var f = list[i];
-      var item = document.createElement('div'); item.className = 'up';
-      var label = document.createElement('b'); label.textContent = f.name; label.style.fontWeight = '600';
-      var bar = document.createElement('i'); var track = document.createElement('div'); track.className = 'track'; track.appendChild(bar);
-      item.appendChild(label); item.appendChild(track); box.appendChild(item);
+      var f = list[i], p = progressItem(f.name);
       try {
         var type = f.type || 'application/octet-stream';
-        var u = await LB.files('upload-url', { path: join(cwd, f.name), size: f.size, type: type });
-        await putFile(u.url, f, u.type || type, bar);
-        bar.style.width = '100%'; label.textContent = f.name + ' ✓';
-      } catch(err){
-        item.classList.add('bad'); label.textContent = f.name + ': ' + err.message;
-      }
+        var u = await call('upload-url', { path: join(cwd, f.name), size: f.size, type: type });
+        await putFile(u.url, f, u.type || type, function(a, t){ p.set(a / t); });
+        p.done(f.name + ' ✓');
+      } catch(err){ if(err && err.code === 'need_code'){ busy = false; return handle(err); } p.fail(f.name + ': ' + err.message); }
     }
-    uploading = false;
-    await refresh();
-    setTimeout(function(){ box.querySelectorAll('.up:not(.bad)').forEach(function(n){ n.remove(); }); }, 2500);
+    busy = false; refresh();
   }
 
-  if(/[?&]debug=1/.test(location.search)){
-    $('dbg').hidden = false;
-    $('corsbtn').addEventListener('click', async function(){
-      $('dbgout').textContent = 'Setting the upload rule on your bucket…';
-      try {
-        var r = await LB.files('fix-cors', {});
-        $('dbgout').textContent = (r.fixed ? 'Done. Uploads are allowed from: ' + r.origins.join(', ') + '. Wait a minute, refresh, and try an upload.' : 'Not fixed yet.\n' + (r.next || '') + '\n\n') + (r.fixed ? '' : JSON.stringify(r, null, 2));
-      } catch(err){ $('dbgout').textContent = err.message; }
-    });
-    $('dbgbtn').addEventListener('click', async function(){
-      $('dbgout').textContent = 'Testing…';
-      try { $('dbgout').textContent = JSON.stringify(await LB.files('selftest', {}), null, 2); }
-      catch(err){ $('dbgout').textContent = err.message; }
-    });
+  // A whole folder (game saves, website backups): links in batches, 4 uploads at a time, one overall progress bar.
+  async function uploadMany(entries, label){
+    if(busy){ say('Wait for the current upload to finish.', true); return false; }
+    busy = true; say('');
+    var total = entries.reduce(function(s, e){ return s + e.file.size; }, 0), sent = 0, doneFiles = 0, failed = [];
+    var p = progressItem(label + ': starting…');
+    function show(){ p.set(total ? sent / total : doneFiles / entries.length, label + ': ' + plural(doneFiles, 'file', 'files') + ' of ' + entries.length.toLocaleString() + ' (' + fmtBytes(sent) + ' of ' + fmtBytes(total) + ')'); }
+    try {
+      for(var i = 0; i < entries.length; i += 200){
+        var batch = entries.slice(i, i + 200);
+        var links = await call('upload-urls', { files: batch.map(function(e){ return { path: e.path, size: e.file.size, type: e.file.type || 'application/octet-stream' }; }) });
+        var queue = batch.map(function(e, k){ return { e: e, link: links.items[k] }; });
+        await Promise.all([0, 1, 2, 3].map(async function(){
+          while(queue.length){
+            var job = queue.shift(), before = 0;
+            try {
+              await putFile(job.link.url, job.e.file, job.link.type, function(a){ sent += a - before; before = a; show(); });
+            } catch(err){ failed.push(job.e.path.split('/').pop()); }
+            sent += job.e.file.size - before; doneFiles++; show();
+          }
+        }));
+      }
+    } catch(err){
+      busy = false;
+      if(err && err.code === 'need_code'){ handle(err); return false; }
+      p.fail(label + ': ' + err.message); refresh(); return false;
+    }
+    busy = false;
+    if(failed.length) p.fail(label + ': ' + plural(failed.length, 'file', 'files') + ' did not upload (' + failed.slice(0, 3).join(', ') + (failed.length > 3 ? ', …' : '') + '). Try backing up again.');
+    else p.done(label + ': backed up ' + plural(entries.length, 'file', 'files') + ' ✓');
+    refresh();
+    return !failed.length;
   }
-  $('pick').addEventListener('click', function(){ $('file').click(); });
+
+  // ---------- backups (games, websites) ----------
+  var backupName = '';
+  function openSnapForm(){
+    var m = mode();
+    $('snapform').hidden = false; $('snaplabel').textContent = m.nameLabel; $('snapname').placeholder = m.namePh; $('snapname').value = '';
+    $('snapfolder').textContent = m.folderLabel; $('snapfiles').hidden = !m.allowFiles; $('snaphelp').textContent = m.help;
+    $('snapname').focus();
+  }
+  function cleanName(s){ return String(s || '').trim().replace(/[\\/]+/g, '-').slice(0, 80); }
+  function startBackup(name, files){
+    backupName = cleanName(name);
+    if(!backupName){ say('Give the ' + mode().thing + ' a name first.', true); $('snapname').focus(); return; }
+    (files ? $('filepickany') : $('folderpick')).click();
+  }
+  $('snapnew').addEventListener('click', openSnapForm);
+  $('snapagain').addEventListener('click', function(){ openSnapForm(); $('snapname').value = cwd.split('/')[0]; });
+  $('snapfolder').addEventListener('click', function(){ startBackup($('snapname').value); });
+  $('snapfiles').addEventListener('click', function(){ startBackup($('snapname').value, true); });
+  $('snapcancel').addEventListener('click', function(){ $('snapform').hidden = true; });
+  $('snapform').addEventListener('submit', function(e){ e.preventDefault(); startBackup($('snapname').value); });
+  async function backupChosen(list, keepFolders){
+    if(!list.length) return;
+    var stamp = stampNow(), name = backupName;
+    var entries = list.map(function(f){ return { file: f, path: name + '/' + stamp + '/' + ((keepFolders && f.webkitRelativePath) || f.name) }; });
+    $('snapform').hidden = true;
+    var ok = await uploadMany(entries, name);
+    if(ok !== false && depth() === 0) open(name);
+  }
+  $('folderpick').addEventListener('change', function(){ var l = Array.prototype.slice.call(this.files); this.value = ''; backupChosen(l, true); });
+  $('filepickany').addEventListener('change', function(){ var l = Array.prototype.slice.call(this.files); this.value = ''; backupChosen(l, false); });
+
+  // ---------- download a folder as a zip (built in the browser) ----------
+  var zipLib = null;
+  function loadZip(){
+    if(window.JSZip) return Promise.resolve(window.JSZip);
+    if(zipLib) return zipLib;
+    zipLib = new Promise(function(res, rej){ var s = document.createElement('script'); s.src = 'https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js'; s.onload = function(){ res(window.JSZip); }; s.onerror = function(){ zipLib = null; rej(new Error('Could not load the zip tool. Check your connection.')); }; document.head.appendChild(s); });
+    return zipLib;
+  }
+  async function zipFolder(path, name){
+    if(busy){ say('Wait for the current upload or download to finish.', true); return; }
+    busy = true; say('');
+    var label = String(name).replace(/[\\/:*?"<>|]+/g, '-');
+    var p = progressItem(label + ': getting the file list…');
+    try {
+      var list = await call('list-all', { path: path });
+      if(!list.files.length){ throw new Error('There is nothing in this folder to download.'); }
+      if(list.total > 2e9){ throw new Error('This is ' + fmtBytes(list.total) + ', too big to zip in the browser. Open it and download files one at a time.'); }
+      var JSZip = await loadZip(), zip = new JSZip(), got = 0;
+      var queue = list.files.slice();
+      await Promise.all([0, 1, 2, 3].map(async function(){
+        while(queue.length){
+          var f = queue.shift();
+          var r = await fetch(f.url); if(!r.ok) throw new Error('Could not download ' + f.path + ' (' + r.status + ').');
+          zip.file(f.path, await r.blob(), { binary: true });
+          got += f.size; p.set(list.total ? got / list.total * 0.9 : 0.5, label + ': downloading ' + fmtBytes(got) + ' of ' + fmtBytes(list.total));
+        }
+      }));
+      p.set(0.92, label + ': making the zip…');
+      var blob = await zip.generateAsync({ type: 'blob', compression: 'STORE' }, function(m){ p.set(0.9 + m.percent / 1000); });
+      var a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = label + '.zip';
+      document.body.appendChild(a); a.click(); setTimeout(function(){ URL.revokeObjectURL(a.href); a.remove(); }, 60000);
+      p.done(label + '.zip is downloading ✓');
+    } catch(err){ if(err && err.code === 'need_code'){ busy = false; return handle(err); } p.fail(label + ': ' + err.message); }
+    busy = false;
+  }
+  $('zipbtn').addEventListener('click', function(){
+    var parts = cwd.split('/');
+    var name = mode().kind === 'snap' ? (parts.length === 1 ? parts[0] + ' (all backups)' : parts[0] + ' ' + parts.slice(1).join(' ')) : parts[parts.length - 1];
+    zipFolder(cwd, name);
+  });
+
+  // ---------- files toolbar ----------
+  function pickFiles(){ $('file').click(); }
+  $('pick').addEventListener('click', pickFiles);
   $('file').addEventListener('change', function(){ var l = Array.prototype.slice.call(this.files); this.value = ''; if(l.length) uploadAll(l); });
   $('mkdir').addEventListener('click', function(){ $('newdir').hidden = false; $('dirname').value = ''; $('dirname').focus(); });
-  function plural(n, one, many){ return n + ' ' + (n === 1 ? one : many); }
-  $('delall').addEventListener('click', function(){
-    var parts = [];
-    if(shown.folders) parts.push(plural(shown.folders, 'folder', 'folders') + (shown.folders === 1 ? ' and everything in it' : ' and everything in them'));
-    if(shown.files) parts.push(plural(shown.files, 'file', 'files'));
-    $('wipetext').textContent = (cwd ? 'Delete everything in "' + cwd.split('/').pop() + '": ' : 'Delete everything in your vault: ') + parts.join(', ') + '? This cannot be undone.';
-    $('wipe').hidden = false; $('wipeyes').focus();
-  });
-  $('wipeno').addEventListener('click', function(){ $('wipe').hidden = true; });
-  $('wipeyes').addEventListener('click', async function(){
-    var b = this; b.disabled = true; b.textContent = 'Deleting…'; say('Deleting everything…');
-    try { var r = await LB.files('delete-all', { path: cwd }); say('Deleted ' + plural(r.deleted, 'item', 'items') + '.'); }
-    catch(err){ say(err.message, true); }
-    b.disabled = false; b.textContent = 'Yes, delete everything'; refresh();
-  });
   $('dircancel').addEventListener('click', function(){ $('newdir').hidden = true; });
   $('newdir').addEventListener('submit', async function(e){
     e.preventDefault();
     var name = $('dirname').value.trim(); if(!name) return;
     if(/[\\/]/.test(name)){ say('A folder name cannot contain / or \\.', true); return; }
-    try { await LB.files('folder', { path: join(cwd, name) }); $('newdir').hidden = true; refresh(); } catch(err){ say(err.message, true); }
+    try { await call('folder', { path: join(cwd, name) }); $('newdir').hidden = true; refresh(); } catch(err){ handle(err); }
   });
-  // Drag files anywhere onto the vault panel.
+  $('delall').addEventListener('click', function(){
+    var parts = [];
+    if(shown.folders) parts.push(plural(shown.folders, 'folder', 'folders') + (shown.folders === 1 ? ' and everything in it' : ' and everything in them'));
+    if(shown.files) parts.push(plural(shown.files, 'file', 'files'));
+    $('wipetext').textContent = (cwd ? 'Delete everything in "' + cwd.split('/').pop() + '": ' : 'Delete everything in ' + (space === 'files' ? 'your files' : mode().title) + ': ') + parts.join(', ') + '? This cannot be undone.';
+    $('wipe').hidden = false; $('wipeyes').focus();
+  });
+  $('wipeno').addEventListener('click', function(){ $('wipe').hidden = true; });
+  $('wipeyes').addEventListener('click', async function(){
+    var b = this; b.disabled = true; b.textContent = 'Deleting…'; say('Deleting everything…');
+    try { var r = await call('delete-all', { path: cwd }); say('Deleted ' + plural(r.deleted, 'item', 'items') + '.'); }
+    catch(err){ handle(err); }
+    b.disabled = false; b.textContent = 'Yes, delete everything'; refresh();
+  });
+
+  // Drag files anywhere onto the vault panel (files and social exports).
   var panel = $('panel'), drop = $('drop');
+  function canDrop(){ var m = mode(); return m.kind === 'browse' || (m.kind === 'social' && depth() >= 1); }
   function hasFiles(e){ var t = e.dataTransfer && e.dataTransfer.types; return !!t && Array.prototype.indexOf.call(t, 'Files') !== -1; }
-  panel.addEventListener('dragenter', function(e){ if(hasFiles(e)){ e.preventDefault(); panel.classList.add('dragging'); } });
+  panel.addEventListener('dragenter', function(e){ if(hasFiles(e) && canDrop()){ e.preventDefault(); panel.classList.add('dragging'); } });
   drop.addEventListener('dragover', function(e){ e.preventDefault(); });
   drop.addEventListener('dragleave', function(e){ if(e.target === drop) panel.classList.remove('dragging'); });
   drop.addEventListener('drop', function(e){ e.preventDefault(); panel.classList.remove('dragging'); var l = Array.prototype.slice.call((e.dataTransfer && e.dataTransfer.files) || []); if(l.length) uploadAll(l); });
   window.addEventListener('dragend', function(){ panel.classList.remove('dragging'); });
+
+  // ---------- debug panel (/vault?debug=1) ----------
+  if(/[?&]debug=1/.test(location.search)){
+    $('dbg').hidden = false;
+    $('corsbtn').addEventListener('click', async function(){
+      $('dbgout').textContent = 'Setting the upload rule on your bucket…';
+      try { var r = await LB.files('fix-cors', {}); $('dbgout').textContent = r.fixed ? 'Done. Uploads are allowed from: ' + r.origins.join(', ') + '.' : 'Not fixed yet.\n' + (r.next || '') + '\n\n' + JSON.stringify(r, null, 2); }
+      catch(err){ $('dbgout').textContent = err.message; }
+    });
+    $('dbgbtn').addEventListener('click', async function(){
+      $('dbgout').textContent = 'Testing…';
+      try { $('dbgout').textContent = JSON.stringify(await LB.files('selftest', {}), null, 2); } catch(err){ $('dbgout').textContent = err.message; }
+    });
+  }
+
+  // =====================================================================
+  // Password manager. Everything is encrypted in this browser with a key made from your master password
+  // (PBKDF2-SHA256, 600,000 rounds, then AES-GCM). The server and Backblaze only ever see scrambled data.
+  // =====================================================================
+  var PW = { key: null, salt: null, items: [], exists: false, timer: null, editing: null };
+  var ITER = 600000;
+  var enc = new TextEncoder(), dec = new TextDecoder();
+  function b64(buf){ var s = '', a = new Uint8Array(buf); for(var i = 0; i < a.length; i++) s += String.fromCharCode(a[i]); return btoa(s); }
+  function unb64(s){ var t = atob(s), a = new Uint8Array(t.length); for(var i = 0; i < t.length; i++) a[i] = t.charCodeAt(i); return a; }
+  async function makeKey(password, salt, iter){
+    var base = await crypto.subtle.importKey('raw', enc.encode(password), 'PBKDF2', false, ['deriveKey']);
+    return crypto.subtle.deriveKey({ name: 'PBKDF2', salt: salt, iterations: iter, hash: 'SHA-256' }, base, { name: 'AES-GCM', length: 256 }, false, ['encrypt', 'decrypt']);
+  }
+  async function seal(){
+    var iv = crypto.getRandomValues(new Uint8Array(12));
+    var ct = await crypto.subtle.encrypt({ name: 'AES-GCM', iv: iv }, PW.key, enc.encode(JSON.stringify({ items: PW.items, saved: Date.now() })));
+    return JSON.stringify({ v: 1, kdf: 'PBKDF2-SHA256', iter: ITER, salt: b64(PW.salt), iv: b64(iv), ct: b64(ct) });
+  }
+  function pwSay(msg, bad){ var m = $('pwmsg'); m.textContent = msg || ''; m.className = 'fm-msg' + (bad ? ' bad' : ''); }
+  function pwState(which){ ['pwloading', 'pwsetup', 'pwlocked', 'pwopen'].forEach(function(id){ $(id).hidden = id !== which; }); }
+  function pwHandle(err){ if(err && err.code === 'need_code'){ pwLock(); return handle(err); } pwSay(err && err.message ? err.message : 'Something went wrong.', true); }
+
+  async function pwShow(){
+    if(PW.key){ pwState('pwopen'); pwDraw(); return; }
+    pwState('pwloading'); pwSay('');
+    try {
+      var r = await LB.files('pw-load', {});
+      PW.exists = r.exists; PW.blob = r.data || null;
+      pwState(r.exists ? 'pwlocked' : 'pwsetup');
+      (r.exists ? $('pwmaster') : $('pwnew1')).focus();
+    } catch(err){ pwHandle(err); }
+  }
+  function pwTouch(){ clearTimeout(PW.timer); if(PW.key) PW.timer = setTimeout(function(){ pwLock(); pwSay('Locked after 10 minutes without use.'); }, 10 * 60000); }
+  function pwLock(){ PW.key = null; PW.salt = null; PW.items = []; PW.editing = null; clearTimeout(PW.timer); $('pwform').hidden = true; if(mode().kind === 'pw') pwShow(); }
+  $('pwview').addEventListener('input', pwTouch); $('pwview').addEventListener('click', pwTouch);
+
+  $('pwsetupform').addEventListener('submit', async function(e){
+    e.preventDefault(); pwSay('');
+    var a = $('pwnew1').value, b = $('pwnew2').value;
+    if(a.length < 10){ return pwSay('Use at least 10 characters. A short sentence you will remember works well.', true); }
+    if(a !== b){ return pwSay('The two passwords do not match.', true); }
+    if(!$('pwok').checked){ return pwSay('Tick the box to confirm you understand the master password cannot be reset.', true); }
+    var btn = this.querySelector('button[type=submit]'); btn.disabled = true; btn.textContent = 'Creating…';
+    try {
+      PW.salt = crypto.getRandomValues(new Uint8Array(16)); PW.key = await makeKey(a, PW.salt, ITER); PW.items = [];
+      await LB.files('pw-save', { data: await seal() });
+      $('pwnew1').value = ''; $('pwnew2').value = ''; $('pwok').checked = false;
+      PW.exists = true; pwState('pwopen'); pwDraw(); pwTouch(); pwSay('Your password vault is ready.');
+    } catch(err){ PW.key = null; pwHandle(err); }
+    btn.disabled = false; btn.textContent = 'Create password vault';
+  });
+
+  $('pwunlockform').addEventListener('submit', async function(e){
+    e.preventDefault(); pwSay('');
+    var btn = this.querySelector('button[type=submit]'); btn.disabled = true; btn.textContent = 'Unlocking…';
+    try {
+      if(!PW.blob){ var r = await LB.files('pw-load', {}); PW.blob = r.data; }
+      var j = JSON.parse(PW.blob), salt = unb64(j.salt), key = await makeKey($('pwmaster').value, salt, j.iter);
+      var plain;
+      try { plain = await crypto.subtle.decrypt({ name: 'AES-GCM', iv: unb64(j.iv) }, key, unb64(j.ct)); }
+      catch(x){ throw new Error('That master password is not right.'); }
+      PW.key = key; PW.salt = salt; PW.items = (JSON.parse(dec.decode(plain)).items) || [];
+      $('pwmaster').value = ''; pwState('pwopen'); pwDraw(); pwTouch(); $('pwsearch').focus();
+    } catch(err){ pwHandle(err); }
+    btn.disabled = false; btn.textContent = 'Unlock';
+  });
+
+  // Forgot master password: the only way out is starting over.
+  $('pwforgot').addEventListener('click', function(){ $('pwreset').hidden = false; });
+  $('pwresetno').addEventListener('click', function(){ $('pwreset').hidden = true; });
+  $('pwresetyes').addEventListener('click', async function(){
+    try { await LB.files('pw-delete', {}); PW.blob = null; PW.exists = false; $('pwreset').hidden = true; pwState('pwsetup'); pwSay('Your old password vault was deleted. Create a new one.'); }
+    catch(err){ pwHandle(err); }
+  });
+  $('pwlock').addEventListener('click', function(){ pwLock(); pwSay('Locked.'); });
+
+  async function pwSave(msg){
+    var data = await seal();
+    await LB.files('pw-save', { data: data });
+    PW.blob = data; if(msg) pwSay(msg);
+  }
+
+  function genPassword(len){
+    var chars = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789!@#$%^&*-_=+?';
+    var out = '', buf = new Uint32Array(1), limit = Math.floor(4294967296 / chars.length) * chars.length;
+    while(out.length < len){ crypto.getRandomValues(buf); if(buf[0] < limit) out += chars[buf[0] % chars.length]; }
+    return out;
+  }
+  async function copy(text, what){
+    try { await navigator.clipboard.writeText(text); pwSay(what + ' copied. It will be cleared from your clipboard in 30 seconds.'); setTimeout(function(){ navigator.clipboard.writeText('').catch(function(){}); }, 30000); }
+    catch(e){ pwSay('Your browser blocked copying. Use Show and copy it by hand.', true); }
+  }
+
+  function pwDraw(){
+    var list = $('pwlist'); list.textContent = '';
+    var q = $('pwsearch').value.trim().toLowerCase();
+    var items = PW.items.slice().sort(function(a, b){ return (a.name || '').localeCompare(b.name || ''); })
+      .filter(function(it){ return !q || [it.name, it.url, it.user].join(' ').toLowerCase().indexOf(q) !== -1; });
+    $('pwcount').textContent = plural(PW.items.length, 'saved login', 'saved logins');
+    if(!PW.items.length){ list.appendChild(emptyState('No passwords saved yet', 'Add your logins here. They are locked with your master password before they leave this device.', 'Add a password', function(){ pwEdit(null); })); return; }
+    if(!items.length){ list.appendChild(el('p', 'help', 'Nothing matches "' + q + '".')); return; }
+    items.forEach(function(it){
+      var r = el('div', 'row pwrow'); r.insertAdjacentHTML('beforeend', ICON_KEY);
+      var nc = el('div', 'namecell'); nc.appendChild(el('span', 'nm', it.name || it.url || 'Untitled'));
+      nc.appendChild(el('span', 'sub2', it.user || ''));
+      var secret = el('span', 'secret', '••••••••••');
+      var act = el('span', 'act');
+      var showing = false;
+      act.appendChild(mini('Show', '', function(){ showing = !showing; secret.textContent = showing ? it.pass : '••••••••••'; this.textContent = showing ? 'Hide' : 'Show'; }));
+      act.appendChild(mini('Copy password', '', function(){ copy(it.pass || '', 'Password'); }));
+      if(it.user) act.appendChild(mini('Copy username', '', function(){ copy(it.user, 'Username'); }));
+      act.appendChild(mini('Edit', '', function(){ pwEdit(it); }));
+      act.appendChild(delBtnPw(it));
+      r.appendChild(nc); r.appendChild(secret); r.appendChild(act); list.appendChild(r);
+    });
+  }
+  function delBtnPw(it){
+    var b = el('button', 'mini del', 'Delete'); b.type = 'button'; var t = null;
+    b.addEventListener('click', async function(){
+      if(!b.classList.contains('armed')){ b.classList.add('armed'); b.textContent = 'Yes, delete'; t = setTimeout(function(){ b.classList.remove('armed'); b.textContent = 'Delete'; }, 5000); return; }
+      clearTimeout(t); var keep = PW.items; PW.items = PW.items.filter(function(x){ return x !== it; });
+      try { await pwSave('Deleted.'); pwDraw(); } catch(err){ PW.items = keep; pwHandle(err); }
+    });
+    return b;
+  }
+  $('pwsearch').addEventListener('input', pwDraw);
+  function pwEdit(it){
+    PW.editing = it;
+    $('pwform').hidden = false; $('pwformh').textContent = it ? 'Edit login' : 'Add a login';
+    $('pwname').value = it ? it.name || '' : ''; $('pwurl').value = it ? it.url || '' : ''; $('pwuser').value = it ? it.user || '' : '';
+    $('pwpass').value = it ? it.pass || '' : ''; $('pwnotes').value = it ? it.notes || '' : ''; $('pwpass').type = 'password'; $('pwpeek').textContent = 'Show';
+    $('pwname').focus();
+  }
+  $('pwadd').addEventListener('click', function(){ pwEdit(null); });
+  $('pwcancel').addEventListener('click', function(){ $('pwform').hidden = true; PW.editing = null; });
+  $('pwgen').addEventListener('click', function(){ $('pwpass').value = genPassword(20); $('pwpass').type = 'text'; $('pwpeek').textContent = 'Hide'; });
+  $('pwpeek').addEventListener('click', function(){ var p = $('pwpass'); p.type = p.type === 'password' ? 'text' : 'password'; this.textContent = p.type === 'password' ? 'Show' : 'Hide'; });
+  $('pwform').addEventListener('submit', async function(e){
+    e.preventDefault();
+    var entry = { name: $('pwname').value.trim(), url: $('pwurl').value.trim(), user: $('pwuser').value.trim(), pass: $('pwpass').value, notes: $('pwnotes').value, updated: Date.now() };
+    if(!entry.name && !entry.url){ return pwSay('Give it a name or a website.', true); }
+    if(!entry.pass){ return pwSay('Add the password, or press Generate.', true); }
+    var keep = PW.items.slice();
+    if(PW.editing){ var i = PW.items.indexOf(PW.editing); if(i !== -1) PW.items[i] = entry; } else PW.items.push(entry);
+    var btn = this.querySelector('button[type=submit]'); btn.disabled = true;
+    try { await pwSave(PW.editing ? 'Saved.' : 'Added.'); $('pwform').hidden = true; PW.editing = null; pwDraw(); }
+    catch(err){ PW.items = keep; pwHandle(err); }
+    btn.disabled = false;
+  });
+
+  // =====================================================================
+  // Emailed code before the vault opens
+  // =====================================================================
+  var gateTimer = null;
+  function gateSay(msg, bad){ var m = $('gatemsg'); m.textContent = msg || ''; m.className = 'fm-msg' + (bad ? ' bad' : ''); }
+  function cooldown(sec){
+    var b = $('gateresend'); clearInterval(gateTimer);
+    if(!sec){ b.disabled = false; b.textContent = 'Send a new code'; return; }
+    b.disabled = true; var left = sec;
+    b.textContent = 'Send a new code in ' + left + 's';
+    gateTimer = setInterval(function(){ left--; if(left <= 0){ clearInterval(gateTimer); b.disabled = false; b.textContent = 'Send a new code'; } else b.textContent = 'Send a new code in ' + left + 's'; }, 1000);
+  }
+  async function sendCode(){
+    gateSay('Sending a code…');
+    try {
+      var r = await LB.files('send-code', {});
+      $('gatetext').textContent = 'We sent a 6-digit code to ' + r.to + '. Enter it to open your vault.';
+      gateSay(r.sent ? 'Code sent. Check your inbox and spam folder.' : 'We just sent a code. Use the newest email.');
+      cooldown(r.wait || 0);
+    } catch(err){ gateSay(err.message, true); cooldown(0); }
+  }
+  function showGate(){
+    $('loading').hidden = true; $('app').hidden = true; $('gate').hidden = false;
+    $('gatecode').value = ''; $('gatecode').focus();
+    sendCode();
+  }
+  $('gateresend').addEventListener('click', sendCode);
+  $('gatecode').addEventListener('input', function(){ this.value = this.value.replace(/\D/g, '').slice(0, 6); if(this.value.length === 6) $('gateform').requestSubmit(); });
+  $('gateform').addEventListener('submit', async function(e){
+    e.preventDefault();
+    var code = $('gatecode').value;
+    if(code.length !== 6){ return gateSay('Enter all 6 digits.', true); }
+    var b = this.querySelector('button[type=submit]'); b.disabled = true; b.textContent = 'Checking…';
+    try {
+      var r = await LB.files('verify-code', { code: code });
+      LB.setVaultPass(r.token, r.expires);
+      gateSay(''); showApp();
+    } catch(err){ gateSay(err.message, true); $('gatecode').select(); }
+    b.disabled = false; b.textContent = 'Open vault';
+  });
+
+  function showApp(){
+    $('gate').hidden = true; $('loading').hidden = true; $('app').hidden = false;
+    var start = (location.hash || '').replace('#', '');
+    setTab(MODES[start] ? start : 'files');
+  }
 
   LB.ready.then(async function(){
     if(!LB.signedIn){ location.replace('/'); return; }
@@ -562,9 +1163,8 @@ footer a{margin-left:14px}
     $('d-user').textContent = u.username || '–';
     $('who').textContent = u.username ? '@' + u.username : email;
     $('avatar').textContent = ((u.username || email || '?').replace(/^@/, '')[0] || '?').toUpperCase();
-    $('loading').hidden = true; $('app').hidden = false;
 
-    var totalGB = 1, label = 'Free', usedGB = 0, billing = false;   // nothing can be stored yet
+    var totalGB = 1, label = 'Free', billing = false;
     try {
       var p = await LB.plan();
       totalGB = p.storageGB; label = p.label; billing = !!p.billing;
@@ -573,12 +1173,12 @@ footer a{margin-left:14px}
     $('d-plan').textContent = label;
     if(billing) $('bill').hidden = false;
     if(/[?&]checkout=success/.test(location.search)) $('thanks').hidden = false;
-    $('used').textContent = usedGB + ' GB';
-    $('of').textContent = 'used of ' + LB.size(totalGB);
-    $('arc').setAttribute('stroke-dasharray', (C * Math.min(usedGB / totalGB, 1)) + ' ' + C);
-    refresh();
+    $('used').textContent = '0 GB'; $('of').textContent = 'used of ' + LB.size(totalGB);
+
+    if(LB.vaultPass()) showApp(); else showGate();
   }).catch(fail);
 })();
+
 </script>
 </body>
 </html>

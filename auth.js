@@ -40,15 +40,15 @@
   }
   LB.signIn = function (target) { go('in', target); };
   LB.signUp = function (target) { go('up', target); };
-  LB.signOut = async function () { await Clerk.signOut(); location.href = '/'; };
+  LB.signOut = async function () { try { sessionStorage.removeItem('lb_vault'); } catch (e) {} await Clerk.signOut(); location.href = '/'; };
   LB.manage = function () { Clerk.openUserProfile(); };
 
   // Talk to our server as the signed-in person.
-  LB.api = async function (action, extra, endpoint) {
+  LB.api = async function (action, extra, endpoint, more) {
     var token = await Clerk.session.getToken();
     var r = await fetch(endpoint || '/api/account', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + token },
+      headers: Object.assign({ 'Content-Type': 'application/json', Authorization: 'Bearer ' + token }, more || {}),
       body: JSON.stringify(Object.assign({ action: action }, extra || {}))
     });
     var d = {};
@@ -58,7 +58,11 @@
   };
   // Open Stripe's checkout for a plan, or the billing page.
   LB.checkout = async function (plan) { var d = await LB.api('checkout', { plan: plan }); location.href = d.url; };
-  LB.files = function (action, extra) { return LB.api(action, extra, '/api/files'); };
+  // The vault pass from the emailed code lives only in this tab, and only for an hour.
+  LB.vaultPass = function () { try { var p = JSON.parse(sessionStorage.getItem('lb_vault') || 'null'); return p && p.exp > Date.now() ? p.token : ''; } catch (e) { return ''; } };
+  LB.setVaultPass = function (token, exp) { try { sessionStorage.setItem('lb_vault', JSON.stringify({ token: token, exp: exp })); } catch (e) {} };
+  LB.clearVaultPass = function () { try { sessionStorage.removeItem('lb_vault'); } catch (e) {} };
+  LB.files = function (action, extra) { return LB.api(action, extra, '/api/files', { 'X-Vault-Access': LB.vaultPass() }); };
   LB.billing = async function () { var d = await LB.api('portal'); location.href = d.url; };
 
   // Which plan this person has (from plans.json or payments).

@@ -165,7 +165,9 @@ footer a{margin-right:14px}
         <li><strong>Account details:</strong> your email address and username, and your name and profile picture if you sign in with Google.</li>
         <li><strong>Sign-in and security data:</strong> things like your IP address, browser, device, and sign-in times, used to keep your account secure.</li>
         <li><strong>Payment details:</strong> if you buy a plan, Stripe handles your card. We get your plan, payment status, and a customer ID from Stripe. We never see or store your full card number.</li>
-        <li><strong>Your files:</strong> the files you upload, plus their names, sizes, folders, and dates.</li>
+        <li><strong>Your files and backups:</strong> the files, game saves, website backups, and social data exports you upload, plus their names, sizes, folders, and dates.</li>
+        <li><strong>Your password vault:</strong> stored only in encrypted form. It is locked with a key made from your master password on your device, and we never receive the master password, so we cannot read what is inside.</li>
+        <li><strong>Vault codes:</strong> when you open your vault we email you a one-time code. We keep a scrambled copy of the code for 10 minutes to check it.</li>
         <li><strong>Waitlist email:</strong> if you join the waitlist, the email address you give us.</li>
         <li><strong>Messages:</strong> anything you send us when you contact support.</li>
         <li><strong>Basic server logs:</strong> our hosting provider records technical details like IP address, pages requested, and time, to run and protect the site.</li>
@@ -176,7 +178,7 @@ footer a{margin-right:14px}
         <li>to run your account and your vault, including storage limits for your plan;</li>
         <li>to take payments and manage your subscription;</li>
         <li>to keep Lifeboat secure and prevent abuse;</li>
-        <li>to send emails you need, like your waitlist confirmation and important notices about your account or these policies;</li>
+        <li>to send emails you need, like the codes that open your vault, your waitlist confirmation, and important notices about your account or these policies;</li>
         <li>to answer you when you contact us.</li>
       </ul>
       <p>We do <strong>not</strong> sell your personal information, show you ads, or use advertising trackers.</p>
@@ -185,7 +187,8 @@ footer a{margin-right:14px}
       <ul>
         <li>Your files are stored privately with our storage provider, Backblaze, in the United States, and are encrypted while stored there.</li>
         <li>Files travel to and from your browser over encrypted connections (HTTPS). Downloads use short-lived links that only work for you.</li>
-        <li>Lifeboat is <strong>not end-to-end encrypted yet</strong>. That means our systems and our storage provider could technically access your files. We do not look at your files except when needed to keep the service running, when you ask us for help, or when the law requires it.</li>
+        <li>Your <strong>password vault is end-to-end encrypted</strong>: only someone with your master password can read it.</li>
+        <li>Your other files and backups are <strong>not end-to-end encrypted yet</strong>. That means our systems and our storage provider could technically access them. We do not look at your files except when needed to keep the service running, when you ask us for help, or when the law requires it.</li>
       </ul>
 
       <h2 id="share">4. Who helps us run Lifeboat</h2>
@@ -204,7 +207,7 @@ footer a{margin-right:14px}
 
       <h2 id="keep">6. How long we keep it</h2>
       <ul>
-        <li>Files stay until you delete them. Deleted files are removed from storage within a few days.</li>
+        <li>Files, backups, and your password vault stay until you delete them. Deleted files are removed from storage within a few days.</li>
         <li>Account details stay until you delete your account. When you ask us to delete your account, we delete it and your files within 30 days.</li>
         <li>Payment records are kept by Stripe and by us as long as tax and accounting laws require.</li>
         <li>Server logs are kept for a limited time by our hosting provider.</li>
