@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Lifeboat: get your digital life back after a hack</title>
-<meta name="description" content="Lifeboat keeps safe copies of your files, game saves, social accounts, and passwords, so you can get everything back after a hack. Start free with 1 GB.">
+<meta name="description" content="Lifeboat keeps safe copies of your files, game saves, social accounts, website backups, and passwords, so you can get everything back after a hack. Start free with 1 GB.">
 <link rel="canonical" href="https://www.lifeboatrecovery.com/">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="Lifeboat">
@@ -79,7 +79,7 @@ section{padding:60px 0;border-top:2px solid var(--line)}
 section h2{font-size:clamp(30px,4.4vw,48px);font-weight:700;letter-spacing:-0.02em;max-width:16em}
 .sub{color:var(--muted);max-width:36em;margin:14px 0 0}
 
-.layers{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:0;margin-top:34px;border:2px solid var(--ink);border-radius:16px;overflow:hidden}
+.layers{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:0;margin-top:34px;border:2px solid var(--ink);border-radius:16px;overflow:hidden}
 .layer{padding:24px;background:var(--surface);border-right:2px solid var(--ink);border-bottom:2px solid var(--ink);margin:0 -2px -2px 0}
 .layer h3{font-size:24px;font-weight:700;margin-bottom:8px}
 .layer p{margin:0 0 12px;color:var(--muted);font-size:16px}
@@ -87,13 +87,17 @@ section h2{font-size:clamp(30px,4.4vw,48px);font-weight:700;letter-spacing:-0.02
 .layer li{margin:3px 0}
 .layer.hl{background:var(--signal);color:var(--signal-ink)}
 .layer.hl p{color:inherit}
+#covers h2{max-width:none}
+.soon{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-top:22px;font-size:15px}
+.soon b{margin-right:4px}
+.soon span{padding:4px 12px;border-radius:99px;border:1.5px dashed var(--line);color:var(--muted)}
 
 .plans{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:18px;margin-top:34px}
 .plan{background:var(--surface);border:2px solid var(--line);border-radius:16px;padding:24px}
 .plan.pick{border-color:var(--ink);box-shadow:6px 6px 0 var(--ink)}
 .plan h3{font-size:22px}
 .price{font:800 40px "Bricolage Grotesque",sans-serif;margin:8px 0}
-.price small{font:500 16px "Instrument Sans",sans-serif;color:var(--muted)}
+.price small{display:block;font:500 16px "Instrument Sans",sans-serif;color:var(--muted);margin-top:2px}
 .plan ul{padding-left:18px;margin:12px 0 0;font-size:15px}
 .plan li{margin:4px 0}
 
@@ -124,7 +128,7 @@ footer{padding:36px 0 50px;color:var(--muted);font-size:14px;border-top:2px soli
     <div class="hero">
       <div>
         <h1>Hacked? Get everything back.</h1>
-        <p class="lead">Lifeboat keeps safe copies of your files, game saves, and social accounts. When something goes wrong, you restore it in a few clicks.</p>
+        <p class="lead">Lifeboat keeps safe copies of your files, game saves, social accounts, and passwords. When something goes wrong, you get them back in a few clicks.</p>
         <div class="cta">
           <button class="btn" type="button" data-signup>Get started</button>
           <a class="btn ghost" href="#covers">See what it covers</a>
@@ -148,29 +152,37 @@ footer{padding:36px 0 50px;color:var(--muted);font-size:14px;border-top:2px soli
     </div>
 
     <section id="covers">
-      <h2>One app for the four ways your digital life breaks</h2>
-      <p class="sub">Most security apps stop at warning you. Lifeboat also gets your stuff back.</p>
+      <h2>Everything you need to get back up</h2>
+      <p class="sub">One private vault for the things a hack, a dead laptop, or a deleted account can take from you.</p>
       <div class="layers">
         <div class="layer">
-          <h3>Protect</h3>
-          <p>Catch trouble before it lands.</p>
-          <ul><li>Virus and malware scanning</li><li>Scam checker for texts, links, listings</li><li>Safe phishing practice for your family</li></ul>
+          <h3>Files</h3>
+          <p>Photos, documents, and anything else you can't afford to lose. Drag them in, download them anytime.</p>
         </div>
         <div class="layer">
-          <h3>Watch</h3>
-          <p>Know the moment something leaks.</p>
-          <ul><li>Breach alerts with a clear to-do list</li><li>Game and social account monitoring</li></ul>
+          <h3>Game saves</h3>
+          <p>Back up a game's save folder. Every backup is kept with its date, so you can go back to any of them as a zip.</p>
+        </div>
+        <div class="layer">
+          <h3>Social archives</h3>
+          <p>Step-by-step guides to download your Instagram, TikTok, Discord, X, Snapchat, YouTube, and Facebook data, and a safe place to keep it.</p>
+        </div>
+        <div class="layer">
+          <h3>Website backups</h3>
+          <p>Keep your site's files and database exports, each one dated, ready to download if your host goes down or gets hacked.</p>
         </div>
         <div class="layer hl">
-          <h3>Back up</h3>
-          <p>Your safety copy, locked so only you can open it.</p>
-          <ul><li>Encrypted file vault</li><li>Social media archive</li><li>Game saves and settings</li><li>Website backups</li></ul>
+          <h3>Passwords</h3>
+          <p>A password manager locked with a master password only you know. It's encrypted on your device, so nobody else can read it, not even us.</p>
         </div>
         <div class="layer">
-          <h3>Recover</h3>
-          <p>Step-by-step help when it already happened.</p>
-          <ul><li>Hacked-account recovery guides</li><li>Ransomware undo with locked versions</li><li>Digital legacy for the people you trust</li></ul>
+          <h3>A vault that stays shut</h3>
+          <p>Every time you open your vault, we email you a code. Someone who steals your password still can't get in.</p>
         </div>
+      </div>
+      <div class="soon">
+        <b>Coming soon</b>
+        <span>Breach alerts</span><span>Scam checker</span><span>Virus scanning</span><span>Hacked-account recovery guides</span><span>Family sharing</span>
       </div>
     </section>
 
@@ -180,22 +192,22 @@ footer{padding:36px 0 50px;color:var(--muted);font-size:14px;border-top:2px soli
         <div class="plan">
           <h3>Free</h3>
           <div class="price">$0<small> per month</small></div>
-          <ul><li>Scam checker</li><li>Breach alerts</li></ul>
+          <ul><li>1 GB of storage</li><li>Every part of the vault</li><li>Password manager</li></ul>
         </div>
         <div class="plan pick">
           <h3>Personal</h3>
           <div class="price">$12<small> per month</small></div>
-          <ul><li>Everything in Free</li><li>Encrypted vault</li><li>Virus scanning</li><li>Guided recovery</li></ul>
+          <ul><li>100 GB of storage</li><li>Everything in Free</li><li>New protection features as they launch</li></ul>
         </div>
         <div class="plan">
           <h3>Family</h3>
           <div class="price">$22.50<small> per month</small></div>
-          <ul><li>Everything in Personal</li><li>Up to 6 people</li><li>Phishing practice</li><li>Shared emergency contacts</li></ul>
+          <ul><li>1 TB of storage</li><li>Everything in Personal</li><li>Sharing with up to 6 people (coming soon)</li></ul>
         </div>
         <div class="plan">
           <h3>Creator and Gamer</h3>
           <div class="price">+$7.50<small> per month</small></div>
-          <ul><li>Social account archive</li><li>Game account monitoring</li><li>Save and settings sync</li></ul>
+          <ul><li>Adds 250 GB to Personal or Family</li><li>Room for big game saves and videos</li></ul>
         </div>
       </div>
     <p style="margin-top:26px"><a class="btn" href="/pricing">Compare plans and choose</a></p>
