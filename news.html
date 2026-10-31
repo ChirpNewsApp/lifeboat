@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Lifeboat news and feedback</title>
+<link rel="canonical" href="https://www.lifeboatrecovery.com/news">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Lifeboat">
+<meta property="og:title" content="Lifeboat news and feedback">
+<meta property="og:description" content="Updates from the Lifeboat team, plus ideas and feedback from people who use Lifeboat.">
+<meta property="og:url" content="https://www.lifeboatrecovery.com/news">
+<meta name="description" content="Updates from the Lifeboat team, plus ideas and feedback from people who use Lifeboat.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ccircle cx='50' cy='50' r='34' fill='none' stroke='%23F7FBFB' stroke-width='24'/%3E%3Ccircle cx='50' cy='50' r='34' fill='none' stroke='%23FF5B2E' stroke-width='24' stroke-dasharray='40.06 13.35' transform='rotate(11.25 50 50)'/%3E%3Ccircle cx='50' cy='50' r='46' fill='none' stroke='%230A3340' stroke-width='3'/%3E%3Ccircle cx='50' cy='50' r='22' fill='none' stroke='%230A3340' stroke-width='3'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=Instrument+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+/* Shared look for the pricing and vault pages. Colors and fonts match the home page. */
+:root{
+  --bg:#E6F0F1; --surface:#F7FBFB; --ink:#0A3340; --muted:#4A6B74;
+  --line:#BFD5D8; --signal:#FF5B2E; --signal-ink:#ffffff; --ok:#1C8A5B; --bad:#C2321B;
+  --tint:#D3E6E8;
+  color-scheme:light;
+}
+@media (prefers-color-scheme:dark){
+  :root{
+    --bg:#0A2630; --surface:#10343F; --ink:#E6F3F4; --muted:#93B3BA;
+    --line:#22505D; --signal:#FF7248; --signal-ink:#1A0A05; --ok:#4CCB93; --bad:#FF8A73;
+    --tint:#17414E;
+    color-scheme:dark;
+  }
+}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html{scroll-padding-top:20px}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:"Instrument Sans",system-ui,sans-serif;font-size:17px;line-height:1.55}
+h1,h2,h3{font-family:"Bricolage Grotesque","Instrument Sans",system-ui,sans-serif;line-height:1.05;margin:0}
+h1{font-size:clamp(38px,6vw,64px);font-weight:800;letter-spacing:-0.025em}
+h2{font-size:clamp(24px,3.4vw,34px);font-weight:700;letter-spacing:-0.02em}
+h3{font-size:22px;font-weight:700}
+p{margin:0}
+a{color:inherit}
+.wrap{max-width:1040px;margin:0 auto;padding:0 22px}
+.muted{color:var(--muted)}
+:focus-visible{outline:3px solid var(--signal);outline-offset:3px}
+
+/* header */
+.top{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:20px 0}
+.logo{display:inline-block;text-decoration:none}
+.logo svg{height:40px;width:auto;display:block}
+.nav{display:flex;align-items:center;gap:10px}
+.navlink{font-weight:600;text-decoration:none;padding:8px 6px}
+.navlink:hover{text-decoration:underline;text-underline-offset:4px}
+
+/* buttons */
+.btn{display:inline-block;background:var(--signal);color:var(--signal-ink);font:600 16px "Instrument Sans",sans-serif;border:2px solid var(--signal);border-radius:10px;padding:11px 18px;cursor:pointer;text-decoration:none;text-align:center;line-height:1.2}
+.btn:hover{filter:brightness(1.06)}
+.btn.ghost{background:transparent;color:var(--ink);border-color:var(--ink)}
+.btn.block{display:block;width:100%}
+.btn[disabled],.btn.off{opacity:.55;cursor:default;filter:none}
+
+/* cards */
+.card{background:var(--surface);border:2px solid var(--ink);border-radius:18px;padding:24px}
+.card.lift{box-shadow:8px 8px 0 var(--ink)}
+
+footer{padding:36px 0 50px;color:var(--muted);font-size:14px;border-top:2px solid var(--line);margin-top:70px;display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap}
+footer a{margin-right:14px}
+
+/* pricing */
+.p-hero{padding:34px 0 26px}
+.p-hero p{font-size:20px;color:var(--muted);max-width:32em;margin-top:16px}
+.gate{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;background:var(--tint);border:2px solid var(--ink);border-radius:14px;padding:16px 20px;margin:6px 0 30px}
+.gate strong{font-family:"Bricolage Grotesque",sans-serif;font-size:20px}
+.gate .row{display:flex;gap:10px;flex-wrap:wrap}
+.plans{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:20px;align-items:stretch}
+.plan{position:relative;display:flex;flex-direction:column;background:var(--surface);border:2px solid var(--ink);border-radius:18px}
+.plan.pick{box-shadow:8px 8px 0 var(--ink)}
+.plan .flag{position:absolute;top:-15px;left:18px;background:var(--signal);color:var(--signal-ink);font-weight:600;font-size:14px;padding:4px 14px;border-radius:99px;border:2px solid var(--ink)}
+.plan .head{padding:26px 22px 6px}
+.price{font:800 44px "Bricolage Grotesque",sans-serif;letter-spacing:-0.02em;margin-top:6px}
+.price small{font:600 17px "Instrument Sans",sans-serif;color:var(--muted);letter-spacing:0}
+.space{margin:14px 22px 0;padding:14px 16px;background:var(--tint);border-radius:12px}
+.space b{display:block;font:800 34px/1 "Bricolage Grotesque",sans-serif;letter-spacing:-0.02em}
+.space span{font-size:14px;color:var(--muted)}
+.plan ul{list-style:none;margin:16px 22px 0;padding:0;font-size:15.5px;flex:1}
+.plan li{display:flex;gap:10px;margin:7px 0}
+.plan li:before{content:"\2713";flex:none;width:20px;height:20px;margin-top:2px;border-radius:50%;background:var(--ok);color:var(--surface);font-size:12px;font-weight:700;display:grid;place-items:center;line-height:1}
+.plan .foot{padding:18px 22px 22px}
+.note{margin-top:22px;min-height:1.5em;font-weight:600}
+.note.ok{color:var(--ok)}
+.fine{margin-top:30px;color:var(--muted);font-size:15px;max-width:44em}
+
+/* vault */
+.v-head{padding:30px 0 22px}
+.v-head p{margin-top:12px;color:var(--muted);font-size:19px}
+.v-grid{display:grid;grid-template-columns:1.15fr 1fr;gap:22px;align-items:start}
+.gauge{display:flex;align-items:center;gap:24px;flex-wrap:wrap}
+.gauge svg{width:210px;height:210px;flex:none}
+.gauge .read{flex:1 1 150px;min-width:150px}
+.gauge .read b{display:block;font:800 40px/1 "Bricolage Grotesque",sans-serif;letter-spacing:-0.02em}
+.gauge .read span{color:var(--muted)}
+.gauge .read p{margin-top:14px;font-size:15px;color:var(--muted)}
+.kv{display:flex;justify-content:space-between;gap:14px;padding:11px 0;border-bottom:2px solid var(--line)}
+.kv:last-of-type{border-bottom:0}
+.kv span:first-child{color:var(--muted)}
+.kv strong{text-align:right;word-break:break-word}
+.acts{display:flex;gap:10px;flex-wrap:wrap;margin-top:16px}
+.sec{margin-top:44px}
+.sec>p{margin-top:8px;color:var(--muted);max-width:38em}
+.tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(215px,1fr));gap:16px;margin-top:20px}
+.tile{display:flex;gap:14px;align-items:flex-start;background:var(--surface);border:2px dashed var(--line);border-radius:14px;padding:18px}
+.tile svg{flex:none;width:34px;height:34px;color:var(--signal)}
+.tile b{display:block;font:700 19px "Bricolage Grotesque",sans-serif}
+.tile span{font-size:14.5px;color:var(--muted)}
+.tile div>span:not(.soon){display:block;line-height:1.4;margin-top:3px}
+.soon{display:inline-block;margin-top:8px;font-size:13px;font-weight:600;color:var(--muted);border:2px solid var(--line);border-radius:99px;padding:1px 10px}
+.skeleton{opacity:.5}
+
+@media (max-width:820px){
+  .v-grid{grid-template-columns:1fr}
+}
+@media (max-width:560px){
+  .navlink{display:none}
+  .btn{padding:10px 14px;font-size:15px}
+  .logo svg{height:34px}
+  .gauge{justify-content:center;text-align:center}
+  .gauge .read p{margin-left:auto;margin-right:auto}
+}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+
+
+/* news board */
+body{font-variant-ligatures:no-contextual;font-feature-settings:"calt" 0}
+.n-hero{padding:30px 0 18px;max-width:40em}
+.n-hero h1{font-size:clamp(38px,6vw,60px);font-weight:800;letter-spacing:-.025em}
+.n-hero p{font-size:19px;color:var(--muted);margin-top:12px}
+.n-grid{display:grid;grid-template-columns:minmax(0,1fr) 330px;gap:28px;align-items:start;padding-bottom:20px}
+.n-filter{display:flex;gap:4px;padding:4px;border-radius:12px;background:var(--tint);width:max-content;max-width:100%;margin-bottom:18px}
+.n-filter button{border:0;background:transparent;padding:8px 16px;border-radius:9px;font:600 15px "Instrument Sans",sans-serif;color:var(--muted);cursor:pointer}
+.n-filter button[aria-pressed="true"]{background:var(--surface);color:var(--ink);box-shadow:0 0 0 1px var(--line)}
+.post{background:var(--surface);border:2px solid var(--line);border-radius:16px;padding:20px 22px;margin-bottom:14px}
+.post.news{border-color:var(--ink);box-shadow:5px 5px 0 var(--ink)}
+.post-top{display:flex;align-items:center;gap:8px;flex-wrap:wrap;font-size:14.5px;color:var(--muted)}
+.who{display:inline-flex;align-items:center;gap:5px;font-weight:600;color:var(--ink)}
+.vbadge{width:18px;height:18px;flex:none}
+.tag{font-size:12.5px;font-weight:700;padding:2px 9px;border-radius:99px;border:1.5px solid var(--line);color:var(--muted)}
+.tag.news{background:var(--signal);border-color:var(--signal);color:var(--signal-ink)}
+.tag.team{border-color:var(--ink);color:var(--ink)}
+.post h2{font-size:24px;margin:10px 0 6px;letter-spacing:-.01em;overflow-wrap:anywhere}
+.post .body{white-space:pre-wrap;overflow-wrap:anywhere;margin:0}
+.post-acts{display:flex;gap:6px;flex-wrap:wrap;margin-top:14px;align-items:center}
+.mini{background:transparent;color:var(--ink);border:1.5px solid var(--line);border-radius:8px;padding:4px 10px;font:600 13.5px "Instrument Sans",sans-serif;cursor:pointer}
+.mini:hover{border-color:var(--ink)}
+.mini.del{color:var(--bad)}
+.mini.del.armed{background:var(--bad);border-color:var(--bad);color:#fff}
+.mini.on{border-color:var(--ink);background:var(--tint)}
+.adm{display:inline-flex;gap:6px;align-items:center;margin-left:auto;font-size:13.5px;color:var(--muted)}
+.compose{position:sticky;top:16px;background:var(--surface);border:2px solid var(--ink);border-radius:16px;padding:20px}
+.compose h2{font-size:21px;margin-bottom:12px}
+.compose label{display:block;font-weight:600;font-size:14.5px;margin:10px 0 5px}
+.compose input,.compose textarea,.compose select{width:100%;font:inherit;font-size:16px;padding:9px 12px;border:1.5px solid var(--line);border-radius:10px;background:var(--bg);color:var(--ink)}
+.compose input:focus,.compose textarea:focus,.compose select:focus{border-color:var(--ink);outline:none}
+.compose textarea{min-height:140px;resize:vertical}
+.count{font-size:13px;color:var(--muted);text-align:right;margin-top:4px}
+.compose .btn{margin-top:12px;width:100%}
+.compose p{color:var(--muted);font-size:15px}
+.compose .row2{display:flex;gap:8px;margin-top:12px}
+.compose .row2 .btn{margin-top:0}
+.n-msg{min-height:1.4em;margin-top:10px;font-weight:600;font-size:14.5px}
+.n-msg.bad{color:var(--bad)}
+.n-msg.ok{color:var(--ok)}
+.n-empty{padding:40px 20px;text-align:center;color:var(--muted);background:var(--surface);border:2px dashed var(--line);border-radius:16px}
+.legend{margin-top:14px;font-size:13.5px;color:var(--muted);display:grid;gap:6px}
+.legend span{display:flex;align-items:center;gap:6px}
+@media (max-width:860px){.n-grid{grid-template-columns:1fr}.compose{position:static;order:-1}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <a class="logo" href="/" aria-label="Lifeboat home"><svg viewBox="0 0 399 100" role="img" aria-label="Lifeboat"><g transform="translate(0.0 0.0) scale(1.0)"><circle cx="50" cy="50" r="34" fill="none" style="stroke:var(--surface)" stroke-width="24"/><circle cx="50" cy="50" r="34" fill="none" style="stroke:var(--signal)" stroke-width="24" stroke-dasharray="40.055 13.352" transform="rotate(11.25 50 50)"/><circle cx="50" cy="50" r="46" fill="none" style="stroke:var(--ink)" stroke-width="3"/><circle cx="50" cy="50" r="22" fill="none" style="stroke:var(--ink)" stroke-width="3"/></g><path d="M119.375 76.19140625H155.234375V65.43359375H132.03125V23.80859375H119.375Z M159.2219375 76.19140625H171.3156875V39.06640625H159.2219375ZM165.23365625 35.4453125C169.136 35.4453125 171.91334375 32.87890625 171.91334375 29.328125C171.91334375 25.77734375 169.136 23.24609375 165.23365625 23.24609375C161.36646875 23.24609375 158.589125 25.77734375 158.589125 29.328125C158.589125 32.87890625 161.36646875 35.4453125 165.23365625 35.4453125Z M201.00246875 39.06640625H193.3735625V37.0625C193.3735625 34.25 194.42825 33.16015625 197.3110625 33.16015625H201.00246875V23.80859375H194.25246875C185.42825 23.80859375 181.24465625 27.39453125 181.24465625 34.953125V39.06640625H174.49465625V48.41796875H181.24465625V76.19140625H193.3735625V48.41796875H201.00246875Z M222.49784375 77.03515625C231.8845625 77.03515625 239.37284375 71.796875 240.7439375 64.30859375H229.88065625C229.00175 66.76953125 226.4705 68.31640625 222.91971875 68.31640625C218.13846875 68.31640625 215.32596875 65.328125 215.18534375 60.6171875H241.0251875V57.34765625C241.0251875 46.09765625 233.32596875 38.22265625 222.1814375 38.22265625C211.17753125 38.22265625 203.37284375 46.30859375 203.37284375 57.62890625C203.37284375 68.94921875 211.10721875 77.03515625 222.49784375 77.03515625ZM215.25565625 53.375C215.783 49.47265625 218.41971875 47.15234375 222.49784375 47.15234375C226.5408125 47.15234375 229.2126875 49.47265625 229.74003125 53.375Z M267.934625 77.0C277.67290625 77.0 283.965875 69.30078125 283.965875 57.55859375C283.965875 46.203125 277.4268125 38.2578125 268.04009375 38.2578125C263.2236875 38.2578125 259.74321875 40.12109375 257.38775 44.05859375H257.3174375V23.80859375H245.22368749999998V76.19140625H257.1768125V70.4609375H257.247125C259.1455625 74.78515625 263.04790625 77.0 267.934625 77.0ZM264.52446875 67.33203125C259.95415625 67.33203125 256.82525 63.5 256.82525 57.55859375C256.82525 51.6875 259.95415625 47.890625 264.52446875 47.890625C268.9893125 47.890625 271.7315 51.51171875 271.7315 57.55859375C271.7315 63.67578125 268.9893125 67.33203125 264.52446875 67.33203125Z M306.34015625 77.03515625C317.976875 77.03515625 325.851875 69.40625 325.851875 57.62890625C325.851875 45.921875 317.976875 38.22265625 306.34015625 38.22265625C294.7034375 38.22265625 286.79328125 45.921875 286.79328125 57.62890625C286.79328125 69.40625 294.7034375 77.03515625 306.34015625 77.03515625ZM306.34015625 67.40234375C302.08625 67.40234375 299.0628125 63.921875 299.0628125 57.62890625C299.0628125 51.37109375 302.12140625 47.85546875 306.34015625 47.85546875C310.55890625 47.85546875 313.6175 51.37109375 313.6175 57.62890625C313.6175 63.921875 310.55890625 67.40234375 306.34015625 67.40234375Z M341.54646875000003 76.82421875C346.78475000000003 76.82421875 350.12459375000003 74.99609375 352.33943750000003 70.98828125H352.48006250000003V76.19140625H364.29256250000003V51.1953125C364.29256250000003 43.00390625 358.35115625000003 38.2578125 347.55818750000003 38.2578125C336.80037500000003 38.2578125 330.71834375000003 43.0390625 330.19100000000003 51.08984375H341.44100000000003C341.68709375000003 48.55859375 343.76131250000003 46.94140625 347.13631250000003 46.94140625C350.33553125000003 46.94140625 352.30428125000003 48.453125 352.30428125000003 50.66796875V50.84375C352.30428125000003 53.05859375 349.87850000000003 53.5859375 343.23396875000003 54.1484375C335.32381250000003 54.78125 328.81990625000003 57.48828125 328.81990625000003 65.8203125C328.81990625000003 73.203125 334.12850000000003 76.82421875 341.54646875000003 76.82421875ZM345.23787500000003 68.9140625C342.28475000000003 68.9140625 340.28084375000003 67.54296875 340.28084375000003 65.2578125C340.28084375000003 62.83203125 342.60115625000003 61.49609375 345.83553125000003 61.00390625C348.82381250000003 60.51171875 351.10896875000003 60.0546875 352.40975000000003 59.45703125V62.83203125C352.40975000000003 66.48828125 349.28084375000003 68.9140625 345.23787500000003 68.9140625Z M393.55746875000006 39.06640625H385.92856250000006V28.94140625H373.79965625000006V39.06640625H367.47153125000006V48.41796875H373.79965625000006V65.75C373.79965625000006 72.95703125 377.80746875000006 76.19140625 386.70200000000006 76.19140625H393.55746875000006V66.83984375H389.37387500000006C386.66684375000006 66.83984375 385.92856250000006 66.1015625 385.92856250000006 63.7109375V48.41796875H393.55746875000006Z" style="fill:var(--ink)"/></svg></a>
+    <nav class="nav" aria-label="Main">
+      <a class="navlink" href="/">Home</a>
+      <a class="navlink" href="/pricing">Plans</a>
+      <span data-auth="out" hidden>
+        <button class="btn ghost" type="button" data-signin data-return="/news">Sign in</button>
+      </span>
+      <a class="btn" href="/vault" data-auth="in" hidden>Open my vault</a>
+    </nav>
+  </header>
+
+  <main>
+    <div class="n-hero">
+      <h1>News and feedback</h1>
+      <p>Updates from the Lifeboat team, and ideas, bugs, and wishes from people who use it. Anyone with an account can post.</p>
+    </div>
+
+    <div class="n-grid">
+      <div>
+        <div class="n-filter" role="group" aria-label="Show">
+          <button type="button" data-filter="all" aria-pressed="true">All</button>
+          <button type="button" data-filter="news" aria-pressed="false">News</button>
+          <button type="button" data-filter="feedback" aria-pressed="false">Feedback</button>
+        </div>
+        <div class="n-msg" id="listmsg" role="status"></div>
+        <div id="posts"><p class="n-empty">Loading posts…</p></div>
+      </div>
+
+      <aside class="compose" aria-labelledby="c-h">
+        <h2 id="c-h">Write a post</h2>
+        <div id="c-out">
+          <p>Sign in to share feedback, report a bug, or ask for a feature.</p>
+          <div class="row2"><button class="btn ghost" type="button" data-signin data-return="/news">Sign in</button><button class="btn" type="button" data-signup data-return="/news">Create account</button></div>
+        </div>
+        <form id="c-form" hidden>
+          <label for="c-title">Title</label>
+          <input id="c-title" type="text" maxlength="120" autocomplete="off" placeholder="e.g. Folder sharing would be great">
+          <label for="c-text">Post</label>
+          <textarea id="c-text" maxlength="4000" placeholder="What's on your mind?"></textarea>
+          <div class="count" id="c-count">0 / 4,000</div>
+          <div id="c-kindwrap" hidden>
+            <label for="c-kind">Post as</label>
+            <select id="c-kind"><option value="feedback">Feedback</option><option value="news">News from the team</option></select>
+          </div>
+          <button class="btn" type="submit">Post</button>
+        </form>
+        <div class="n-msg" id="c-msg" role="status"></div>
+        <div class="legend" aria-label="Badges">
+          <span><svg class="vbadge" viewBox="0 0 24 24" aria-hidden="true"><path fill="#2F7DF6" d="M12 1.5l2.6 1.9 3.2-.2 1 3 2.6 1.9-1 3 1 3-2.6 1.9-1 3-3.2-.2L12 22.5l-2.6-1.9-3.2.2-1-3L2.6 15.9l1-3-1-3 2.6-1.9 1-3 3.2.2z"/><path d="M7.5 12.3l3 3 6-6.2" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>Blue badge: verified</span>
+          <span><svg class="vbadge" viewBox="0 0 24 24" aria-hidden="true"><path fill="#F2B300" d="M12 1.5l2.6 1.9 3.2-.2 1 3 2.6 1.9-1 3 1 3-2.6 1.9-1 3-3.2-.2L12 22.5l-2.6-1.9-3.2.2-1-3L2.6 15.9l1-3-1-3 2.6-1.9 1-3 3.2.2z"/><path d="M7.5 12.3l3 3 6-6.2" fill="none" stroke="#3A2A00" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>Yellow badge: verified (gold)</span>
+        </div>
+      </aside>
+    </div>
+  </main>
+
+  <footer>
+    <span>© 2026 Lifeboat</span>
+    <span><a href="/">Home</a><a href="/pricing">Plans</a><a href="/news">News</a><a href="/terms">Terms</a><a href="/privacy">Privacy</a></span>
+  </footer>
+</div>
+
+<script src="/auth.js"></script>
+<script>
+(function(){
+  var $ = function(id){ return document.getElementById(id); };
+  var posts = [], me = null, filter = 'all';
+  var BADGE = {
+    blue: '<svg class="vbadge" viewBox="0 0 24 24" role="img" aria-label="Verified"><title>Verified</title><path fill="#2F7DF6" d="M12 1.5l2.6 1.9 3.2-.2 1 3 2.6 1.9-1 3 1 3-2.6 1.9-1 3-3.2-.2L12 22.5l-2.6-1.9-3.2.2-1-3L2.6 15.9l1-3-1-3 2.6-1.9 1-3 3.2.2z"/><path d="M7.5 12.3l3 3 6-6.2" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+    yellow: '<svg class="vbadge" viewBox="0 0 24 24" role="img" aria-label="Verified (gold)"><title>Verified (gold)</title><path fill="#F2B300" d="M12 1.5l2.6 1.9 3.2-.2 1 3 2.6 1.9-1 3 1 3-2.6 1.9-1 3-3.2-.2L12 22.5l-2.6-1.9-3.2.2-1-3L2.6 15.9l1-3-1-3 2.6-1.9 1-3 3.2.2z"/><path d="M7.5 12.3l3 3 6-6.2" fill="none" stroke="#3A2A00" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>'
+  };
+  function el(tag, cls, text){ var e = document.createElement(tag); if(cls) e.className = cls; if(text !== undefined) e.textContent = text; return e; }
+  function say(id, text, kind){ var m = $(id); m.textContent = text || ''; m.className = 'n-msg' + (kind ? ' ' + kind : ''); }
+  function ago(iso){
+    var s = (Date.now() - new Date(iso).getTime()) / 1000;
+    if(s < 60) return 'just now';
+    if(s < 3600) return Math.floor(s / 60) + ' min ago';
+    if(s < 86400) return Math.floor(s / 3600) + ' h ago';
+    if(s < 7 * 86400) return Math.floor(s / 86400) + ' d ago';
+    return new Date(iso).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' });
+  }
+
+  async function api(action, extra){
+    var headers = { 'Content-Type': 'application/json' };
+    if(window.LB && LB.signedIn && window.Clerk && Clerk.session){ try { headers.Authorization = 'Bearer ' + await Clerk.session.getToken(); } catch(e){} }
+    var r = await fetch('/api/news', { method: 'POST', headers: headers, body: JSON.stringify(Object.assign({ action: action }, extra || {})) });
+    var d = {}; try { d = await r.json(); } catch(e){}
+    if(!r.ok || !d.ok) throw new Error(d.error || 'Something went wrong. Try again.');
+    return d;
+  }
+
+  function delBtn(p){
+    var b = el('button', 'mini del', 'Delete'); b.type = 'button'; var t = null;
+    b.addEventListener('click', async function(){
+      if(!b.classList.contains('armed')){ b.classList.add('armed'); b.textContent = 'Yes, delete'; t = setTimeout(function(){ b.classList.remove('armed'); b.textContent = 'Delete'; }, 5000); return; }
+      clearTimeout(t); b.disabled = true; b.textContent = 'Deleting…';
+      try { await api('delete', { id: p.id }); posts = posts.filter(function(x){ return x.id !== p.id; }); draw(); say('listmsg', 'Post deleted.', 'ok'); }
+      catch(err){ b.disabled = false; b.classList.remove('armed'); b.textContent = 'Delete'; say('listmsg', err.message, 'bad'); }
+    });
+    return b;
+  }
+  function badgeBtn(p, color, label){
+    var b = el('button', 'mini' + (p.author.badge === color ? ' on' : ''), label); b.type = 'button';
+    b.setAttribute('aria-pressed', p.author.badge === color ? 'true' : 'false');
+    b.addEventListener('click', async function(){
+      var want = p.author.badge === color ? '' : color;
+      try {
+        var r = await api('badge', { id: p.id, badge: want });
+        posts.forEach(function(x){ if(x.author.name === r.name) x.author.badge = want; });
+        draw(); say('listmsg', want ? 'Gave ' + r.name + ' a ' + want + ' badge.' : 'Removed ' + r.name + '\'s badge.', 'ok');
+      } catch(err){ say('listmsg', err.message, 'bad'); }
+    });
+    return b;
+  }
+
+  function draw(){
+    var box = $('posts'); box.textContent = '';
+    var shown = posts.filter(function(p){ return filter === 'all' || p.kind === filter; });
+    if(!shown.length){ box.appendChild(el('p', 'n-empty', filter === 'news' ? 'No news yet.' : posts.length ? 'Nothing here yet.' : 'No posts yet. Be the first to share feedback.')); return; }
+    shown.forEach(function(p){
+      var a = el('article', 'post' + (p.kind === 'news' ? ' news' : ''));
+      var top = el('div', 'post-top');
+      var who = el('span', 'who', p.author.name);
+      if(BADGE[p.author.badge]) who.insertAdjacentHTML('beforeend', BADGE[p.author.badge]);
+      top.appendChild(who);
+      if(p.author.admin) top.appendChild(el('span', 'tag team', 'Team'));
+      top.appendChild(el('span', 'tag' + (p.kind === 'news' ? ' news' : ''), p.kind === 'news' ? 'News' : 'Feedback'));
+      var when = el('time', '', ago(p.created)); when.dateTime = p.created; when.title = new Date(p.created).toLocaleString(); top.appendChild(when);
+      a.appendChild(top);
+      a.appendChild(el('h2', '', p.title));
+      a.appendChild(el('p', 'body', p.text));
+      if(p.canDelete || (me && me.admin)){
+        var acts = el('div', 'post-acts');
+        if(p.canDelete) acts.appendChild(delBtn(p));
+        if(me && me.admin && !p.author.admin){
+          var adm = el('span', 'adm'); adm.appendChild(el('span', '', 'Badge for ' + p.author.name + ':'));
+          adm.appendChild(badgeBtn(p, 'blue', 'Blue')); adm.appendChild(badgeBtn(p, 'yellow', 'Yellow'));
+          acts.appendChild(adm);
+        }
+        a.appendChild(acts);
+      }
+      box.appendChild(a);
+    });
+  }
+
+  async function load(){
+    try { var d = await api('list'); posts = d.posts; me = d.me; draw(); $('c-kindwrap').hidden = !(me && me.admin); }
+    catch(err){ $('posts').textContent = ''; $('posts').appendChild(el('p', 'n-empty', err.message)); }
+  }
+
+  document.querySelectorAll('[data-filter]').forEach(function(b){
+    b.addEventListener('click', function(){
+      filter = b.getAttribute('data-filter');
+      document.querySelectorAll('[data-filter]').forEach(function(x){ x.setAttribute('aria-pressed', x === b ? 'true' : 'false'); });
+      draw();
+    });
+  });
+  $('c-text').addEventListener('input', function(){ $('c-count').textContent = this.value.length.toLocaleString() + ' / 4,000'; });
+  $('c-form').addEventListener('submit', async function(e){
+    e.preventDefault();
+    var btn = this.querySelector('button[type=submit]'); btn.disabled = true; btn.textContent = 'Posting…'; say('c-msg', '');
+    try {
+      var d = await api('post', { title: $('c-title').value, text: $('c-text').value, kind: $('c-kind').value });
+      posts.unshift(d.post); draw(); this.reset(); $('c-count').textContent = '0 / 4,000'; say('c-msg', 'Posted.', 'ok');
+    } catch(err){ say('c-msg', err.message, 'bad'); }
+    btn.disabled = false; btn.textContent = 'Post';
+  });
+
+  function signedOutUI(){ $('c-out').hidden = false; $('c-form').hidden = true; }
+  LB.ready.then(function(){ $('c-out').hidden = !!LB.signedIn; $('c-form').hidden = !LB.signedIn; load(); }).catch(function(){ signedOutUI(); load(); });
+})();
+</script>
+</body>
+</html>

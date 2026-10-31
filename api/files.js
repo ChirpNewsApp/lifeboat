@@ -559,3 +559,4 @@ module.exports._deps = deps;
 module.exports._cleanPath = cleanPath;
 module.exports._makePass = makePass;
 module.exports._codeHash = codeHash;
+module.exports.config = config;
