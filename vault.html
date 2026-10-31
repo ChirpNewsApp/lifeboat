@@ -736,8 +736,8 @@ footer a{margin-left:14px}
 
   // ---------- family sharing ----------
   var famRole = 'none';
-  function famPerson(name, tagText, action){
-    var r = el('div', 'person'); r.appendChild(el('b', '', '@' + name));
+  function famPerson(name, tagText, action, plain){
+    var r = el('div', 'person'); r.appendChild(el('b', '', (plain ? '' : '@') + name));
     if(tagText) r.appendChild(el('span', 'tag', tagText));
     if(action) r.appendChild(action);
     return r;
@@ -787,7 +787,7 @@ footer a{margin-left:14px}
         c.addEventListener('click', async function(){ try { await LB.files('fam-cancel', { username: i.name }); say('Invite cancelled.'); refresh(); } catch(err){ handle(err); } });
         list.appendChild(famPerson(i.name, 'Invited', c));
       });
-      if(u) list.appendChild(famPerson('family folder', 'Shared: ' + fmtBytes(u.shared)));
+      if(u) list.appendChild(famPerson('Family folder', 'Shared: ' + fmtBytes(u.shared), null, true));
       box.appendChild(list);
       if(total < st.max){
         var f = el('form'); var inp = el('input'); inp.placeholder = 'Their Lifeboat username'; inp.autocomplete = 'off'; inp.setAttribute('aria-label', 'Username to invite');
