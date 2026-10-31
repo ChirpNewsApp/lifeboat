@@ -12,6 +12,8 @@
 //   { "action": "image-url", "type": "image/png", "size": 12345 }   admins only: link to upload one photo for a post
 //   Posts can include "images": [keys from image-url], admins only, up to 4.
 //   { "action": "pin", "id": "...", "pinned": true | false }   admins only: pinned posts show first
+//   { "action": "reply", "id": "...", "text": "..." }   admins and people with the yellow badge only
+//   { "action": "reply-delete", "id": "...", "replyId": "..." }   the reply's author or an admin
 //
 // Posts are stored as small JSON files in the same Backblaze bucket, under news/.
 
@@ -30,6 +32,8 @@ const AVATAR_TYPES = { 'image/jpeg': 'jpg', 'image/png': 'png', 'image/webp': 'w
 const AVATAR_KEY = /^news\/avatars\/[a-f0-9]{24}\.(jpg|png|webp|gif)$/;
 const MAX_IMAGES = 4;
 const MAX_PINS = 10;
+const MAX_REPLY = 1000;
+const MAX_REPLIES = 100;
 const MAX_IMAGE_BYTES = 10 * 1000 * 1000;
 const IMAGE_KEY = /^news\/img\/[a-f0-9]{24}\.(jpg|png|webp|gif)$/;
 
@@ -97,8 +101,16 @@ async function publicPost(cfg, p, badges, me, avatarOf) {
     author: { name: p.username || 'member', badge: badges[p.userId] || '', admin: isAdmin(p.username), avatar: avatarOf ? await avatarOf(p.userId, p.username) : '' },
     mine: !!(me && me.userId === p.userId),
     canDelete: !!(me && (me.userId === p.userId || me.admin)),
+    replies: await Promise.all((p.replies || []).map(async (r) => ({
+      id: r.id, text: r.text, created: r.created,
+      author: { name: r.username || 'member', badge: badges[r.userId] || '', admin: isAdmin(r.username), avatar: avatarOf ? await avatarOf(r.userId, r.username) : '' },
+      canDelete: !!(me && (me.userId === r.userId || me.admin)),
+    }))),
   };
 }
+
+// Only admins and people with the yellow badge can reply.
+function canReply(me, badges) { return !!me && (me.admin || badges[me.userId] === 'yellow'); }
 
 async function list(req, res, cfg, keys) {
   const me = await viewer(req, keys);
@@ -118,9 +130,47 @@ async function list(req, res, cfg, keys) {
   if (!me) res.setHeader('Cache-Control', 'public, s-maxage=10, stale-while-revalidate=60');
   return res.status(200).json({
     ok: true,
-    me: me ? { name: me.username, admin: me.admin, avatar: me.admin ? await avatarOf(me.userId, me.username) : '' } : null,
+    me: me ? { name: me.username, admin: me.admin, canReply: canReply(me, badges), avatar: me.admin ? await avatarOf(me.userId, me.username) : '' } : null,
     posts: await Promise.all(posts.filter(Boolean).map(async (p) => Object.assign(await publicPost(cfg, p, badges, me, avatarOf), { pinned: pins.indexOf(p.id) !== -1 }))),
   });
+}
+
+async function reply(req, res, cfg, keys, body) {
+  const me = await viewer(req, keys);
+  if (!me) return res.status(401).json({ ok: false, error: 'Sign in first.' });
+  const [badges, avatarOf] = await Promise.all([readJson(cfg, 'news/badges.json', {}), avatarLinks(cfg)]);
+  if (!canReply(me, badges)) return res.status(403).json({ ok: false, error: 'Only admins and people with the yellow badge can reply.' });
+  if (!validId(body.id)) return res.status(400).json({ ok: false, error: 'Unknown post.' });
+  const text = String(body.text || '').replace(/\r\n/g, '\n').replace(/\n{4,}/g, '\n\n\n').trim();
+  if (!text) return res.status(400).json({ ok: false, error: 'Write a reply first.' });
+  if (text.length > MAX_REPLY) return res.status(400).json({ ok: false, error: 'Keep replies under ' + MAX_REPLY.toLocaleString() + ' characters.' });
+  const p = await readJson(cfg, postKey(body.id), null);
+  if (!p) return res.status(404).json({ ok: false, error: 'That post is gone.' });
+  p.replies = p.replies || [];
+  if (p.replies.length >= MAX_REPLIES) return res.status(400).json({ ok: false, error: 'This post has reached the reply limit.' });
+  const now = deps.now();
+  const r = { id: now.toString(36) + crypto.randomBytes(3).toString('hex'), text, created: new Date(now).toISOString(), userId: me.userId, username: me.username };
+  p.replies.push(r);
+  await writeJson(cfg, postKey(p.id), p);
+  return res.status(200).json({ ok: true, reply: {
+    id: r.id, text: r.text, created: r.created,
+    author: { name: r.username || 'member', badge: badges[r.userId] || '', admin: isAdmin(r.username), avatar: await avatarOf(r.userId, r.username) },
+    canDelete: true,
+  } });
+}
+
+async function replyDelete(req, res, cfg, keys, body) {
+  const me = await viewer(req, keys);
+  if (!me) return res.status(401).json({ ok: false, error: 'Sign in first.' });
+  if (!validId(body.id)) return res.status(400).json({ ok: false, error: 'Unknown post.' });
+  const p = await readJson(cfg, postKey(body.id), null);
+  if (!p) return res.status(404).json({ ok: false, error: 'That post is gone.' });
+  const r = (p.replies || []).filter((x) => x.id === String(body.replyId || ''))[0];
+  if (!r) return res.status(404).json({ ok: false, error: 'That reply is already gone.' });
+  if (r.userId !== me.userId && !me.admin) return res.status(403).json({ ok: false, error: 'You can only delete your own replies.' });
+  p.replies = p.replies.filter((x) => x !== r);
+  await writeJson(cfg, postKey(p.id), p);
+  return res.status(200).json({ ok: true });
 }
 
 async function pin(req, res, cfg, keys, body) {
@@ -239,6 +289,8 @@ async function handler(req, res) {
     if (body.action === 'delete') return await remove(req, res, cfg, keys, body);
     if (body.action === 'badge') return await badge(req, res, cfg, keys, body);
     if (body.action === 'pin') return await pin(req, res, cfg, keys, body);
+    if (body.action === 'reply') return await reply(req, res, cfg, keys, body);
+    if (body.action === 'reply-delete') return await replyDelete(req, res, cfg, keys, body);
     if (body.action === 'avatar-url' || body.action === 'image-url') return await uploadLink(req, res, cfg, keys, body);
     if (body.action === 'avatar-set' || body.action === 'avatar-remove') return await avatarSet(req, res, cfg, keys, body);
     return res.status(400).json({ ok: false, error: 'Unknown action.' });

@@ -144,6 +144,20 @@ body{font-variant-ligatures:no-contextual;font-feature-settings:"calt" 0}
 .pinned-label{display:flex;align-items:center;gap:6px;font-size:13.5px;font-weight:700;color:var(--signal);margin:-4px 0 10px}
 .pinned-label svg{width:15px;height:15px}
 .post.pinned{border-color:var(--signal)}
+.replies{margin-top:16px;padding-top:14px;border-top:1.5px solid var(--line);display:grid;gap:14px}
+.replies-h{font-size:13.5px;font-weight:700;color:var(--muted)}
+.reply{display:flex;gap:10px;align-items:flex-start}
+.reply .av{width:32px;height:32px;font-size:14px}
+.reply-body{min-width:0;flex:1}
+.reply-line{display:flex;align-items:center;gap:7px;flex-wrap:wrap;font-size:13.5px;color:var(--muted)}
+.reply-line .vbadge{width:16px;height:16px}
+.reply p{white-space:pre-wrap;overflow-wrap:anywhere;margin:3px 0 0;font-size:16px}
+.reply .mini{margin-top:6px}
+.reply-form{display:grid;gap:8px}
+.reply-form textarea{width:100%;min-height:80px;resize:vertical;font:inherit;font-size:16px;padding:9px 12px;border:1.5px solid var(--line);border-radius:10px;background:var(--bg);color:var(--ink)}
+.reply-form textarea:focus{border-color:var(--ink);outline:none}
+.reply-form .row{display:flex;gap:8px;align-items:center}
+.reply-form .btn{padding:8px 14px;font-size:15px}
 .post-top{display:flex;align-items:center;gap:12px}
 .av{flex:none;width:44px;height:44px;border-radius:50%;overflow:hidden;display:grid;place-items:center;background:var(--ink);color:var(--bg);font:700 18px "Bricolage Grotesque",sans-serif;text-transform:uppercase}
 .av img{width:100%;height:100%;object-fit:cover;display:block}
@@ -265,7 +279,7 @@ body{font-variant-ligatures:no-contextual;font-feature-settings:"calt" 0}
         </div>
         <div class="legend" aria-label="Badges">
           <span><svg class="vbadge" viewBox="0 0 24 24" aria-hidden="true"><path fill="#2F7DF6" d="M12 1.5l2.6 1.9 3.2-.2 1 3 2.6 1.9-1 3 1 3-2.6 1.9-1 3-3.2-.2L12 22.5l-2.6-1.9-3.2.2-1-3L2.6 15.9l1-3-1-3 2.6-1.9 1-3 3.2.2z"/><path d="M7.5 12.3l3 3 6-6.2" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>Blue badge: verified</span>
-          <span><svg class="vbadge" viewBox="0 0 24 24" aria-hidden="true"><path fill="#F2B300" d="M12 1.5l2.6 1.9 3.2-.2 1 3 2.6 1.9-1 3 1 3-2.6 1.9-1 3-3.2-.2L12 22.5l-2.6-1.9-3.2.2-1-3L2.6 15.9l1-3-1-3 2.6-1.9 1-3 3.2.2z"/><path d="M7.5 12.3l3 3 6-6.2" fill="none" stroke="#3A2A00" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>Yellow badge: verified (gold)</span>
+          <span><svg class="vbadge" viewBox="0 0 24 24" aria-hidden="true"><path fill="#F2B300" d="M12 1.5l2.6 1.9 3.2-.2 1 3 2.6 1.9-1 3 1 3-2.6 1.9-1 3-3.2-.2L12 22.5l-2.6-1.9-3.2.2-1-3L2.6 15.9l1-3-1-3 2.6-1.9 1-3 3.2.2z"/><path d="M7.5 12.3l3 3 6-6.2" fill="none" stroke="#3A2A00" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>Yellow badge: verified (gold), can reply to posts</span>
         </div>
       </aside>
     </div>
@@ -392,6 +406,66 @@ body{font-variant-ligatures:no-contextual;font-feature-settings:"calt" 0}
     });
     return b;
   }
+  // ---- replies (admins and yellow-badge people can write them; everyone can read) ----
+  var openReply = null, drafts = {};
+  function drawReplies(card, p){
+    var reps = p.replies || [];
+    var can = !!(me && me.canReply);
+    if(!reps.length && !can) return;
+    var box = el('div', 'replies');
+    if(reps.length) box.appendChild(el('div', 'replies-h', reps.length === 1 ? '1 reply' : reps.length + ' replies'));
+    reps.forEach(function(r){
+      var row = el('div', 'reply');
+      row.appendChild(avatar(r.author.name, r.author.avatar));
+      var body = el('div', 'reply-body'), line = el('div', 'reply-line');
+      var who = el('span', 'who', r.author.name); if(BADGE[r.author.badge]) who.insertAdjacentHTML('beforeend', BADGE[r.author.badge]);
+      line.appendChild(who);
+      if(r.author.admin) line.appendChild(el('span', 'tag team', 'Team'));
+      var t = el('time', '', ago(r.created)); t.dateTime = r.created; t.title = new Date(r.created).toLocaleString(); line.appendChild(t);
+      body.appendChild(line); body.appendChild(el('p', '', r.text));
+      if(r.canDelete) body.appendChild(replyDel(p, r));
+      row.appendChild(body); box.appendChild(row);
+    });
+    if(can){
+      if(openReply === p.id){
+        var f = el('form', 'reply-form');
+        var ta = el('textarea'); ta.maxLength = 1000; ta.placeholder = 'Write a reply…'; ta.value = drafts[p.id] || ''; ta.setAttribute('aria-label', 'Reply to ' + p.title);
+        ta.addEventListener('input', function(){ drafts[p.id] = ta.value; });
+        var row2 = el('div', 'row');
+        var send = el('button', 'btn', 'Reply'); send.type = 'submit';
+        var cancel = el('button', 'btn ghost', 'Cancel'); cancel.type = 'button';
+        cancel.addEventListener('click', function(){ openReply = null; draw(); });
+        row2.appendChild(send); row2.appendChild(cancel);
+        f.appendChild(ta); f.appendChild(row2);
+        f.addEventListener('submit', async function(e){
+          e.preventDefault(); send.disabled = true; send.textContent = 'Sending…';
+          try {
+            var d = await api('reply', { id: p.id, text: ta.value });
+            p.replies = (p.replies || []).concat(d.reply); drafts[p.id] = ''; openReply = null; draw();
+            say('listmsg', 'Reply posted.', 'ok');
+          } catch(err){ send.disabled = false; send.textContent = 'Reply'; say('listmsg', err.message, 'bad'); }
+        });
+        box.appendChild(f);
+        setTimeout(function(){ ta.focus(); }, 0);
+      } else {
+        var rb = el('button', 'mini', 'Reply'); rb.type = 'button';
+        rb.addEventListener('click', function(){ openReply = p.id; draw(); });
+        var wrap = el('div'); wrap.appendChild(rb); box.appendChild(wrap);
+      }
+    }
+    card.appendChild(box);
+  }
+  function replyDel(p, r){
+    var b = el('button', 'mini del', 'Delete'); b.type = 'button'; var t = null;
+    b.addEventListener('click', async function(){
+      if(!b.classList.contains('armed')){ b.classList.add('armed'); b.textContent = 'Yes, delete'; t = setTimeout(function(){ b.classList.remove('armed'); b.textContent = 'Delete'; }, 5000); return; }
+      clearTimeout(t); b.disabled = true;
+      try { await api('reply-delete', { id: p.id, replyId: r.id }); p.replies = p.replies.filter(function(x){ return x.id !== r.id; }); draw(); say('listmsg', 'Reply deleted.', 'ok'); }
+      catch(err){ b.disabled = false; say('listmsg', err.message, 'bad'); }
+    });
+    return b;
+  }
+
   function pinBtn(p){
     var b = el('button', 'mini' + (p.pinned ? ' on' : ''), p.pinned ? 'Unpin' : 'Pin'); b.type = 'button';
     b.addEventListener('click', async function(){
@@ -455,6 +529,7 @@ body{font-variant-ligatures:no-contextual;font-feature-settings:"calt" 0}
         p.images.forEach(function(u, i){ var l = el('a'); l.href = u; l.target = '_blank'; l.rel = 'noopener'; var im = el('img'); im.src = u; im.alt = 'Photo ' + (i + 1) + ' for ' + p.title; im.loading = 'lazy'; l.appendChild(im); g.appendChild(l); });
         a.appendChild(g);
       }
+      drawReplies(a, p);
       if(p.canDelete || (me && me.admin)){
         var acts = el('div', 'post-acts');
         if(p.canDelete) acts.appendChild(delBtn(p));
