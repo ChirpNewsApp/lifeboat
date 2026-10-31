@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Lifeboat Terms of Service</title>
+<meta name="description" content="The terms for using Lifeboat.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ccircle cx='50' cy='50' r='34' fill='none' stroke='%23F7FBFB' stroke-width='24'/%3E%3Ccircle cx='50' cy='50' r='34' fill='none' stroke='%23FF5B2E' stroke-width='24' stroke-dasharray='40.06 13.35' transform='rotate(11.25 50 50)'/%3E%3Ccircle cx='50' cy='50' r='46' fill='none' stroke='%230A3340' stroke-width='3'/%3E%3Ccircle cx='50' cy='50' r='22' fill='none' stroke='%230A3340' stroke-width='3'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=Instrument+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+/* Shared look for the pricing and vault pages. Colors and fonts match the home page. */
+:root{
+  --bg:#E6F0F1; --surface:#F7FBFB; --ink:#0A3340; --muted:#4A6B74;
+  --line:#BFD5D8; --signal:#FF5B2E; --signal-ink:#ffffff; --ok:#1C8A5B; --bad:#C2321B;
+  --tint:#D3E6E8;
+  color-scheme:light;
+}
+@media (prefers-color-scheme:dark){
+  :root{
+    --bg:#0A2630; --surface:#10343F; --ink:#E6F3F4; --muted:#93B3BA;
+    --line:#22505D; --signal:#FF7248; --signal-ink:#1A0A05; --ok:#4CCB93; --bad:#FF8A73;
+    --tint:#17414E;
+    color-scheme:dark;
+  }
+}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html{scroll-padding-top:20px}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:"Instrument Sans",system-ui,sans-serif;font-size:17px;line-height:1.55}
+h1,h2,h3{font-family:"Bricolage Grotesque","Instrument Sans",system-ui,sans-serif;line-height:1.05;margin:0}
+h1{font-size:clamp(38px,6vw,64px);font-weight:800;letter-spacing:-0.025em}
+h2{font-size:clamp(24px,3.4vw,34px);font-weight:700;letter-spacing:-0.02em}
+h3{font-size:22px;font-weight:700}
+p{margin:0}
+a{color:inherit}
+.wrap{max-width:1040px;margin:0 auto;padding:0 22px}
+.muted{color:var(--muted)}
+:focus-visible{outline:3px solid var(--signal);outline-offset:3px}
+
+/* header */
+.top{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:20px 0}
+.logo{display:inline-block;text-decoration:none}
+.logo svg{height:40px;width:auto;display:block}
+.nav{display:flex;align-items:center;gap:10px}
+.navlink{font-weight:600;text-decoration:none;padding:8px 6px}
+.navlink:hover{text-decoration:underline;text-underline-offset:4px}
+
+/* buttons */
+.btn{display:inline-block;background:var(--signal);color:var(--signal-ink);font:600 16px "Instrument Sans",sans-serif;border:2px solid var(--signal);border-radius:10px;padding:11px 18px;cursor:pointer;text-decoration:none;text-align:center;line-height:1.2}
+.btn:hover{filter:brightness(1.06)}
+.btn.ghost{background:transparent;color:var(--ink);border-color:var(--ink)}
+.btn.block{display:block;width:100%}
+.btn[disabled],.btn.off{opacity:.55;cursor:default;filter:none}
+
+/* cards */
+.card{background:var(--surface);border:2px solid var(--ink);border-radius:18px;padding:24px}
+.card.lift{box-shadow:8px 8px 0 var(--ink)}
+
+footer{padding:36px 0 50px;color:var(--muted);font-size:14px;border-top:2px solid var(--line);margin-top:70px;display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap}
+footer a{margin-right:14px}
+
+/* pricing */
+.p-hero{padding:34px 0 26px}
+.p-hero p{font-size:20px;color:var(--muted);max-width:32em;margin-top:16px}
+.gate{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;background:var(--tint);border:2px solid var(--ink);border-radius:14px;padding:16px 20px;margin:6px 0 30px}
+.gate strong{font-family:"Bricolage Grotesque",sans-serif;font-size:20px}
+.gate .row{display:flex;gap:10px;flex-wrap:wrap}
+.plans{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:20px;align-items:stretch}
+.plan{position:relative;display:flex;flex-direction:column;background:var(--surface);border:2px solid var(--ink);border-radius:18px}
+.plan.pick{box-shadow:8px 8px 0 var(--ink)}
+.plan .flag{position:absolute;top:-15px;left:18px;background:var(--signal);color:var(--signal-ink);font-weight:600;font-size:14px;padding:4px 14px;border-radius:99px;border:2px solid var(--ink)}
+.plan .head{padding:26px 22px 6px}
+.price{font:800 44px "Bricolage Grotesque",sans-serif;letter-spacing:-0.02em;margin-top:6px}
+.price small{font:600 17px "Instrument Sans",sans-serif;color:var(--muted);letter-spacing:0}
+.space{margin:14px 22px 0;padding:14px 16px;background:var(--tint);border-radius:12px}
+.space b{display:block;font:800 34px/1 "Bricolage Grotesque",sans-serif;letter-spacing:-0.02em}
+.space span{font-size:14px;color:var(--muted)}
+.plan ul{list-style:none;margin:16px 22px 0;padding:0;font-size:15.5px;flex:1}
+.plan li{display:flex;gap:10px;margin:7px 0}
+.plan li:before{content:"\2713";flex:none;width:20px;height:20px;margin-top:2px;border-radius:50%;background:var(--ok);color:var(--surface);font-size:12px;font-weight:700;display:grid;place-items:center;line-height:1}
+.plan .foot{padding:18px 22px 22px}
+.note{margin-top:22px;min-height:1.5em;font-weight:600}
+.note.ok{color:var(--ok)}
+.fine{margin-top:30px;color:var(--muted);font-size:15px;max-width:44em}
+
+/* vault */
+.v-head{padding:30px 0 22px}
+.v-head p{margin-top:12px;color:var(--muted);font-size:19px}
+.v-grid{display:grid;grid-template-columns:1.15fr 1fr;gap:22px;align-items:start}
+.gauge{display:flex;align-items:center;gap:24px;flex-wrap:wrap}
+.gauge svg{width:210px;height:210px;flex:none}
+.gauge .read{flex:1 1 150px;min-width:150px}
+.gauge .read b{display:block;font:800 40px/1 "Bricolage Grotesque",sans-serif;letter-spacing:-0.02em}
+.gauge .read span{color:var(--muted)}
+.gauge .read p{margin-top:14px;font-size:15px;color:var(--muted)}
+.kv{display:flex;justify-content:space-between;gap:14px;padding:11px 0;border-bottom:2px solid var(--line)}
+.kv:last-of-type{border-bottom:0}
+.kv span:first-child{color:var(--muted)}
+.kv strong{text-align:right;word-break:break-word}
+.acts{display:flex;gap:10px;flex-wrap:wrap;margin-top:16px}
+.sec{margin-top:44px}
+.sec>p{margin-top:8px;color:var(--muted);max-width:38em}
+.tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(215px,1fr));gap:16px;margin-top:20px}
+.tile{display:flex;gap:14px;align-items:flex-start;background:var(--surface);border:2px dashed var(--line);border-radius:14px;padding:18px}
+.tile svg{flex:none;width:34px;height:34px;color:var(--signal)}
+.tile b{display:block;font:700 19px "Bricolage Grotesque",sans-serif}
+.tile span{font-size:14.5px;color:var(--muted)}
+.tile div>span:not(.soon){display:block;line-height:1.4;margin-top:3px}
+.soon{display:inline-block;margin-top:8px;font-size:13px;font-weight:600;color:var(--muted);border:2px solid var(--line);border-radius:99px;padding:1px 10px}
+.skeleton{opacity:.5}
+
+@media (max-width:820px){
+  .v-grid{grid-template-columns:1fr}
+}
+@media (max-width:560px){
+  .navlink{display:none}
+  .btn{padding:10px 14px;font-size:15px}
+  .logo svg{height:34px}
+  .gauge{justify-content:center;text-align:center}
+  .gauge .read p{margin-left:auto;margin-right:auto}
+}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+
+
+/* legal pages */
+.legal{max-width:760px;padding:34px 0 10px}
+.legal h1{font-size:clamp(38px,6vw,58px)}
+.legal .upd{margin-top:12px;color:var(--muted);font-size:15px}
+.legal .lead{margin-top:18px;font-size:19px;color:var(--muted)}
+.legal h2{font-size:clamp(22px,3vw,28px);margin:40px 0 12px;scroll-margin-top:20px}
+.legal p{margin:10px 0}
+.legal ul{margin:10px 0;padding-left:22px}
+.legal li{margin:8px 0}
+.legal a{color:var(--ink);text-decoration-color:var(--signal);text-decoration-thickness:2px;text-underline-offset:3px}
+.toc{display:flex;flex-wrap:wrap;gap:8px;margin:26px 0 6px;padding:16px;background:var(--surface);border:2px solid var(--ink);border-radius:14px}
+.toc a{font-size:14.5px;font-weight:600;text-decoration:none;padding:5px 11px;border:2px solid var(--line);border-radius:99px}
+.toc a:hover{border-color:var(--ink)}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <a class="logo" href="/" aria-label="Lifeboat home"><svg viewBox="0 0 399 100" role="img" aria-label="Lifeboat"><g transform="translate(0.0 0.0) scale(1.0)"><circle cx="50" cy="50" r="34" fill="none" style="stroke:var(--surface)" stroke-width="24"/><circle cx="50" cy="50" r="34" fill="none" style="stroke:var(--signal)" stroke-width="24" stroke-dasharray="40.055 13.352" transform="rotate(11.25 50 50)"/><circle cx="50" cy="50" r="46" fill="none" style="stroke:var(--ink)" stroke-width="3"/><circle cx="50" cy="50" r="22" fill="none" style="stroke:var(--ink)" stroke-width="3"/></g><path d="M119.375 76.19140625H155.234375V65.43359375H132.03125V23.80859375H119.375Z M159.2219375 76.19140625H171.3156875V39.06640625H159.2219375ZM165.23365625 35.4453125C169.136 35.4453125 171.91334375 32.87890625 171.91334375 29.328125C171.91334375 25.77734375 169.136 23.24609375 165.23365625 23.24609375C161.36646875 23.24609375 158.589125 25.77734375 158.589125 29.328125C158.589125 32.87890625 161.36646875 35.4453125 165.23365625 35.4453125Z M201.00246875 39.06640625H193.3735625V37.0625C193.3735625 34.25 194.42825 33.16015625 197.3110625 33.16015625H201.00246875V23.80859375H194.25246875C185.42825 23.80859375 181.24465625 27.39453125 181.24465625 34.953125V39.06640625H174.49465625V48.41796875H181.24465625V76.19140625H193.3735625V48.41796875H201.00246875Z M222.49784375 77.03515625C231.8845625 77.03515625 239.37284375 71.796875 240.7439375 64.30859375H229.88065625C229.00175 66.76953125 226.4705 68.31640625 222.91971875 68.31640625C218.13846875 68.31640625 215.32596875 65.328125 215.18534375 60.6171875H241.0251875V57.34765625C241.0251875 46.09765625 233.32596875 38.22265625 222.1814375 38.22265625C211.17753125 38.22265625 203.37284375 46.30859375 203.37284375 57.62890625C203.37284375 68.94921875 211.10721875 77.03515625 222.49784375 77.03515625ZM215.25565625 53.375C215.783 49.47265625 218.41971875 47.15234375 222.49784375 47.15234375C226.5408125 47.15234375 229.2126875 49.47265625 229.74003125 53.375Z M267.934625 77.0C277.67290625 77.0 283.965875 69.30078125 283.965875 57.55859375C283.965875 46.203125 277.4268125 38.2578125 268.04009375 38.2578125C263.2236875 38.2578125 259.74321875 40.12109375 257.38775 44.05859375H257.3174375V23.80859375H245.22368749999998V76.19140625H257.1768125V70.4609375H257.247125C259.1455625 74.78515625 263.04790625 77.0 267.934625 77.0ZM264.52446875 67.33203125C259.95415625 67.33203125 256.82525 63.5 256.82525 57.55859375C256.82525 51.6875 259.95415625 47.890625 264.52446875 47.890625C268.9893125 47.890625 271.7315 51.51171875 271.7315 57.55859375C271.7315 63.67578125 268.9893125 67.33203125 264.52446875 67.33203125Z M306.34015625 77.03515625C317.976875 77.03515625 325.851875 69.40625 325.851875 57.62890625C325.851875 45.921875 317.976875 38.22265625 306.34015625 38.22265625C294.7034375 38.22265625 286.79328125 45.921875 286.79328125 57.62890625C286.79328125 69.40625 294.7034375 77.03515625 306.34015625 77.03515625ZM306.34015625 67.40234375C302.08625 67.40234375 299.0628125 63.921875 299.0628125 57.62890625C299.0628125 51.37109375 302.12140625 47.85546875 306.34015625 47.85546875C310.55890625 47.85546875 313.6175 51.37109375 313.6175 57.62890625C313.6175 63.921875 310.55890625 67.40234375 306.34015625 67.40234375Z M341.54646875000003 76.82421875C346.78475000000003 76.82421875 350.12459375000003 74.99609375 352.33943750000003 70.98828125H352.48006250000003V76.19140625H364.29256250000003V51.1953125C364.29256250000003 43.00390625 358.35115625000003 38.2578125 347.55818750000003 38.2578125C336.80037500000003 38.2578125 330.71834375000003 43.0390625 330.19100000000003 51.08984375H341.44100000000003C341.68709375000003 48.55859375 343.76131250000003 46.94140625 347.13631250000003 46.94140625C350.33553125000003 46.94140625 352.30428125000003 48.453125 352.30428125000003 50.66796875V50.84375C352.30428125000003 53.05859375 349.87850000000003 53.5859375 343.23396875000003 54.1484375C335.32381250000003 54.78125 328.81990625000003 57.48828125 328.81990625000003 65.8203125C328.81990625000003 73.203125 334.12850000000003 76.82421875 341.54646875000003 76.82421875ZM345.23787500000003 68.9140625C342.28475000000003 68.9140625 340.28084375000003 67.54296875 340.28084375000003 65.2578125C340.28084375000003 62.83203125 342.60115625000003 61.49609375 345.83553125000003 61.00390625C348.82381250000003 60.51171875 351.10896875000003 60.0546875 352.40975000000003 59.45703125V62.83203125C352.40975000000003 66.48828125 349.28084375000003 68.9140625 345.23787500000003 68.9140625Z M393.55746875000006 39.06640625H385.92856250000006V28.94140625H373.79965625000006V39.06640625H367.47153125000006V48.41796875H373.79965625000006V65.75C373.79965625000006 72.95703125 377.80746875000006 76.19140625 386.70200000000006 76.19140625H393.55746875000006V66.83984375H389.37387500000006C386.66684375000006 66.83984375 385.92856250000006 66.1015625 385.92856250000006 63.7109375V48.41796875H393.55746875000006Z" style="fill:var(--ink)"/></svg></a>
+    <nav class="nav" aria-label="Main">
+      <a class="navlink" href="/">Home</a>
+      <a class="navlink" href="/pricing">Plans</a>
+      <a class="btn" href="/vault">My vault</a>
+    </nav>
+  </header>
+
+  <main>
+    <article class="legal">
+      <h1>Terms of Service</h1>
+      <p class="upd">Last updated: October 31, 2026</p>
+      <p class="lead">These terms are the deal between you and Lifeboat when you use lifeboatrecovery.com. We wrote them in plain English. Please read them, because by creating an account or using Lifeboat you agree to them.</p>
+
+      <nav class="toc" aria-label="On this page">
+        <a href="#who">Who we are</a><a href="#accounts">Accounts</a><a href="#service">What Lifeboat does</a><a href="#plans">Plans and payments</a><a href="#content">Your files</a><a href="#rules">Rules</a><a href="#backups">Keep a second copy</a><a href="#ending">Ending your account</a><a href="#legal">Legal fine print</a><a href="#contact">Contact</a>
+      </nav>
+
+      <h2 id="who">1. Who we are</h2>
+      <p>Lifeboat ("Lifeboat", "we", "us") runs the website lifeboatrecovery.com and the vault you use there. You can reach us at <a href="mailto:support@lifeboatrecovery.com">support@lifeboatrecovery.com</a>.</p>
+
+      <h2 id="accounts">2. Accounts</h2>
+      <ul>
+        <li>You must be at least 13 years old to use Lifeboat. If you are under 18, you need permission from a parent or guardian, and a parent or guardian must handle any payment.</li>
+        <li>Give us accurate sign-up details and keep your login safe. You are responsible for what happens in your account.</li>
+        <li>One person per account. Family plans are for the people in your household that you invite.</li>
+        <li>Tell us right away at <a href="mailto:support@lifeboatrecovery.com">support@lifeboatrecovery.com</a> if you think someone else got into your account.</li>
+      </ul>
+
+      <h2 id="service">3. What Lifeboat does</h2>
+      <p>Today, Lifeboat gives you a private vault where you can upload, organize, download, and delete files, with storage based on your plan. Some features shown on our website, like virus scanning, breach alerts, scam checking, game save backups, social media archives, website backups, and guided recovery, are still being built and may not be available yet. We will say on the site when they open.</p>
+      <p>Lifeboat is not connected to Google, Instagram, Steam, or any other company whose accounts we may help you recover. Our recovery help is guidance. We cannot promise any company will give you an account back.</p>
+
+      <h2 id="plans">4. Plans and payments</h2>
+      <ul>
+        <li><strong>Free plan.</strong> 1 GB of storage at no cost.</li>
+        <li><strong>Paid plans.</strong> Personal, Family, and the Creator add-on are billed monthly in US dollars at the prices shown on our <a href="/pricing">pricing page</a> when you subscribe. Payments are processed by Stripe. We never see or store your full card number.</li>
+        <li><strong>Automatic renewal.</strong> Paid plans renew every month and charge your payment method until you cancel.</li>
+        <li><strong>Cancelling.</strong> Cancel any time from <em>Manage billing</em> in your vault. You keep your paid plan until the end of the month you already paid for, and you will not be charged again.</li>
+        <li><strong>Refunds.</strong> Payments are not refunded for partial months, except where the law requires it. If something went wrong, email us and we will look at it fairly.</li>
+        <li><strong>Price changes.</strong> If we change a price, we will email you at least 14 days before your next bill at the new price, so you have time to cancel.</li>
+        <li><strong>Storage limits.</strong> If you use more storage than your plan allows, for example after moving to a smaller plan, your files stay put, but you cannot upload more until you delete some or upgrade.</li>
+        <li><strong>Failed payments.</strong> If a payment fails and is not fixed, your account may move to the Free plan.</li>
+      </ul>
+
+      <h2 id="content">5. Your files</h2>
+      <p>Your files belong to you. You give us permission only to store, copy, and send your files back to you as needed to run Lifeboat, for example keeping them on our storage provider's servers and creating download links when you ask. We do not sell your files or use them for advertising. Our <a href="/privacy">Privacy Policy</a> explains how we handle your data.</p>
+      <p>You are responsible for making sure you have the right to upload what you upload.</p>
+
+      <h2 id="rules">6. Rules</h2>
+      <p>Do not use Lifeboat to:</p>
+      <ul>
+        <li>store or share anything illegal, including child sexual abuse material, which we report to the authorities as the law requires;</li>
+        <li>share malware or use the service to attack other people or computers;</li>
+        <li>store or share content that infringes someone else's copyright or other rights;</li>
+        <li>harass, stalk, threaten, or spy on anyone;</li>
+        <li>try to get into accounts or files that are not yours, or test, break, or get around our security;</li>
+        <li>resell Lifeboat, or overload it with automated traffic.</li>
+      </ul>
+      <p>If you think something on Lifeboat infringes your copyright, email us with the details and we will respond.</p>
+
+      <h2 id="backups">7. Keep a second copy</h2>
+      <p>We work hard to keep your files safe, but no storage service is perfect. For anything you cannot afford to lose, keep another copy somewhere else too.</p>
+
+      <h2 id="ending">8. Ending your account</h2>
+      <ul>
+        <li>You can stop using Lifeboat at any time. You can delete your files from your vault yourself. To delete your whole account and everything in it, email us from the address on your account and we will do it within 30 days.</li>
+        <li>We may suspend or close an account that breaks these terms, does not pay, or that we must close for legal reasons. When we can, we will tell you first and give you a chance to download your files. We may act without notice for illegal content or to protect other people.</li>
+        <li>If we ever shut Lifeboat down, we will give you at least 30 days' notice so you can download your files.</li>
+      </ul>
+
+      <h2 id="legal">9. Legal fine print</h2>
+      <p><strong>No warranty.</strong> Lifeboat is provided "as is" and "as available." To the extent the law allows, we do not promise that it will always be available, error-free, or that it will meet every need.</p>
+      <p><strong>Limit of liability.</strong> To the extent the law allows, Lifeboat is not liable for indirect, incidental, special, or consequential damages, or for lost data, lost profits, or lost accounts, and our total liability for any claim is limited to the amount you paid us in the 12 months before the claim, or $50, whichever is more. Some places do not allow these limits, so they may not apply to you.</p>
+      <p><strong>Your responsibility.</strong> If you break these terms or the law and someone makes a claim against us because of it, you agree to cover the reasonable costs that result, to the extent the law allows.</p>
+      <p><strong>Governing law.</strong> These terms are governed by the laws of the State of North Carolina, USA, without regard to conflict-of-law rules. Any dispute will be handled in the state or federal courts located in Mecklenburg County, North Carolina, unless the law where you live gives you the right to bring it somewhere else.</p>
+      <p><strong>Changes.</strong> We may update these terms. If a change is important, we will email you or show a notice on the site before it takes effect. If you keep using Lifeboat after that, you accept the new terms.</p>
+      <p><strong>The whole agreement.</strong> These terms and our Privacy Policy are the full agreement between you and Lifeboat. If part of them cannot be enforced, the rest still applies.</p>
+
+      <h2 id="contact">10. Contact</h2>
+      <p>Questions about these terms? Email <a href="mailto:support@lifeboatrecovery.com">support@lifeboatrecovery.com</a>.</p>
+    </article>
+  </main>
+
+  <footer>
+    <span>© 2026 Lifeboat</span>
+    <span><a href="/">Home</a><a href="/pricing">Plans</a><a href="/terms">Terms</a><a href="/privacy">Privacy</a></span>
+  </footer>
+</div>
+</body>
+</html>
