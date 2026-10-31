@@ -3,7 +3,7 @@
 (function () {
   // Paste your Clerk publishable key (starts with pk_test_ or pk_live_).
   // It is safe to keep here. Never paste the secret key (sk_...) into any page.
-  var PUBLISHABLE_KEY = 'pk_test_Zml0LWdyaWZmb24tMjk3Ni5jbGVyay5hY2NvdW50cy5kZXYk';
+  var PUBLISHABLE_KEY = 'pk_test_';
 
   var configured = PUBLISHABLE_KEY.indexOf('PASTE_') !== 0;
   var LB = (window.LB = { configured: configured, loaded: false, signedIn: false });
@@ -44,9 +44,9 @@
   LB.manage = function () { Clerk.openUserProfile(); };
 
   // Talk to our server as the signed-in person.
-  LB.api = async function (action, extra) {
+  LB.api = async function (action, extra, endpoint) {
     var token = await Clerk.session.getToken();
-    var r = await fetch('/api/account', {
+    var r = await fetch(endpoint || '/api/account', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + token },
       body: JSON.stringify(Object.assign({ action: action }, extra || {}))
@@ -58,6 +58,7 @@
   };
   // Open Stripe's checkout for a plan, or the billing page.
   LB.checkout = async function (plan) { var d = await LB.api('checkout', { plan: plan }); location.href = d.url; };
+  LB.files = function (action, extra) { return LB.api(action, extra, '/api/files'); };
   LB.billing = async function () { var d = await LB.api('portal'); location.href = d.url; };
 
   // Which plan this person has (from plans.json or payments).

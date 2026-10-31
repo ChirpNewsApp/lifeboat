@@ -1,38 +1,28 @@
-# Adding Stripe (test mode first)
+# Payments with Stripe
 
-## 1. Upload these files to GitHub
-Replace the old ones. Use `ready/auth.js` (it already has your Clerk key).
-
+## 1. Upload to GitHub
 | File | Where |
 | --- | --- |
-| `pricing.html`, `vault.html`, `auth.js`, `stripe-prices.json` | top level |
 | `api/account.js` | inside `api` (replace the old one) |
+| `stripe-prices.json` | top level |
+| `pricing.html`, `vault.html`, `index.html`, `auth.js` | top level (auth.js: use `ready/auth.js`, it has your Clerk key) |
 
-## 2. Make the 3 products in Stripe
-Turn on **Test mode** (top right of the Stripe dashboard). Product catalog, Add product, three times:
+Delete `paypal-plans.json` and `lemon-variants.json` if they are on GitHub.
 
-| Name | Price | Billing |
-| --- | --- | --- |
-| Lifeboat Personal | $12.00 | Recurring, monthly |
-| Lifeboat Family | $22.50 | Recurring, monthly |
-| Lifeboat Creator add-on | $7.50 | Recurring, monthly |
+## 2. Stripe: key and products
+1. Use a **regular Stripe account** with API keys (Developers, API keys shows a Secret key). A WooPayments account will not work.
+2. Practice first: switch to **Sandbox/Test mode** if your Stripe offers it (account name at top left, Sandboxes). It gives a `sk_test_` key and needs no live checks.
+3. Product catalog, make three **monthly recurring** products: Personal $12, Family $22.50, Creator add-on $7.50.
+4. Copy each **Price ID** (starts with `price_`, not `prod_`) into `stripe-prices.json` on GitHub.
 
-Open each product and copy its **Price ID** (starts with `price_`). It is safe to put in GitHub.
+## 3. Vercel
+Settings, Environment Variables: `STRIPE_SECRET_KEY` (the `sk_` key, never in GitHub or chat) and `CLERK_SECRET_KEY`. Remove any PayPal or Lemon Squeezy variables.
 
-## 3. Paste the Price IDs
-Edit `stripe-prices.json` on GitHub and replace the three PASTE lines with your IDs. Keep the quotes and commas.
+## 4. Billing page
+Stripe, Settings, Billing, Customer portal: turn on. Allow cancelling and plan switching.
 
-## 4. Add the secret key in Vercel
-Stripe, Developers, API keys: copy the **Secret key** (`sk_test_...`).
-Vercel, your project, Settings, Environment Variables: add `STRIPE_SECRET_KEY` with that value. Make sure `CLERK_SECRET_KEY` is there too. Never paste a secret key into GitHub or chat.
-
-## 5. Turn on the billing page
-Stripe, Settings, Billing, Customer portal: turn it on. Allow customers to cancel and update payment methods. Under subscriptions, allow switching plans and add your Personal and Family products.
-
-## 6. Redeploy and test
-Vercel, Deployments, Redeploy. Then sign in, open `/pricing`, click Choose Personal, and pay with test card `4242 4242 4242 4242`, any future date, any CVC. You should land on `/vault` with a thank-you banner and your plan shown. "Manage billing" opens Stripe's page.
-
-Plans you give by hand in `plans.json` always win over Stripe.
+## 5. Redeploy and test
+Redeploy in Vercel. Sign in with an account that is not `jaxon`, open `/pricing`, click Choose Personal. In test mode pay with `4242 4242 4242 4242`, any future date, any CVC.
 
 ## Before real money
-Switch Stripe out of test mode (new live Price IDs and `sk_live_` key), and upgrade Vercel to Pro, since Hobby is non-commercial.
+Use live products, live Price IDs and the `sk_live_` key. Roll any key that was ever posted in chat. Upgrade Vercel to Pro.

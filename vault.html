@@ -110,6 +110,36 @@ footer a{margin-right:14px}
 .tile div>span:not(.soon){display:block;line-height:1.4;margin-top:3px}
 .soon{display:inline-block;margin-top:8px;font-size:13px;font-weight:600;color:var(--muted);border:2px solid var(--line);border-radius:99px;padding:1px 10px}
 .skeleton{opacity:.5}
+/* file manager */
+.fm{margin-top:44px}
+.fm-bar{display:flex;gap:10px;flex-wrap:wrap;align-items:center;justify-content:space-between;margin:14px 0}
+.crumbs{display:flex;flex-wrap:wrap;gap:4px;align-items:center;font-weight:600}
+.crumbs button{background:none;border:0;color:var(--ink);font:inherit;cursor:pointer;padding:4px 6px;border-radius:8px;text-decoration:underline;text-underline-offset:4px}
+.crumbs span{color:var(--muted)}
+.drop{border:2px dashed var(--line);border-radius:14px;padding:22px;text-align:center;color:var(--muted);background:var(--surface);transition:border-color .15s,background .15s}
+.drop.over{border-color:var(--signal);background:var(--tint)}
+.rows{margin-top:14px;background:var(--surface);border:2px solid var(--ink);border-radius:14px;overflow:hidden}
+.row{display:flex;align-items:center;gap:12px;padding:11px 14px;border-bottom:2px solid var(--line)}
+.row:last-child{border-bottom:0}
+.row .ic{flex:none;width:22px;height:22px;color:var(--signal)}
+.row .nm{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:600}
+.row button.nm{background:none;border:0;color:var(--ink);font:inherit;font-weight:600;text-align:left;cursor:pointer;padding:0}
+.row .meta{flex:none;color:var(--muted);font-size:14px;white-space:nowrap}
+.row .act{flex:none;display:flex;gap:6px}
+.mini{background:transparent;color:var(--ink);border:2px solid var(--line);border-radius:8px;padding:4px 10px;font:600 14px "Instrument Sans",sans-serif;cursor:pointer}
+.mini:hover{border-color:var(--ink)}
+.mini.del{color:var(--bad)}
+.empty{padding:26px;text-align:center;color:var(--muted)}
+.ups{margin-top:12px;display:grid;gap:8px}
+.up{background:var(--surface);border:2px solid var(--line);border-radius:10px;padding:8px 12px;font-size:14.5px}
+.up .bar{height:6px;border-radius:99px;background:var(--line);margin-top:6px;overflow:hidden}
+.up .bar i{display:block;height:100%;width:0;background:var(--signal);transition:width .15s}
+.up.bad{border-color:var(--bad)}
+.up.bad b{color:var(--bad)}
+.fm-msg{min-height:1.5em;margin-top:10px;font-weight:600}
+.fm-msg.bad{color:var(--bad)}
+@media (max-width:560px){.row .meta{display:none}}
+
 
 @media (max-width:820px){
   .v-grid{grid-template-columns:1fr}
@@ -168,7 +198,7 @@ footer a{margin-right:14px}
             <div class="read">
               <b id="used">0 GB</b>
               <span id="of">used</span>
-              <p>Nothing is backed up yet. Uploads open soon.</p>
+              <p id="gmsg">Loading your files…</p>
             </div>
           </div>
         </section>
@@ -186,16 +216,28 @@ footer a{margin-right:14px}
         </section>
       </div>
 
-      <section class="sec" aria-labelledby="fo-h">
-        <h2 id="fo-h">Where your things will go</h2>
-        <p>Uploading is not open yet. When it is, your folders and files show up here, and one click restores a whole folder.</p>
+      <section class="fm" aria-labelledby="fm-h">
+        <h2 id="fm-h">Your files</h2>
+        <div class="fm-bar">
+          <div class="crumbs" id="crumbs" aria-label="Folder path"></div>
+          <div class="acts" style="margin:0">
+            <button class="btn" type="button" id="pick">Upload files</button>
+            <button class="btn ghost" type="button" id="mkdir">New folder</button>
+            <input type="file" id="file" multiple hidden>
+          </div>
+        </div>
+        <div class="drop" id="drop">Drag files here, or press Upload files.</div>
+        <div class="ups" id="ups" aria-live="polite"></div>
+        <div class="fm-msg" id="fmmsg" role="status"></div>
+        <div class="rows" id="rows"></div>
+      </section>
+
+      <section class="sec" aria-labelledby="nx-h">
+        <h2 id="nx-h">Coming next</h2>
+        <p>Game saves, social archives, and website backups are on the way.</p>
         <div class="tiles">
           <div class="tile">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" aria-hidden="true"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>
-            <div><b>Files</b><span>Photos, documents, anything you can't lose.</span><span class="soon">Opens soon</span></div>
-          </div>
-          <div class="tile">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round" aria-hidden="true"><rect x="2.5" y="7" width="19" height="10" rx="5"/><path d="M8 10v4M6 12h4"/><circle cx="16" cy="11" r=".6"/><circle cx="18" cy="13" r=".6"/></svg>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round" aria-hidden="true"><rect x="2.5" y="7" width="19" height="10" rx="5"/><path d="M8 10v4M6 12h4"/><circle cx="16" cy="11" r="1"/></svg>
             <div><b>Game saves</b><span>Saves, keybinds, and settings for your games.</span><span class="soon">Opens soon</span></div>
           </div>
           <div class="tile">
@@ -225,6 +267,140 @@ footer a{margin-right:14px}
 
   function fail(){ $('loading').hidden = true; $('app').hidden = true; $('err').hidden = false; }
 
+
+  // ---------- file manager ----------
+  var cwd = '', quotaBytes = 0, usedBytes = 0;
+  var ICON_DIR = '<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" aria-hidden="true"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>';
+  var ICON_FILE = '<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" aria-hidden="true"><path d="M6 3h8l5 5v13H6z"/><path d="M14 3v5h5"/></svg>';
+
+  function fmtBytes(n){
+    if(n >= 1e9) return (n / 1e9).toFixed(n >= 1e10 ? 0 : 1).replace(/\.0$/, '') + ' GB';
+    if(n >= 1e6) return (n / 1e6).toFixed(n >= 1e7 ? 0 : 1).replace(/\.0$/, '') + ' MB';
+    if(n >= 1e3) return Math.round(n / 1e3) + ' KB';
+    return n + ' B';
+  }
+  function fmtDate(s){ if(!s) return ''; try { return new Date(s).toLocaleDateString(undefined, { month:'short', day:'numeric', year:'numeric' }); } catch(e){ return ''; } }
+  function join(a, b){ return a ? a + '/' + b : b; }
+  function say(msg, bad){ var m = $('fmmsg'); m.textContent = msg || ''; m.className = 'fm-msg' + (bad ? ' bad' : ''); }
+
+  function gauge(){
+    var share = quotaBytes ? Math.min(usedBytes / quotaBytes, 1) : 0;
+    $('used').textContent = fmtBytes(usedBytes);
+    $('of').textContent = 'used of ' + fmtBytes(quotaBytes);
+    $('arc').setAttribute('stroke-dasharray', (C * share) + ' ' + C);
+    $('gmsg').textContent = usedBytes === 0 ? 'Nothing is backed up yet. Add your first files below.' : fmtBytes(Math.max(quotaBytes - usedBytes, 0)) + ' left on your plan.';
+  }
+
+  function crumbs(){
+    var box = $('crumbs'); box.textContent = '';
+    var parts = cwd ? cwd.split('/') : [];
+    function add(label, path){
+      var b = document.createElement('button'); b.type = 'button'; b.textContent = label;
+      b.addEventListener('click', function(){ open(path); }); box.appendChild(b);
+    }
+    add('My files', '');
+    var acc = '';
+    parts.forEach(function(p){ var s = document.createElement('span'); s.textContent = '/'; box.appendChild(s); acc = join(acc, p); add(p, acc); });
+  }
+
+  function mini(label, cls, fn){
+    var b = document.createElement('button'); b.type = 'button'; b.className = 'mini' + (cls ? ' ' + cls : ''); b.textContent = label; b.addEventListener('click', fn); return b;
+  }
+
+  function draw(d){
+    var rows = $('rows'); rows.textContent = '';
+    if(!d.folders.length && !d.files.length){
+      var e = document.createElement('div'); e.className = 'empty'; e.textContent = cwd ? 'This folder is empty.' : 'No files yet. Upload something, or make a folder.'; rows.appendChild(e); return;
+    }
+    d.folders.forEach(function(name){
+      var r = document.createElement('div'); r.className = 'row'; r.insertAdjacentHTML('beforeend', ICON_DIR);
+      var n = document.createElement('button'); n.type = 'button'; n.className = 'nm'; n.textContent = name; n.addEventListener('click', function(){ open(join(cwd, name)); });
+      var meta = document.createElement('span'); meta.className = 'meta'; meta.textContent = 'Folder';
+      var act = document.createElement('span'); act.className = 'act';
+      act.appendChild(mini('Delete', 'del', async function(){
+        if(!confirm('Delete the folder "' + name + '" and everything inside it? This cannot be undone.')) return;
+        say('Deleting…'); try { await LB.files('delete', { path: join(cwd, name), folder: true }); say(''); refresh(); } catch(err){ say(err.message, true); }
+      }));
+      r.appendChild(n); r.appendChild(meta); r.appendChild(act); rows.appendChild(r);
+    });
+    d.files.forEach(function(f){
+      var r = document.createElement('div'); r.className = 'row'; r.insertAdjacentHTML('beforeend', ICON_FILE);
+      var n = document.createElement('span'); n.className = 'nm'; n.textContent = f.name; n.title = f.name;
+      var meta = document.createElement('span'); meta.className = 'meta'; meta.textContent = fmtBytes(f.size) + (f.modified ? '  ·  ' + fmtDate(f.modified) : '');
+      var act = document.createElement('span'); act.className = 'act';
+      act.appendChild(mini('Download', '', async function(){
+        try { var x = await LB.files('download-url', { path: join(cwd, f.name) }); location.href = x.url; } catch(err){ say(err.message, true); }
+      }));
+      act.appendChild(mini('Delete', 'del', async function(){
+        if(!confirm('Delete "' + f.name + '"? This cannot be undone.')) return;
+        say('Deleting…'); try { await LB.files('delete', { path: join(cwd, f.name) }); say(''); refresh(); } catch(err){ say(err.message, true); }
+      }));
+      r.appendChild(n); r.appendChild(meta); r.appendChild(act); rows.appendChild(r);
+    });
+  }
+
+  async function refresh(){
+    try {
+      var d = await LB.files('list', { path: cwd });
+      cwd = d.path || ''; quotaBytes = d.quota; usedBytes = d.used;
+      crumbs(); gauge(); draw(d);
+    } catch(err){
+      $('rows').textContent = ''; var e = document.createElement('div'); e.className = 'empty';
+      e.textContent = err.code === 'no_storage' ? 'File storage is not switched on yet.' : err.message; $('rows').appendChild(e);
+      $('gmsg').textContent = '';
+    }
+  }
+  function open(path){ cwd = path; say(''); refresh(); }
+
+  function putFile(url, file, type, bar){
+    return new Promise(function(resolve, reject){
+      var x = new XMLHttpRequest(); x.open('PUT', url);
+      x.setRequestHeader('Content-Type', type);
+      x.upload.onprogress = function(e){ if(e.lengthComputable) bar.style.width = Math.round(e.loaded / e.total * 100) + '%'; };
+      x.onload = function(){ x.status >= 200 && x.status < 300 ? resolve() : reject(new Error('The upload was refused (' + x.status + ').')); };
+      x.onerror = function(){ reject(new Error('The upload could not reach storage. Check your connection.')); };
+      x.send(file);
+    });
+  }
+
+  var uploading = false;
+  async function uploadAll(list){
+    if(uploading){ say('Wait for the current uploads to finish.', true); return; }
+    uploading = true; say('');
+    var box = $('ups');
+    for(var i = 0; i < list.length; i++){
+      var f = list[i];
+      var item = document.createElement('div'); item.className = 'up';
+      var label = document.createElement('b'); label.textContent = f.name; label.style.fontWeight = '600';
+      var bar = document.createElement('i'); var track = document.createElement('div'); track.className = 'bar'; track.appendChild(bar);
+      item.appendChild(label); item.appendChild(track); box.appendChild(item);
+      try {
+        var type = f.type || 'application/octet-stream';
+        var u = await LB.files('upload-url', { path: join(cwd, f.name), size: f.size, type: type });
+        await putFile(u.url, f, u.type || type, bar);
+        bar.style.width = '100%'; label.textContent = f.name + ' ✓';
+      } catch(err){
+        item.classList.add('bad'); label.textContent = f.name + ': ' + err.message;
+      }
+    }
+    uploading = false;
+    await refresh();
+    setTimeout(function(){ box.querySelectorAll('.up:not(.bad)').forEach(function(n){ n.remove(); }); }, 2500);
+  }
+
+  $('pick').addEventListener('click', function(){ $('file').click(); });
+  $('file').addEventListener('change', function(){ var l = Array.prototype.slice.call(this.files); this.value = ''; if(l.length) uploadAll(l); });
+  $('mkdir').addEventListener('click', async function(){
+    var name = prompt('Name for the new folder:'); if(!name) return;
+    name = name.trim(); if(!name) return;
+    if(/[\\/]/.test(name)){ say('A folder name cannot contain / or \\.', true); return; }
+    try { await LB.files('folder', { path: join(cwd, name) }); refresh(); } catch(err){ say(err.message, true); }
+  });
+  var drop = $('drop');
+  ['dragenter','dragover'].forEach(function(ev){ drop.addEventListener(ev, function(e){ e.preventDefault(); drop.classList.add('over'); }); });
+  ['dragleave','drop'].forEach(function(ev){ drop.addEventListener(ev, function(e){ e.preventDefault(); drop.classList.remove('over'); }); });
+  drop.addEventListener('drop', function(e){ var l = Array.prototype.slice.call((e.dataTransfer && e.dataTransfer.files) || []); if(l.length) uploadAll(l); });
+
   LB.ready.then(async function(){
     if(!LB.signedIn){ location.replace('/'); return; }
     var u = LB.user || {};
@@ -246,6 +422,7 @@ footer a{margin-right:14px}
     $('used').textContent = usedGB + ' GB';
     $('of').textContent = 'used of ' + LB.size(totalGB);
     $('arc').setAttribute('stroke-dasharray', (C * Math.min(usedGB / totalGB, 1)) + ' ' + C);
+    refresh();
   }).catch(fail);
 })();
 </script>
