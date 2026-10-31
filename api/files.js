@@ -23,6 +23,9 @@ const MAX_NAME = 200;
 const MAX_PATH = 800;
 const MAX_LIST_PAGES = 200;                     // safety stop when adding up storage (200,000 files)
 const LINK_SECONDS = 600;
+const PREVIEW_SECONDS = 3600;                  // image preview links last an hour
+const MAX_PREVIEWS = 300;                       // per folder listing
+const IMAGE_RE = /\.(jpe?g|png|gif|webp|avif|bmp|svg)$/i;
 
 // Kept in one place so tests can swap them for fakes.
 const deps = {
@@ -124,6 +127,13 @@ async function list(res, cfg, keys, userId, body) {
   }
   folders.sort((a, b) => a.localeCompare(b));
   files.sort((a, b) => a.name.localeCompare(b.name));
+
+  // Short-lived view links for pictures, so the vault can show previews.
+  const { GetObjectCommand } = deps.cmd();
+  const pics = files.filter((f) => IMAGE_RE.test(f.name)).slice(0, MAX_PREVIEWS);
+  await Promise.all(pics.map(async (f) => {
+    try { f.preview = await deps.sign(cfg, new GetObjectCommand({ Bucket: cfg.bucket, Key: prefix + f.name }), PREVIEW_SECONDS); } catch (e) { /* no preview */ }
+  }));
 
   const [used, q] = await Promise.all([usedBytes(cfg, area), quotaBytes(keys, userId)]);
   return res.status(200).json({ ok: true, path, folders, files, used, quota: q.bytes, label: q.plan.label });

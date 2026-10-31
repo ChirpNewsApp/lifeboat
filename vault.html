@@ -129,6 +129,14 @@ footer a{margin-right:14px}
 .mini{background:transparent;color:var(--ink);border:2px solid var(--line);border-radius:8px;padding:4px 10px;font:600 14px "Instrument Sans",sans-serif;cursor:pointer}
 .mini:hover{border-color:var(--ink)}
 .mini.del{color:var(--bad)}
+.thumb{flex:none;width:44px;height:44px;padding:0;border:2px solid var(--line);border-radius:9px;overflow:hidden;background:var(--tint);cursor:zoom-in}
+.thumb:hover{border-color:var(--ink)}
+.thumb img{display:block;width:100%;height:100%;object-fit:cover}
+.lb{position:fixed;inset:0;z-index:50;background:rgba(4,20,26,.86);display:grid;place-items:center;padding:20px}
+.lb figure{margin:0;max-width:min(1100px,100%);min-width:min(460px,100%);display:flex;flex-direction:column;gap:12px}
+.lb img{max-width:100%;max-height:calc(100vh - 140px);object-fit:contain;border-radius:12px;background:#0b1f26;display:block;margin:0 auto}
+.lb figcaption{display:flex;gap:12px;flex-wrap:wrap;align-items:center;justify-content:space-between;background:var(--surface);color:var(--ink);border:2px solid var(--ink);border-radius:14px;padding:10px 14px}
+.lb figcaption span:first-child{font-weight:600;overflow-wrap:anywhere}
 .btn.danger{color:var(--bad);border-color:var(--bad)}
 .wipe{display:flex;gap:14px;flex-wrap:wrap;align-items:center;justify-content:space-between;margin:0 0 14px;padding:14px 16px;border:2px solid var(--bad);border-radius:14px;background:var(--surface)}
 .wipe p{font-weight:600;flex:1 1 260px}
@@ -283,6 +291,16 @@ footer a{margin-right:14px}
   </footer>
 </div>
 
+<div class="lb" id="lb" hidden role="dialog" aria-modal="true" aria-labelledby="lbname">
+  <figure>
+    <img id="lbimg" alt="">
+    <figcaption>
+      <span id="lbname"></span>
+      <span class="acts" style="margin:0"><button class="btn" type="button" id="lbdl">Download</button><button class="btn ghost" type="button" id="lbclose">Close</button></span>
+    </figcaption>
+  </figure>
+</div>
+
 <script src="/auth.js"></script>
 <script>
 (function(){
@@ -361,8 +379,19 @@ footer a{margin-right:14px}
       r.appendChild(n); r.appendChild(meta); r.appendChild(act); rows.appendChild(r);
     });
     d.files.forEach(function(f){
-      var r = document.createElement('div'); r.className = 'row'; r.insertAdjacentHTML('beforeend', ICON_FILE);
-      var n = document.createElement('span'); n.className = 'nm'; n.textContent = f.name; n.title = f.name;
+      var r = document.createElement('div'); r.className = 'row';
+      var n;
+      if(f.preview){
+        var th = document.createElement('button'); th.type = 'button'; th.className = 'thumb'; th.setAttribute('aria-label', 'Preview ' + f.name);
+        var im = document.createElement('img'); im.src = f.preview; im.alt = ''; im.loading = 'lazy'; im.decoding = 'async';
+        im.addEventListener('error', function(){ th.replaceWith(document.createRange().createContextualFragment(ICON_FILE)); });
+        th.appendChild(im); th.addEventListener('click', function(){ viewer(f); }); r.appendChild(th);
+        n = document.createElement('button'); n.type = 'button'; n.className = 'nm'; n.textContent = f.name; n.title = f.name;
+        n.addEventListener('click', function(){ viewer(f); });
+      } else {
+        r.insertAdjacentHTML('beforeend', ICON_FILE);
+        n = document.createElement('span'); n.className = 'nm'; n.textContent = f.name; n.title = f.name;
+      }
       var meta = document.createElement('span'); meta.className = 'meta'; meta.textContent = fmtBytes(f.size) + (f.modified ? '  ·  ' + fmtDate(f.modified) : '');
       var act = document.createElement('span'); act.className = 'act';
       act.appendChild(mini('Download', '', async function(){
@@ -372,6 +401,19 @@ footer a{margin-right:14px}
       r.appendChild(n); r.appendChild(meta); r.appendChild(act); rows.appendChild(r);
     });
   }
+
+  // Full-size picture viewer
+  var lastFocus = null;
+  function viewer(f){
+    lastFocus = document.activeElement;
+    $('lbimg').src = f.preview; $('lbimg').alt = f.name; $('lbname').textContent = f.name;
+    $('lbdl').onclick = async function(){ try { var x = await LB.files('download-url', { path: join(cwd, f.name) }); location.href = x.url; } catch(err){ say(err.message, true); } };
+    $('lb').hidden = false; document.body.style.overflow = 'hidden'; $('lbclose').focus();
+  }
+  function closeViewer(){ $('lb').hidden = true; $('lbimg').removeAttribute('src'); document.body.style.overflow = ''; if(lastFocus) lastFocus.focus(); }
+  $('lbclose').addEventListener('click', closeViewer);
+  $('lb').addEventListener('click', function(e){ if(e.target === this) closeViewer(); });
+  document.addEventListener('keydown', function(e){ if(e.key === 'Escape' && !$('lb').hidden) closeViewer(); });
 
   async function refresh(){
     try {
