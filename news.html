@@ -312,7 +312,7 @@ body{font-variant-ligatures:no-contextual;font-feature-settings:"calt" 0}
       if(p.canDelete || (me && me.admin)){
         var acts = el('div', 'post-acts');
         if(p.canDelete) acts.appendChild(delBtn(p));
-        if(me && me.admin && !p.author.admin){
+        if(me && me.admin){
           var adm = el('span', 'adm'); adm.appendChild(el('span', '', 'Badge for ' + p.author.name + ':'));
           adm.appendChild(badgeBtn(p, 'blue', 'Blue')); adm.appendChild(badgeBtn(p, 'yellow', 'Yellow'));
           acts.appendChild(adm);
