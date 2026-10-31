@@ -129,6 +129,11 @@ footer a{margin-right:14px}
 .mini{background:transparent;color:var(--ink);border:2px solid var(--line);border-radius:8px;padding:4px 10px;font:600 14px "Instrument Sans",sans-serif;cursor:pointer}
 .mini:hover{border-color:var(--ink)}
 .mini.del{color:var(--bad)}
+.mini.del.armed{background:var(--bad);border-color:var(--bad);color:#fff}
+.newdir{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin:0 0 14px;padding:14px;background:var(--surface);border:2px solid var(--ink);border-radius:14px}
+.newdir label{font-weight:600}
+.newdir input{flex:1 1 200px;min-width:0;font:inherit;padding:10px 12px;border:2px solid var(--line);border-radius:10px;background:var(--bg);color:var(--ink)}
+.newdir input:focus{border-color:var(--ink);outline:none}
 .empty{padding:26px;text-align:center;color:var(--muted)}
 .ups{margin-top:12px;display:grid;gap:8px}
 .up{background:var(--surface);border:2px solid var(--line);border-radius:10px;padding:8px 12px;font-size:14.5px}
@@ -226,6 +231,12 @@ footer a{margin-right:14px}
             <input type="file" id="file" multiple hidden>
           </div>
         </div>
+        <form class="newdir" id="newdir" hidden>
+          <label for="dirname">Folder name</label>
+          <input id="dirname" type="text" maxlength="200" autocomplete="off" placeholder="e.g. Photos">
+          <button class="btn" type="submit">Create</button>
+          <button class="btn ghost" type="button" id="dircancel">Cancel</button>
+        </form>
         <div class="drop" id="drop">Drag files here, or press Upload files.</div>
         <div class="ups" id="ups" aria-live="polite"></div>
         <div class="fm-msg" id="fmmsg" role="status"></div>
@@ -307,6 +318,22 @@ footer a{margin-right:14px}
   function mini(label, cls, fn){
     var b = document.createElement('button'); b.type = 'button'; b.className = 'mini' + (cls ? ' ' + cls : ''); b.textContent = label; b.addEventListener('click', fn); return b;
   }
+  // Delete asks on the page itself: first click turns the button into "Yes, delete" for 5 seconds.
+  // (Pop-up confirm boxes are blocked in some browsers, which silently cancelled deletes.)
+  function delBtn(what, run){
+    var b = document.createElement('button'); b.type = 'button'; b.className = 'mini del'; b.textContent = 'Delete';
+    var timer = null;
+    b.addEventListener('click', async function(){
+      if(!b.classList.contains('armed')){
+        b.classList.add('armed'); b.textContent = 'Yes, delete'; say('Click "Yes, delete" to delete ' + what + '. This cannot be undone.');
+        timer = setTimeout(function(){ b.classList.remove('armed'); b.textContent = 'Delete'; say(''); }, 5000);
+        return;
+      }
+      clearTimeout(timer); b.disabled = true; b.textContent = 'Deleting…'; say('Deleting…');
+      try { await run(); say(''); refresh(); } catch(err){ b.disabled = false; b.classList.remove('armed'); b.textContent = 'Delete'; say(err.message, true); }
+    });
+    return b;
+  }
 
   function draw(d){
     var rows = $('rows'); rows.textContent = '';
@@ -318,10 +345,7 @@ footer a{margin-right:14px}
       var n = document.createElement('button'); n.type = 'button'; n.className = 'nm'; n.textContent = name; n.addEventListener('click', function(){ open(join(cwd, name)); });
       var meta = document.createElement('span'); meta.className = 'meta'; meta.textContent = 'Folder';
       var act = document.createElement('span'); act.className = 'act';
-      act.appendChild(mini('Delete', 'del', async function(){
-        if(!confirm('Delete the folder "' + name + '" and everything inside it? This cannot be undone.')) return;
-        say('Deleting…'); try { await LB.files('delete', { path: join(cwd, name), folder: true }); say(''); refresh(); } catch(err){ say(err.message, true); }
-      }));
+      act.appendChild(delBtn('the folder "' + name + '" and everything inside it', function(){ return LB.files('delete', { path: join(cwd, name), folder: true }); }));
       r.appendChild(n); r.appendChild(meta); r.appendChild(act); rows.appendChild(r);
     });
     d.files.forEach(function(f){
@@ -332,10 +356,7 @@ footer a{margin-right:14px}
       act.appendChild(mini('Download', '', async function(){
         try { var x = await LB.files('download-url', { path: join(cwd, f.name) }); location.href = x.url; } catch(err){ say(err.message, true); }
       }));
-      act.appendChild(mini('Delete', 'del', async function(){
-        if(!confirm('Delete "' + f.name + '"? This cannot be undone.')) return;
-        say('Deleting…'); try { await LB.files('delete', { path: join(cwd, f.name) }); say(''); refresh(); } catch(err){ say(err.message, true); }
-      }));
+      act.appendChild(delBtn('"' + f.name + '"', function(){ return LB.files('delete', { path: join(cwd, f.name) }); }));
       r.appendChild(n); r.appendChild(meta); r.appendChild(act); rows.appendChild(r);
     });
   }
@@ -409,11 +430,13 @@ footer a{margin-right:14px}
   }
   $('pick').addEventListener('click', function(){ $('file').click(); });
   $('file').addEventListener('change', function(){ var l = Array.prototype.slice.call(this.files); this.value = ''; if(l.length) uploadAll(l); });
-  $('mkdir').addEventListener('click', async function(){
-    var name = prompt('Name for the new folder:'); if(!name) return;
-    name = name.trim(); if(!name) return;
+  $('mkdir').addEventListener('click', function(){ $('newdir').hidden = false; $('dirname').value = ''; $('dirname').focus(); });
+  $('dircancel').addEventListener('click', function(){ $('newdir').hidden = true; });
+  $('newdir').addEventListener('submit', async function(e){
+    e.preventDefault();
+    var name = $('dirname').value.trim(); if(!name) return;
     if(/[\\/]/.test(name)){ say('A folder name cannot contain / or \\.', true); return; }
-    try { await LB.files('folder', { path: join(cwd, name) }); refresh(); } catch(err){ say(err.message, true); }
+    try { await LB.files('folder', { path: join(cwd, name) }); $('newdir').hidden = true; refresh(); } catch(err){ say(err.message, true); }
   });
   var drop = $('drop');
   ['dragenter','dragover'].forEach(function(ev){ drop.addEventListener(ev, function(e){ e.preventDefault(); drop.classList.add('over'); }); });
