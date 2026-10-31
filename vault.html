@@ -129,6 +129,10 @@ footer a{margin-right:14px}
 .mini{background:transparent;color:var(--ink);border:2px solid var(--line);border-radius:8px;padding:4px 10px;font:600 14px "Instrument Sans",sans-serif;cursor:pointer}
 .mini:hover{border-color:var(--ink)}
 .mini.del{color:var(--bad)}
+.btn.danger{color:var(--bad);border-color:var(--bad)}
+.wipe{display:flex;gap:14px;flex-wrap:wrap;align-items:center;justify-content:space-between;margin:0 0 14px;padding:14px 16px;border:2px solid var(--bad);border-radius:14px;background:var(--surface)}
+.wipe p{font-weight:600;flex:1 1 260px}
+.btn.wipe-yes{background:var(--bad);border-color:var(--bad);color:#fff}
 .mini.del.armed{background:var(--bad);border-color:var(--bad);color:#fff}
 .newdir{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin:0 0 14px;padding:14px;background:var(--surface);border:2px solid var(--ink);border-radius:14px}
 .newdir label{font-weight:600}
@@ -228,6 +232,7 @@ footer a{margin-right:14px}
           <div class="acts" style="margin:0">
             <button class="btn" type="button" id="pick">Upload files</button>
             <button class="btn ghost" type="button" id="mkdir">New folder</button>
+            <button class="btn ghost danger" type="button" id="delall" hidden>Delete all</button>
             <input type="file" id="file" multiple hidden>
           </div>
         </div>
@@ -239,6 +244,13 @@ footer a{margin-right:14px}
         </form>
         <div class="drop" id="drop">Drag files here, or press Upload files.</div>
         <div class="ups" id="ups" aria-live="polite"></div>
+        <div class="wipe" id="wipe" hidden role="alert">
+          <p id="wipetext"></p>
+          <div class="acts" style="margin:0">
+            <button class="btn wipe-yes" type="button" id="wipeyes">Yes, delete everything</button>
+            <button class="btn ghost" type="button" id="wipeno">Cancel</button>
+          </div>
+        </div>
         <div class="fm-msg" id="fmmsg" role="status"></div>
         <div class="rows" id="rows"></div>
         <div id="dbg" hidden style="margin-top:14px"><button class="btn" type="button" id="corsbtn">Fix upload permissions</button> <button class="btn ghost" type="button" id="dbgbtn">Run storage test</button><pre id="dbgout" style="white-space:pre-wrap;word-break:break-word;background:var(--surface);border:2px solid var(--line);border-radius:10px;padding:12px;margin-top:10px;font-size:13px"></pre></div>
@@ -281,7 +293,7 @@ footer a{margin-right:14px}
 
 
   // ---------- file manager ----------
-  var cwd = '', quotaBytes = 0, usedBytes = 0;
+  var cwd = '', quotaBytes = 0, usedBytes = 0, shown = { files: 0, folders: 0 };
   var ICON_DIR = '<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" aria-hidden="true"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>';
   var ICON_FILE = '<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" aria-hidden="true"><path d="M6 3h8l5 5v13H6z"/><path d="M14 3v5h5"/></svg>';
 
@@ -365,6 +377,9 @@ footer a{margin-right:14px}
     try {
       var d = await LB.files('list', { path: cwd });
       cwd = d.path || ''; quotaBytes = d.quota; usedBytes = d.used;
+      shown = { files: d.files.length, folders: d.folders.length };
+      $('delall').hidden = !(shown.files || shown.folders);
+      $('wipe').hidden = true;
       crumbs(); gauge(); draw(d);
     } catch(err){
       $('rows').textContent = ''; var e = document.createElement('div'); e.className = 'empty';
@@ -431,6 +446,21 @@ footer a{margin-right:14px}
   $('pick').addEventListener('click', function(){ $('file').click(); });
   $('file').addEventListener('change', function(){ var l = Array.prototype.slice.call(this.files); this.value = ''; if(l.length) uploadAll(l); });
   $('mkdir').addEventListener('click', function(){ $('newdir').hidden = false; $('dirname').value = ''; $('dirname').focus(); });
+  function plural(n, one, many){ return n + ' ' + (n === 1 ? one : many); }
+  $('delall').addEventListener('click', function(){
+    var parts = [];
+    if(shown.folders) parts.push(plural(shown.folders, 'folder', 'folders') + (shown.folders === 1 ? ' and everything in it' : ' and everything in them'));
+    if(shown.files) parts.push(plural(shown.files, 'file', 'files'));
+    $('wipetext').textContent = (cwd ? 'Delete everything in "' + cwd.split('/').pop() + '": ' : 'Delete everything in your vault: ') + parts.join(', ') + '? This cannot be undone.';
+    $('wipe').hidden = false; $('wipeyes').focus();
+  });
+  $('wipeno').addEventListener('click', function(){ $('wipe').hidden = true; });
+  $('wipeyes').addEventListener('click', async function(){
+    var b = this; b.disabled = true; b.textContent = 'Deleting…'; say('Deleting everything…');
+    try { var r = await LB.files('delete-all', { path: cwd }); say('Deleted ' + plural(r.deleted, 'item', 'items') + '.'); }
+    catch(err){ say(err.message, true); }
+    b.disabled = false; b.textContent = 'Yes, delete everything'; refresh();
+  });
   $('dircancel').addEventListener('click', function(){ $('newdir').hidden = true; });
   $('newdir').addEventListener('submit', async function(e){
     e.preventDefault();

@@ -8,6 +8,7 @@
 //   { "action": "folder", "path": "photos/2026" }             make a folder
 //   { "action": "download-url", "path": "photos/me.jpg" }
 //   { "action": "delete", "path": "photos/me.jpg" }           add "folder": true to delete a folder and everything in it
+//   { "action": "delete-all", "path": "photos" }             empty a folder but keep it ("" = the whole vault)
 //
 // Environment variables (set in Vercel, see STORAGE-SETUP.md):
 //   B2_KEY_ID, B2_APP_KEY   SECRET.  A Backblaze application key limited to your bucket.
@@ -166,6 +167,26 @@ async function downloadUrl(res, cfg, userId, body) {
   return res.status(200).json({ ok: true, url });
 }
 
+// Delete everything inside a folder but keep the folder. With path "" it empties the whole vault.
+async function removeAll(res, cfg, userId, body) {
+  const path = cleanPath(body.path, true);
+  if (path === null) return res.status(400).json({ ok: false, error: 'That folder name is not allowed.' });
+  const { DeleteObjectsCommand, ListObjectsV2Command } = deps.cmd();
+  const prefix = areaOf(userId) + (path ? path + '/' : '');
+  let deleted = 0, token;
+  for (let i = 0; i < MAX_LIST_PAGES; i++) {
+    const r = await deps.send(cfg, new ListObjectsV2Command({ Bucket: cfg.bucket, Prefix: prefix, ContinuationToken: token }));
+    const keys = (r.Contents || []).filter((o) => o.Key !== prefix).map((o) => ({ Key: o.Key }));
+    if (keys.length) {
+      await deps.send(cfg, new DeleteObjectsCommand({ Bucket: cfg.bucket, Delete: { Objects: keys, Quiet: true } }));
+      deleted += keys.length;
+    }
+    if (!r.IsTruncated) break;
+    token = r.NextContinuationToken;
+  }
+  return res.status(200).json({ ok: true, deleted });
+}
+
 async function remove(res, cfg, userId, body) {
   const path = cleanPath(body.path, false);
   if (!path) return res.status(400).json({ ok: false, error: 'That name is not allowed.' });
@@ -292,6 +313,7 @@ async function handler(req, res) {
     if (body.action === 'folder') return await makeFolder(res, cfg, userId, body);
     if (body.action === 'download-url') return await downloadUrl(res, cfg, userId, body);
     if (body.action === 'delete') return await remove(res, cfg, userId, body);
+    if (body.action === 'delete-all') return await removeAll(res, cfg, userId, body);
     if (body.action === 'selftest') return await selftest(res, cfg, userId);
     if (body.action === 'fix-cors') return await fixCors(req, res, cfg);
     return res.status(400).json({ ok: false, error: 'Unknown action.' });
