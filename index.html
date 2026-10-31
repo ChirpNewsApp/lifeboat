@@ -97,9 +97,6 @@ section h2{font-size:clamp(30px,4.4vw,48px);font-weight:700;letter-spacing:-0.02
 .plan ul{padding-left:18px;margin:12px 0 0;font-size:15px}
 .plan li{margin:4px 0}
 
-form{display:flex;gap:10px;flex-wrap:wrap;margin-top:26px;max-width:520px}
-input[type=email]{flex:1 1 220px;font:400 17px "Instrument Sans",sans-serif;padding:13px 14px;border-radius:10px;border:2px solid var(--ink);background:var(--surface);color:var(--ink)}
-#joined{margin-top:14px;color:var(--ok);font-weight:600;min-height:1.5em}
 footer{padding:36px 0 50px;color:var(--muted);font-size:14px;border-top:2px solid var(--line)}
 
 @media (max-width:820px){
@@ -204,16 +201,13 @@ footer{padding:36px 0 50px;color:var(--muted);font-size:14px;border-top:2px soli
     <p style="margin-top:26px"><a class="btn" href="/pricing">Compare plans and choose</a></p>
     </section>
 
-    <section id="waitlist">
-      <h2>Be first in the boat</h2>
-      <p class="sub">Leave your email and we'll tell you when early access opens.</p>
-      <form id="form">
-        <label for="email" style="position:absolute;left:-9999px">Email address</label>
-        <input id="email" type="email" placeholder="you@example.com" required autocomplete="email">
-        <input type="text" id="company" name="company" tabindex="-1" autocomplete="off" aria-hidden="true" style="position:absolute;left:-9999px;width:1px;height:1px;opacity:0">
-        <button class="btn" type="submit">Join the waitlist</button>
-      </form>
-      <div id="joined" aria-live="polite"></div>
+    <section id="start" class="start">
+      <h2>Your safety copy starts free</h2>
+      <p class="sub">Create an account in a minute and get 1 GB free. Upgrade when you need more room.</p>
+      <div class="cta" style="margin-top:26px">
+        <button class="btn" type="button" data-signup>Get started free</button>
+        <a class="btn ghost" href="/pricing">See plans</a>
+      </div>
     </section>
   </main>
 
@@ -251,38 +245,6 @@ footer{padding:36px 0 50px;color:var(--muted);font-size:14px;border-top:2px soli
     },500*items.length+600);
   });
 
-  document.getElementById('form').addEventListener('submit',function(e){
-    e.preventDefault();
-    var form=e.target, out=document.getElementById('joined'),
-        btn=form.querySelector('button[type=submit]');
-    out.style.color='';
-    btn.disabled=true; btn.textContent='Joining...';
-    fetch('/api/waitlist',{
-      method:'POST',
-      headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({
-        email:document.getElementById('email').value,
-        company:document.getElementById('company').value
-      })
-    }).then(function(r){
-      return r.json().catch(function(){return {ok:false}});
-    }).then(function(d){
-      if(d.ok){
-        form.reset();
-        out.textContent=d.confirmed
-          ? 'You are on the waitlist! Check your inbox for a confirmation email.'
-          : 'You are on the waitlist! We\u2019ll email you when early access opens.';
-      }else{
-        out.style.color='var(--bad)';
-        out.textContent=d.error||'That did not go through. Try again in a minute.';
-      }
-    }).catch(function(){
-      out.style.color='var(--bad)';
-      out.textContent='Could not reach the server. Check your connection and try again.';
-    }).then(function(){
-      btn.disabled=false; btn.textContent='Join the waitlist';
-    });
-  });
 })();
 </script>
 <script src="/auth.js"></script>
