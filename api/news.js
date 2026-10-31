@@ -11,6 +11,7 @@
 //   { "action": "avatar-set", "key": "..." } / { "action": "avatar-remove" }   admins only
 //   { "action": "image-url", "type": "image/png", "size": 12345 }   admins only: link to upload one photo for a post
 //   Posts can include "images": [keys from image-url], admins only, up to 4.
+//   { "action": "pin", "id": "...", "pinned": true | false }   admins only: pinned posts show first
 //
 // Posts are stored as small JSON files in the same Backblaze bucket, under news/.
 
@@ -28,6 +29,7 @@ const MAX_AVATAR_BYTES = 5 * 1000 * 1000;
 const AVATAR_TYPES = { 'image/jpeg': 'jpg', 'image/png': 'png', 'image/webp': 'webp', 'image/gif': 'gif' };
 const AVATAR_KEY = /^news\/avatars\/[a-f0-9]{24}\.(jpg|png|webp|gif)$/;
 const MAX_IMAGES = 4;
+const MAX_PINS = 10;
 const MAX_IMAGE_BYTES = 10 * 1000 * 1000;
 const IMAGE_KEY = /^news\/img\/[a-f0-9]{24}\.(jpg|png|webp|gif)$/;
 
@@ -101,8 +103,13 @@ async function publicPost(cfg, p, badges, me, avatarOf) {
 async function list(req, res, cfg, keys) {
   const me = await viewer(req, keys);
   const { ListObjectsV2Command } = deps.cmd();
-  const r = await deps.send(cfg, new ListObjectsV2Command({ Bucket: cfg.bucket, Prefix: 'news/posts/', MaxKeys: MAX_LIST }));
-  const keysFound = (r.Contents || []).map((o) => o.Key).filter((k) => k.endsWith('.json'));
+  const [r, pins] = await Promise.all([
+    deps.send(cfg, new ListObjectsV2Command({ Bucket: cfg.bucket, Prefix: 'news/posts/', MaxKeys: MAX_LIST })),
+    readJson(cfg, 'news/pins.json', []),
+  ]);
+  // Pinned posts come first (most recently pinned on top), even if they are older than the newest 100.
+  const pinKeys = pins.filter(validId).map(postKey);
+  const keysFound = pinKeys.concat((r.Contents || []).map((o) => o.Key).filter((k) => k.endsWith('.json') && pinKeys.indexOf(k) === -1));
   const [posts, badges, avatarOf] = await Promise.all([
     Promise.all(keysFound.map((k) => readJson(cfg, k, null))),
     readJson(cfg, 'news/badges.json', {}),
@@ -112,8 +119,22 @@ async function list(req, res, cfg, keys) {
   return res.status(200).json({
     ok: true,
     me: me ? { name: me.username, admin: me.admin, avatar: me.admin ? await avatarOf(me.userId, me.username) : '' } : null,
-    posts: await Promise.all(posts.filter(Boolean).map((p) => publicPost(cfg, p, badges, me, avatarOf))),
+    posts: await Promise.all(posts.filter(Boolean).map(async (p) => Object.assign(await publicPost(cfg, p, badges, me, avatarOf), { pinned: pins.indexOf(p.id) !== -1 }))),
   });
+}
+
+async function pin(req, res, cfg, keys, body) {
+  const me = await viewer(req, keys);
+  if (!me || !me.admin) return res.status(403).json({ ok: false, error: 'Only admins can pin posts.' });
+  if (!validId(body.id)) return res.status(400).json({ ok: false, error: 'Unknown post.' });
+  if (!(await readJson(cfg, postKey(body.id), null))) return res.status(404).json({ ok: false, error: 'That post is gone.' });
+  let pins = (await readJson(cfg, 'news/pins.json', [])).filter((x) => x !== body.id);
+  if (body.pinned) {
+    if (pins.length >= MAX_PINS) return res.status(400).json({ ok: false, error: 'You can pin up to ' + MAX_PINS + ' posts. Unpin one first.' });
+    pins.unshift(body.id);
+  }
+  await writeJson(cfg, 'news/pins.json', pins);
+  return res.status(200).json({ ok: true, pinned: !!body.pinned });
 }
 
 async function post(req, res, cfg, keys, body) {
@@ -153,6 +174,8 @@ async function remove(req, res, cfg, keys, body) {
   const { DeleteObjectCommand } = deps.cmd();
   await deps.send(cfg, new DeleteObjectCommand({ Bucket: cfg.bucket, Key: postKey(body.id) }));
   for (const k of p.images || []) { try { await deps.send(cfg, new DeleteObjectCommand({ Bucket: cfg.bucket, Key: k })); } catch (e) { /* already gone */ } }
+  const pins = await readJson(cfg, 'news/pins.json', []);
+  if (pins.indexOf(body.id) !== -1) await writeJson(cfg, 'news/pins.json', pins.filter((x) => x !== body.id));
   return res.status(200).json({ ok: true });
 }
 
@@ -215,6 +238,7 @@ async function handler(req, res) {
     if (body.action === 'post') return await post(req, res, cfg, keys, body);
     if (body.action === 'delete') return await remove(req, res, cfg, keys, body);
     if (body.action === 'badge') return await badge(req, res, cfg, keys, body);
+    if (body.action === 'pin') return await pin(req, res, cfg, keys, body);
     if (body.action === 'avatar-url' || body.action === 'image-url') return await uploadLink(req, res, cfg, keys, body);
     if (body.action === 'avatar-set' || body.action === 'avatar-remove') return await avatarSet(req, res, cfg, keys, body);
     return res.status(400).json({ ok: false, error: 'Unknown action.' });
