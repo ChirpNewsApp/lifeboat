@@ -120,28 +120,33 @@ function siteUrl(req) {
   return 'https://' + host;
 }
 
-async function myPlan(req, res, keys) {
-  const userId = await whoIs(req, res, keys.clerk);
-  if (!userId) return;
+// Works out one person's plan (used by my-plan here and by the file storage limits in files.js).
+async function resolvePlan(keys, userId) {
   const user = await deps.user(userId, keys.clerk);
+  const plans = PLAN_DATA.plans || {};
 
   // 1. Plans you give out by hand in plans.json always win.
-  const plans = PLAN_DATA.plans || {};
   const manual = String((PLAN_DATA.assignments || {})[user.username.toLowerCase()] || '').trim().toLowerCase();
   if (manual && plans[manual]) {
-    return res.status(200).json({ ok: true, username: user.username, source: 'manual', billing: !!user.stripeCustomerId, plan: manual, label: plans[manual].label, storageGB: plans[manual].storageGB });
+    return { ok: true, username: user.username, source: 'manual', billing: !!user.stripeCustomerId, plan: manual, label: plans[manual].label, storageGB: plans[manual].storageGB };
   }
 
   // 2. Otherwise, whatever they pay for in Stripe.
   if (keys.stripe && user.stripeCustomerId) {
     try {
       const d = describe(await stripePlans(keys.stripe, user.stripeCustomerId));
-      return res.status(200).json({ ok: true, username: user.username, source: d.plan === 'free' ? 'free' : 'stripe', billing: true, plan: d.plan, label: d.label, storageGB: d.storageGB });
+      return { ok: true, username: user.username, source: d.plan === 'free' ? 'free' : 'stripe', billing: true, plan: d.plan, label: d.label, storageGB: d.storageGB };
     } catch (e) { /* fall through to Free */ }
   }
 
   const free = plans.free || { label: 'Free', storageGB: 1 };
-  return res.status(200).json({ ok: true, username: user.username, source: 'free', billing: !!user.stripeCustomerId, plan: 'free', label: free.label, storageGB: free.storageGB });
+  return { ok: true, username: user.username, source: 'free', billing: !!user.stripeCustomerId, plan: 'free', label: free.label, storageGB: free.storageGB };
+}
+
+async function myPlan(req, res, keys) {
+  const userId = await whoIs(req, res, keys.clerk);
+  if (!userId) return;
+  return res.status(200).json(await resolvePlan(keys, userId));
 }
 
 async function ensureCustomer(keys, userId, user) {
@@ -231,3 +236,5 @@ async function handler(req, res) {
 
 module.exports = handler;
 module.exports._deps = deps;
+module.exports.whoIs = whoIs;
+module.exports.resolvePlan = resolvePlan;
