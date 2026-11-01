@@ -14,7 +14,7 @@
 //   { "action": "pin", "id": "...", "pinned": true | false }   admins only: pinned posts show first
 //   { "action": "reply", "id": "...", "text": "..." }   admins and people with the yellow badge only
 //   { "action": "reply-delete", "id": "...", "replyId": "..." }   the reply's author or an admin
-//   { "action": "tag", "id": "...", "tag": "bughunter", "on": true | false }   admins only: give the post's author a tag
+//   { "action": "tag", "id": "...", "tag": "team" | "bughunter", "on": true | false }   admins only: give the post's author a tag
 //
 // Posts are stored as small JSON files in the same Backblaze bucket, under news/.
 
@@ -28,7 +28,7 @@ const MAX_TEXT = 4000;
 const MAX_LIST = 100;
 const POST_GAP_SECONDS = 30;          // one post every 30 seconds per person
 const BADGES = ['blue', 'yellow'];
-const TAGS = ['bughunter'];            // tags admins can give, shown next to the name like Team
+const TAGS = ['team', 'bughunter'];    // tags admins can give, shown next to the name (admins always show Team)
 const MAX_AVATAR_BYTES = 5 * 1000 * 1000;
 const AVATAR_TYPES = { 'image/jpeg': 'jpg', 'image/png': 'png', 'image/webp': 'webp', 'image/gif': 'gif' };
 const AVATAR_KEY = /^news\/avatars\/[a-f0-9]{24}\.(jpg|png|webp|gif)$/;

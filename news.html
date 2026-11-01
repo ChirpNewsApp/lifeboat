@@ -421,7 +421,7 @@ body{font-variant-ligatures:no-contextual;font-feature-settings:"calt" 0}
       var body = el('div', 'reply-body'), line = el('div', 'reply-line');
       var who = el('span', 'who', r.author.name); if(BADGE[r.author.badge]) who.insertAdjacentHTML('beforeend', BADGE[r.author.badge]);
       line.appendChild(who);
-      if(r.author.admin) line.appendChild(el('span', 'tag team', 'Team'));
+      if(r.author.admin || (r.author.tags || []).indexOf('team') !== -1) line.appendChild(el('span', 'tag team', 'Team'));
       if((r.author.tags || []).indexOf('bughunter') !== -1) line.appendChild(el('span', 'tag bug', 'Bug Hunter'));
       var t = el('time', '', ago(r.created)); t.dateTime = r.created; t.title = new Date(r.created).toLocaleString(); line.appendChild(t);
       body.appendChild(line); body.appendChild(el('p', '', r.text));
@@ -531,7 +531,7 @@ body{font-variant-ligatures:no-contextual;font-feature-settings:"calt" 0}
       var who = el('span', 'who', p.author.name);
       if(BADGE[p.author.badge]) who.insertAdjacentHTML('beforeend', BADGE[p.author.badge]);
       line1.appendChild(who);
-      if(p.author.admin) line1.appendChild(el('span', 'tag team', 'Team'));
+      if(p.author.admin || (p.author.tags || []).indexOf('team') !== -1) line1.appendChild(el('span', 'tag team', 'Team'));
       if((p.author.tags || []).indexOf('bughunter') !== -1) line1.appendChild(el('span', 'tag bug', 'Bug Hunter'));
       var line2 = el('div', 'post-line');
       line2.appendChild(el('span', 'tag' + (p.kind === 'news' ? ' news' : ''), p.kind === 'news' ? 'News' : 'Feedback'));
@@ -553,6 +553,7 @@ body{font-variant-ligatures:no-contextual;font-feature-settings:"calt" 0}
         if(me && me.admin){
           var adm = el('span', 'adm'); adm.appendChild(el('span', '', 'Badges for ' + p.author.name + ':'));
           adm.appendChild(badgeBtn(p, 'blue', 'Blue')); adm.appendChild(badgeBtn(p, 'yellow', 'Yellow'));
+          if(!p.author.admin) adm.appendChild(tagBtn(p, 'team', 'Team'));
           adm.appendChild(tagBtn(p, 'bughunter', 'Bug Hunter'));
           acts.appendChild(adm);
         }
