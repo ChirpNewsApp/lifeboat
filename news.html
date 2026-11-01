@@ -562,9 +562,24 @@ body{font-variant-ligatures:no-contextual;font-feature-settings:"calt" 0}
     });
   }
 
+  function show(list, who){
+    posts = list; me = who;
+    pinOrder = posts.filter(function(p){ return p.pinned; }).map(function(p){ return p.id; });
+    sortPosts(); draw();
+    var adm = !!(me && me.admin); $('c-kindwrap').hidden = !adm; $('c-picwrap').hidden = !adm; $('prof').hidden = !adm; if(adm) setProf(me.avatar, me.name);
+  }
+  // 1. Instantly: posts pre-loaded by another page (up to 5 minutes old).
+  var shownEarly = false;
+  try { var c = JSON.parse(sessionStorage.getItem('lb_news') || 'null'); if(c && Date.now() - c.t < 5 * 60000 && Array.isArray(c.posts)){ show(c.posts, null); shownEarly = true; } } catch(e){}
+  // 2. Straight away: the public list, without waiting for login to load.
+  var early = fetch('/api/news', { headers: { Accept: 'application/json' } }).then(function(r){ return r.json(); }).then(function(d){
+    if(d && d.ok && !upgraded){ show(d.posts, null); shownEarly = true; try { sessionStorage.setItem('lb_news', JSON.stringify({ t: Date.now(), posts: d.posts })); } catch(e){} }
+  }).catch(function(){});
+  // 3. After login loads: the same list with your buttons (delete, badges, replies).
+  var upgraded = false;
   async function load(){
-    try { var d = await api('list'); posts = d.posts; me = d.me; pinOrder = posts.filter(function(p){ return p.pinned; }).map(function(p){ return p.id; }); sortPosts(); draw(); var adm = !!(me && me.admin); $('c-kindwrap').hidden = !adm; $('c-picwrap').hidden = !adm; $('prof').hidden = !adm; if(adm) setProf(me.avatar, me.name); }
-    catch(err){ $('posts').textContent = ''; $('posts').appendChild(el('p', 'n-empty', err.message)); }
+    try { var d = await api('list'); upgraded = true; show(d.posts, d.me); }
+    catch(err){ if(!shownEarly){ $('posts').textContent = ''; $('posts').appendChild(el('p', 'n-empty', err.message)); } }
   }
 
   document.querySelectorAll('[data-filter]').forEach(function(b){
@@ -593,7 +608,7 @@ body{font-variant-ligatures:no-contextual;font-feature-settings:"calt" 0}
   });
 
   function signedOutUI(){ $('c-out').hidden = false; $('c-form').hidden = true; }
-  LB.ready.then(function(){ $('c-out').hidden = !!LB.signedIn; $('c-form').hidden = !LB.signedIn; load(); }).catch(function(){ signedOutUI(); load(); });
+  LB.ready.then(function(){ $('c-out').hidden = !!LB.signedIn; $('c-form').hidden = !LB.signedIn; if(LB.signedIn) load(); else early.then(function(){ if(!shownEarly) load(); }); }).catch(function(){ signedOutUI(); early.then(function(){ if(!shownEarly) load(); }); });
 })();
 </script>
 </body>

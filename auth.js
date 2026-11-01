@@ -119,4 +119,17 @@
     showHeader(); // shows Sign in and Get started
     rejectReady(err);
   });
+
+  // Pre-load the news in the background so /news opens instantly.
+  LB.prefetchNews = function () {
+    return fetch('/api/news', { headers: { Accept: 'application/json' } })
+      .then(function (r) { return r.ok ? r.json() : null; })
+      .then(function (d) { if (d && d.ok) { try { sessionStorage.setItem('lb_news', JSON.stringify({ t: Date.now(), posts: d.posts })); } catch (e) {} } return d; })
+      .catch(function () { return null; });
+  };
+  if (location.pathname.replace(/\/$/, '') !== '/news') {
+    var later = window.requestIdleCallback || function (fn) { setTimeout(fn, 1200); };
+    window.addEventListener('load', function () { later(function () { LB.prefetchNews(); }); });
+    var hint = document.createElement('link'); hint.rel = 'prefetch'; hint.href = '/news'; document.head.appendChild(hint);
+  }
 })();

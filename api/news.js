@@ -300,7 +300,14 @@ async function avatarSet(req, res, cfg, keys, body) {
 }
 
 async function handler(req, res) {
-  if (req.method !== 'POST') { res.setHeader('Allow', 'POST'); return res.status(405).json({ ok: false, error: 'Use POST.' }); }
+  // GET is the public, cacheable list (no login), so pages can pre-load the news quickly.
+  if (req.method === 'GET') {
+    const cfgG = files.config();
+    if (!process.env.CLERK_SECRET_KEY || !cfgG) return res.status(500).json({ ok: false, error: 'The news board is not set up yet.' });
+    try { req.headers = Object.assign({}, req.headers, { authorization: '' }); return await list(req, res, cfgG, { clerk: process.env.CLERK_SECRET_KEY }); }
+    catch (err) { console.error('Lifeboat news error:', err); return res.status(500).json({ ok: false, error: 'The news board had a problem. Try again in a minute.' }); }
+  }
+  if (req.method !== 'POST') { res.setHeader('Allow', 'GET, POST'); return res.status(405).json({ ok: false, error: 'Use GET or POST.' }); }
   const keys = { clerk: process.env.CLERK_SECRET_KEY || '' };
   const cfg = files.config();
   if (!keys.clerk || !cfg) return res.status(500).json({ ok: false, error: 'The news board is not set up yet.' });
