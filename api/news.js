@@ -6,6 +6,7 @@
 //   { "action": "list" }                                         newest posts first (no login needed)
 //   { "action": "post", "title": "...", "text": "...", "kind": "other" | "bug" | "staff" | "news" }   a tag is required; news is admins only
 //   Staff reports are private: only admins and the person who wrote it can see or reply to them.
+//   Bug reports email everyone on the team (admins plus the Team tag) and get an instant reply from Lifeboat Bot.
 //   { "action": "delete", "id": "..." }                          your own post, or any post if you are an admin
 //   { "action": "badge", "id": "...", "badge": "blue" | "yellow" | "" }   admins only: badge the post's author
 //   { "action": "avatar-url", "type": "image/jpeg", "size": 12345 }   admins only: link to upload a profile picture
@@ -44,6 +45,15 @@ const deps = {
   async user(userId, key) { return account._deps.user(userId, key); },
   send(cfg, cmd) { return files._deps.send(cfg, cmd); },
   sign(cfg, cmd, seconds) { return files._deps.sign(cfg, cmd, seconds); },
+  // Everyone on the team: admins (admins.json) and people with the Team tag.
+  async teamEmails(keys, tags) {
+    const out = new Set();
+    const tagged = Object.keys(tags || {}).filter((id) => tags[id] && tags[id].team);
+    await Promise.all(tagged.map(async (id) => { try { const u = await account._deps.user(id, keys.clerk); if (u && u.email) out.add(String(u.email).toLowerCase()); } catch (e) { /* skip */ } }));
+    await Promise.all(((ADMINS && ADMINS.admins) || []).map(async (name) => { try { const u = await files._deps.findUser(name, keys.clerk); if (u && u.email) out.add(String(u.email).toLowerCase()); } catch (e) { /* skip */ } }));
+    return [...out].slice(0, 25);
+  },
+  sendEmail(to, subject, text, html) { return files._deps.sendEmail(to, subject, text, html); },
   cmd() { return files._deps.cmd(); },
   now() { return Date.now(); },
 };
@@ -98,6 +108,7 @@ async function avatarLinks(cfg) {
 
 function tagsOf(tags, userId) { return TAGS.filter((t) => tags && tags[userId] && tags[userId][t]); }
 async function authorOf(userId, username, badges, tags, avatarOf) {
+  if (userId === BOT.id) return { name: BOT.name, badge: 'yellow', admin: false, tags: ['team'], avatar: BOT.avatar, bot: true };
   return { name: username || 'member', badge: badges[userId] || '', admin: isAdmin(username), tags: tagsOf(tags, userId), avatar: avatarOf ? await avatarOf(userId, username) : '' };
 }
 
@@ -112,7 +123,7 @@ async function publicPost(cfg, p, badges, me, avatarOf, tags) {
     replies: await Promise.all((p.replies || []).map(async (r) => ({
       id: r.id, text: r.text, created: r.created,
       author: await authorOf(r.userId, r.username, badges, tags, avatarOf),
-      canDelete: !!(me && (me.userId === r.userId || me.admin)),
+      canDelete: !!(me && (me.admin || (r.userId !== BOT.id && me.userId === r.userId))),
     }))),
   };
 }
@@ -122,6 +133,9 @@ function canReply(me, badges) { return !!me && (me.admin || badges[me.userId] ==
 // Staff reports are only for admins and the person who wrote them.
 function canSee(p, me) { return p.kind !== 'staff' || (!!me && (me.admin || me.userId === p.userId)); }
 const KINDS = ['other', 'bug', 'staff'];
+const BOT = { id: 'lifeboat-bot', name: 'Lifeboat Bot', avatar: '/bot.svg' };
+const BOT_BUG_REPLY = 'Thanks for reporting a bug. Staff have been notified and will be with you soon.';
+const SITE = 'https://www.lifeboatrecovery.com';
 
 async function list(req, res, cfg, keys) {
   const me = await viewer(req, keys);
@@ -225,10 +239,31 @@ async function post(req, res, cfg, keys, body) {
     return res.status(429).json({ ok: false, error: 'Wait a few seconds before posting again.' });
   }
   const p = { id: newId(now), title, text, kind, images, created: new Date(now).toISOString(), userId: me.userId, username: me.username };
+  if (kind === 'bug') p.replies = [{ id: 'bot' + now.toString(36), text: BOT_BUG_REPLY, created: new Date(now + 1000).toISOString(), userId: BOT.id, username: BOT.name }];
   await writeJson(cfg, postKey(p.id), p);
+  if (kind === 'bug') await notifyTeam(cfg, keys, p);
   await writeJson(cfg, 'news/rate/' + me.userId + '.json', { last: now });
   const [badges, avatarOf, tags] = await Promise.all([readJson(cfg, 'news/badges.json', {}), avatarLinks(cfg), readJson(cfg, 'news/tags.json', {})]);
   return res.status(200).json({ ok: true, post: await publicPost(cfg, p, badges, me, avatarOf, tags) });
+}
+
+// Email the team about a new bug report. Failures never block the post.
+async function notifyTeam(cfg, keys, p) {
+  try {
+    const tags = await readJson(cfg, 'news/tags.json', {});
+    const to = await deps.teamEmails(keys, tags);
+    const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+    const preview = p.text.length > 400 ? p.text.slice(0, 397) + '...' : p.text;
+    const subject = 'New bug report: respond now!';
+    const text = '@' + p.username + ' reported a bug on Lifeboat.\n\n' + p.title + '\n\n' + preview + '\n\nRespond now: ' + SITE + '/news';
+    const html = '<div style="font-family:Arial,sans-serif;color:#0A3340;max-width:520px">'
+      + '<p style="font-size:13px;font-weight:bold;color:#C2321B;margin:0 0 6px">NEW BUG REPORT</p>'
+      + '<p style="font-size:20px;font-weight:bold;margin:0 0 4px">' + esc(p.title) + '</p>'
+      + '<p style="font-size:14px;color:#4F6E77;margin:0 0 14px">from @' + esc(p.username) + '</p>'
+      + '<p style="font-size:15px;white-space:pre-wrap;margin:0 0 18px">' + esc(preview) + '</p>'
+      + '<p><a href="' + SITE + '/news" style="display:inline-block;background:#FF5B2E;color:#fff;padding:10px 16px;border-radius:8px;text-decoration:none;font-weight:bold">Respond now</a></p></div>';
+    await Promise.all(to.map((addr) => deps.sendEmail(addr, subject, text, html).catch(() => null)));
+  } catch (e) { console.error('Lifeboat bug-report email failed:', e); }
 }
 
 async function remove(req, res, cfg, keys, body) {

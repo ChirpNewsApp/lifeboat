@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" role="img" aria-label="Lifeboat Bot">
+  <rect width="120" height="120" rx="60" fill="#0A3340"/>
+  <line x1="60" y1="20" x2="60" y2="32" stroke="#E6F3F4" stroke-width="4" stroke-linecap="round"/>
+  <circle cx="60" cy="17" r="6" fill="#FF5B2E"/>
+  <rect x="26" y="32" width="68" height="56" rx="16" fill="#E6F3F4"/>
+  <rect x="17" y="50" width="9" height="20" rx="4" fill="#FF5B2E"/>
+  <rect x="94" y="50" width="9" height="20" rx="4" fill="#FF5B2E"/>
+  <circle cx="46" cy="56" r="8" fill="#0A3340"/>
+  <circle cx="74" cy="56" r="8" fill="#0A3340"/>
+  <circle cx="48.5" cy="53.5" r="2.5" fill="#E6F3F4"/>
+  <circle cx="76.5" cy="53.5" r="2.5" fill="#E6F3F4"/>
+  <path d="M45 73 Q60 82 75 73" fill="none" stroke="#FF5B2E" stroke-width="4.5" stroke-linecap="round"/>
+  <rect x="44" y="92" width="32" height="8" rx="4" fill="#E6F3F4" opacity=".55"/>
+</svg>
