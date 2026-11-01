@@ -129,7 +129,8 @@ async function publicPost(cfg, p, badges, me, avatarOf, tags) {
 }
 
 // Only admins and people with the yellow badge can reply.
-function canReply(me, badges) { return !!me && (me.admin || badges[me.userId] === 'yellow'); }
+// Who can reply: admins, people with the yellow badge, and people with the Team tag.
+function canReply(me, badges, tags) { return !!me && (me.admin || badges[me.userId] === 'yellow' || !!(tags && tags[me.userId] && tags[me.userId].team)); }
 // Staff reports are only for admins and the person who wrote them.
 function canSee(p, me) { return p.kind !== 'staff' || (!!me && (me.admin || me.userId === p.userId)); }
 const KINDS = ['other', 'bug', 'staff'];
@@ -156,7 +157,7 @@ async function list(req, res, cfg, keys) {
   if (!me) res.setHeader('Cache-Control', 'public, s-maxage=10, stale-while-revalidate=60');
   return res.status(200).json({
     ok: true,
-    me: me ? { name: me.username, admin: me.admin, canReply: canReply(me, badges), avatar: me.admin ? await avatarOf(me.userId, me.username) : '' } : null,
+    me: me ? { name: me.username, admin: me.admin, canReply: canReply(me, badges, tags), avatar: me.admin ? await avatarOf(me.userId, me.username) : '' } : null,
     posts: await Promise.all(posts.filter((p) => p && canSee(p, me)).map(async (p) => Object.assign(await publicPost(cfg, p, badges, me, avatarOf, tags), { pinned: pins.indexOf(p.id) !== -1 }))),
   });
 }
@@ -172,8 +173,8 @@ async function reply(req, res, cfg, keys, body) {
   const p = await readJson(cfg, postKey(body.id), null);
   if (!p || !canSee(p, me)) return res.status(404).json({ ok: false, error: 'That post is gone.' });
   // Staff reports: staff and the author can talk. Everything else: admins and yellow badges.
-  const allowed = p.kind === 'staff' ? (me.admin || me.userId === p.userId) : canReply(me, badges);
-  if (!allowed) return res.status(403).json({ ok: false, error: 'Only admins and people with the yellow badge can reply.' });
+  const allowed = p.kind === 'staff' ? (me.admin || me.userId === p.userId) : canReply(me, badges, tags);
+  if (!allowed) return res.status(403).json({ ok: false, error: 'Only the team and people with the yellow badge can reply.' });
   p.replies = p.replies || [];
   if (p.replies.length >= MAX_REPLIES) return res.status(400).json({ ok: false, error: 'This post has reached the reply limit.' });
   const now = deps.now();
