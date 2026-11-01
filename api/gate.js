@@ -1,12 +1,13 @@
 // Lifeboat security check (Cloudflare Turnstile).
 //
 // The home page, the Feedback board and the vault show a full-page
-// "Verifying you are human" screen on every visit (see /gate.js).
+// "Verifying you are human" screen (see /gate.js), skipped for 15 minutes after passing.
 //
 //   GET  /api/gate            -> { siteKey }   ('' while the check is switched off)
 //   POST /api/gate {token}    -> asks Cloudflare if the token is real; if so,
-//                                returns a short "human pass" the Feedback form
-//                                can use instead of a second check.
+//                                returns a 15-minute "human pass": pages skip the
+//                                check while it lasts, and the Feedback form uses
+//                                it instead of a second check.
 //
 // Switched on only when BOTH of these are set in Vercel:
 //   TURNSTILE_SITE_KEY     public. From Cloudflare > Turnstile > your widget.
@@ -14,7 +15,7 @@
 
 const crypto = require('crypto');
 
-const PASS_MINUTES = 120;
+const PASS_MINUTES = 15; // passing the check counts this long (gate.js uses the same)
 
 function on() { return !!(process.env.TURNSTILE_SITE_KEY && process.env.TURNSTILE_SECRET_KEY); }
 function siteKey() { return on() ? process.env.TURNSTILE_SITE_KEY : ''; }

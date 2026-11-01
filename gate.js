@@ -2,12 +2,15 @@
    visit to the pages that include this script. It stays out of the way when:
    - the Turnstile keys aren't set in Vercel yet (the server sends an empty key),
    - the visitor is a search engine (so Google can still list the site),
-   - the server can't be reached (so an outage never locks everyone out). */
+   - the server can't be reached (so an outage never locks everyone out),
+   - the visitor passed the check less than 15 minutes ago (any tab). */
 (function () {
   var ua = navigator.userAgent || '';
   if (/bot\b|bot\/|crawl|spider|slurp|bingpreview|mediapartners|google-inspectiontool|google-site-verification|facebookexternalhit|embedly|whatsapp|telegram|discord|slack|lighthouse/i.test(ua)) return;
 
-  var CACHE = 'lb_gate_key', PASS = 'lb_human';
+  var CACHE = 'lb_gate_key', PASS = 'lb_human', PASS_MS = 15 * 60000;
+  // Passed recently? Then go straight in until the 15 minutes run out.
+  try { var h = JSON.parse(localStorage.getItem(PASS) || 'null'); if (h && h.until > Date.now() && h.until - Date.now() <= PASS_MS) return; } catch (e) {}
   var cached = null;
   try { cached = JSON.parse(sessionStorage.getItem(CACHE) || 'null'); } catch (e) {}
   if (cached && cached.key === '' && Date.now() - cached.t < 10 * 60000) return; // switched off (checked recently)
@@ -85,7 +88,7 @@
           .then(function (r) { return r.json().catch(function () { return {}; }); })
           .then(function (d) {
             if (d && d.ok) {
-              if (d.pass) { try { sessionStorage.setItem(PASS, JSON.stringify({ pass: d.pass, exp: d.exp })); } catch (e) {} }
+              if (d.pass) { try { localStorage.setItem(PASS, JSON.stringify({ pass: d.pass, exp: d.exp, until: Date.now() + PASS_MS })); } catch (e) {} }
               sub.innerHTML = '<span class="g-ok"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="11" fill="#1e8e3e"/><path d="M7 12.5l3.2 3.2L17 9" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>Verification successful</span>';
               setTimeout(open, 350);
             } else {

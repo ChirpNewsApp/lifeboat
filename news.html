@@ -590,10 +590,10 @@ body{font-variant-ligatures:no-contextual;font-feature-settings:"calt" 0}
     if(!adm && has) sel.querySelector('option[value=news]').remove();
   }
   // Cloudflare bot check (Turnstile). Only loads when the server sends a site key.
-  // Passing the full-page security screen (gate.js) gives a 2-hour pass, so the form
+  // Passing the full-page security screen (gate.js) counts for 15 minutes, so the form
   // only shows its own check if that pass is missing or has run out.
   var tsKey = '', tsId = null, tsShown = false;
-  function humanPass(){ try { var h = JSON.parse(sessionStorage.getItem('lb_human') || 'null'); return (h && h.pass && h.exp * 1000 > Date.now() + 60000) ? h.pass : ''; } catch(e){ return ''; } }
+  function humanPass(){ try { var h = JSON.parse(localStorage.getItem('lb_human') || 'null'); return (h && h.pass && h.until > Date.now() + 15000) ? h.pass : ''; } catch(e){ return ''; } }
   function botCheck(key){
     if(!key || tsKey || !LB.signedIn) return;
     tsKey = key;
@@ -658,7 +658,7 @@ body{font-variant-ligatures:no-contextual;font-feature-settings:"calt" 0}
       var d = await api('post', { title: $('c-title').value, text: $('c-text').value, kind: $('c-kind').value, images: keys, turnstile: token, human: pass });
       posts.unshift(d.post); sortPosts(); draw(); this.reset(); $('c-kindnote').hidden = true; $('c-count').textContent = '0 / 4,000'; say('c-msg', d.post.kind === 'staff' ? 'Sent to staff. Only staff and you can see it.' : 'Posted.', 'ok');
       chosen.forEach(function(f){ URL.revokeObjectURL(f.preview); }); chosen = []; drawPicks();
-    } catch(err){ say('c-msg', err.message, 'bad'); if(/bot check/i.test(err.message)){ try { sessionStorage.removeItem('lb_human'); } catch(e){} showBot(); } }
+    } catch(err){ say('c-msg', err.message, 'bad'); if(/bot check/i.test(err.message)){ try { localStorage.removeItem('lb_human'); } catch(e){} showBot(); } }
     if(token) botReset(); // each check works once, so get a fresh one for the next post
     btn.disabled = false; btn.textContent = 'Post';
   });
