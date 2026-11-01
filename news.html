@@ -3,6 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<script src="/gate.js"></script>
 <title>Lifeboat news and feedback</title>
 <link rel="canonical" href="https://www.lifeboatrecovery.com/news">
 <meta property="og:type" content="website">
@@ -587,14 +588,22 @@ body{font-variant-ligatures:no-contextual;font-feature-settings:"calt" 0}
     if(!adm && has) sel.querySelector('option[value=news]').remove();
   }
   // Cloudflare bot check (Turnstile). Only loads when the server sends a site key.
-  var tsKey = '', tsId = null;
+  // Passing the full-page security screen (gate.js) gives a 2-hour pass, so the form
+  // only shows its own check if that pass is missing or has run out.
+  var tsKey = '', tsId = null, tsShown = false;
+  function humanPass(){ try { var h = JSON.parse(sessionStorage.getItem('lb_human') || 'null'); return (h && h.pass && h.exp * 1000 > Date.now() + 60000) ? h.pass : ''; } catch(e){ return ''; } }
   function botCheck(key){
     if(!key || tsKey || !LB.signedIn) return;
     tsKey = key;
-    window.lbTurnstileReady = function(){
-      var box = $('c-turnstile'); box.hidden = false;
-      tsId = turnstile.render(box, { sitekey: tsKey, action: 'post', size: 'flexible', theme: 'light' });
-    };
+    if(document.documentElement.classList.contains('lb-gating')) return; // the security screen is up and will give a pass
+    if(!humanPass()) showBot();
+  }
+  window.addEventListener('lb-gate-passed', function(){ if(tsKey && !humanPass()) showBot(); });
+  function showBot(){
+    if(tsShown || !tsKey) return; tsShown = true;
+    var draw = function(){ var box = $('c-turnstile'); box.hidden = false; tsId = turnstile.render(box, { sitekey: tsKey, action: 'post', size: 'flexible', theme: 'light' }); };
+    if(window.turnstile && turnstile.render) return draw(); // already loaded by the security screen
+    window.lbTurnstileReady = draw;
     var s = document.createElement('script');
     s.src = 'https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit&onload=lbTurnstileReady';
     s.async = true; s.defer = true;
@@ -634,8 +643,8 @@ body{font-variant-ligatures:no-contextual;font-feature-settings:"calt" 0}
   $('c-form').addEventListener('submit', async function(e){
     e.preventDefault();
     if(!$('c-kind').value){ say('c-msg', 'Pick a tag for your post.', 'bad'); $('c-kind').focus(); return; }
-    var token = botToken();
-    if(tsKey && !token){ say('c-msg', 'Finish the bot check above the Post button (tick the box if it asks), then post.', 'bad'); return; }
+    var token = botToken(), pass = humanPass();
+    if(tsKey && !token && !pass){ showBot(); say('c-msg', 'Finish the bot check above the Post button (tick the box if it asks), then post.', 'bad'); return; }
     var btn = this.querySelector('button[type=submit]'); btn.disabled = true; btn.textContent = 'Posting…'; say('c-msg', '');
     try {
       var keys = [];
@@ -644,10 +653,10 @@ body{font-variant-ligatures:no-contextual;font-feature-settings:"calt" 0}
         keys.push(await uploadPicture('image-url', await shrink(chosen[i].file, 2000, false)));
       }
       btn.textContent = 'Posting…';
-      var d = await api('post', { title: $('c-title').value, text: $('c-text').value, kind: $('c-kind').value, images: keys, turnstile: token });
+      var d = await api('post', { title: $('c-title').value, text: $('c-text').value, kind: $('c-kind').value, images: keys, turnstile: token, human: pass });
       posts.unshift(d.post); sortPosts(); draw(); this.reset(); $('c-kindnote').hidden = true; $('c-count').textContent = '0 / 4,000'; say('c-msg', d.post.kind === 'staff' ? 'Sent to staff. Only staff and you can see it.' : 'Posted.', 'ok');
       chosen.forEach(function(f){ URL.revokeObjectURL(f.preview); }); chosen = []; drawPicks();
-    } catch(err){ say('c-msg', err.message, 'bad'); }
+    } catch(err){ say('c-msg', err.message, 'bad'); if(/bot check/i.test(err.message)){ try { sessionStorage.removeItem('lb_human'); } catch(e){} showBot(); } }
     if(token) botReset(); // each check works once, so get a fresh one for the next post
     btn.disabled = false; btn.textContent = 'Post';
   });
