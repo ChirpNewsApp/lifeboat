@@ -22,7 +22,8 @@
       'font:16px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;visibility:visible!important;transition:opacity .25s}' +
     '#lb-gate.out{opacity:0;pointer-events:none}' +
     '#lb-gate .g-in{max-width:720px;margin:0 auto;padding:12vh 24px 40px;min-height:100%;box-sizing:border-box;display:flex;flex-direction:column}' +
-    '#lb-gate h1{font-size:clamp(28px,6vw,40px);font-weight:500;line-height:1.2;margin:0 0 12px;word-break:break-word}' +
+    '#lb-gate h1{font-size:clamp(26px,6vw,40px);font-weight:500;line-height:1.2;margin:0 0 12px;word-break:break-word;display:flex;align-items:center;gap:.4em}' +
+    '#lb-gate h1 img{width:1.1em;height:1.1em;flex:none;border-radius:22%}' +
     '#lb-gate .g-sub{font-size:clamp(18px,3.5vw,24px);font-weight:500;margin:0 0 28px}' +
     '#lb-gate .g-box{min-height:65px;margin:0 0 28px}' +
     '#lb-gate .g-why{margin:0}' +
@@ -45,14 +46,14 @@
     gate.setAttribute('role', 'main');
     gate.innerHTML =
       '<div class="g-in">' +
-        '<h1></h1>' +
+        '<h1><img src="/favicon.svg" alt=""><span></span></h1>' +
         '<p class="g-sub" aria-live="polite">Verifying you are human. This may take a few seconds.</p>' +
         '<p class="g-err" hidden></p>' +
         '<div class="g-box"></div>' +
         '<p class="g-why"></p>' +
         '<div class="g-foot"><span>Lifeboat security check</span><span>Protected by Cloudflare Turnstile</span></div>' +
       '</div>';
-    gate.querySelector('h1').textContent = host;
+    gate.querySelector('h1 span').textContent = host;
     gate.querySelector('.g-why').textContent = host + ' needs to review the security of your connection before proceeding.';
     box = gate.querySelector('.g-box'); sub = gate.querySelector('.g-sub'); err = gate.querySelector('.g-err');
     document.body.appendChild(gate);
@@ -69,6 +70,7 @@
     try { window.dispatchEvent(new Event('lb-gate-passed')); } catch (e) {}
   }
   function fail(msg, retry) {
+    if (!err) return;
     err.hidden = false; err.textContent = msg;
     if (retry) { var b = document.createElement('button'); b.type = 'button'; b.textContent = 'Try again'; b.onclick = function () { location.reload(); }; err.appendChild(b); }
   }
@@ -96,7 +98,10 @@
       },
       'before-interactive-callback': function () { sub.textContent = 'Verify you are human by completing the action below.'; },
       'expired-callback': function () { try { window.turnstile.reset(widget); } catch (e) {} },
-      'error-callback': function () { sub.textContent = 'Verify you are human by completing the action below.'; }
+      'error-callback': function (code) {
+        sub.textContent = 'Verify you are human by completing the action below.';
+        fail('The check did not pass' + (code ? ' (error ' + String(code).replace(/[^\w-]/g, '') + ')' : '') + '. Turn off any VPN or ad blocker for this site, then try again.', true);
+      }
     });
   }
   function loadTurnstile(key) {
