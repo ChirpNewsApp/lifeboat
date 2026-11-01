@@ -136,7 +136,7 @@ body{font-variant-ligatures:no-contextual;font-feature-settings:"calt" 0}
 .n-hero h1{font-size:clamp(38px,6vw,60px);font-weight:800;letter-spacing:-.025em}
 .n-hero p{font-size:19px;color:var(--muted);margin-top:12px}
 .n-grid{display:grid;grid-template-columns:minmax(0,1fr) 330px;gap:28px;align-items:start;padding-bottom:20px}
-.n-filter{display:flex;gap:4px;padding:4px;border-radius:12px;background:var(--tint);width:max-content;max-width:100%;margin-bottom:18px}
+.n-filter{display:flex;flex-wrap:wrap;gap:4px;padding:4px;border-radius:12px;background:var(--tint);width:max-content;max-width:100%;margin-bottom:18px}
 .n-filter button{border:0;background:transparent;padding:8px 16px;border-radius:9px;font:600 15px "Instrument Sans",sans-serif;color:var(--muted);cursor:pointer}
 .n-filter button[aria-pressed="true"]{background:var(--surface);color:var(--ink);box-shadow:0 0 0 1px var(--line)}
 .post{background:var(--surface);border:2px solid var(--line);border-radius:16px;padding:20px 22px;margin-bottom:14px}
@@ -173,6 +173,7 @@ body{font-variant-ligatures:no-contextual;font-feature-settings:"calt" 0}
 .pick img{width:100%;height:100%;object-fit:cover}
 .pick button{position:absolute;top:2px;right:2px;width:22px;height:22px;border-radius:50%;border:0;background:rgba(0,0,0,.65);color:#fff;font-size:14px;line-height:1;cursor:pointer}
 .addpics{margin-top:12px}
+.ts{margin:14px 0 2px;min-height:65px}
 .btn.small{padding:7px 12px;font-size:14.5px;width:auto!important;margin-top:0!important}
 .prof{margin-top:18px;padding-top:16px;border-top:1.5px solid var(--line)}
 .prof h3{font-size:17px;margin-bottom:10px}
@@ -214,7 +215,7 @@ body{font-variant-ligatures:no-contextual;font-feature-settings:"calt" 0}
 .n-empty{padding:40px 20px;text-align:center;color:var(--muted);background:var(--surface);border:2px dashed var(--line);border-radius:16px}
 .legend{margin-top:14px;font-size:13.5px;color:var(--muted);display:grid;gap:6px}
 .legend span{display:flex;align-items:center;gap:6px}
-@media (max-width:860px){.n-grid{grid-template-columns:1fr}.compose{position:static;order:-1}}
+@media (max-width:860px){.n-grid{grid-template-columns:minmax(0,1fr)}.compose{position:static;order:-1}}
 </style>
 </head>
 <body>
@@ -277,6 +278,7 @@ body{font-variant-ligatures:no-contextual;font-feature-settings:"calt" 0}
             </select>
             <p class="count" id="c-kindnote" style="text-align:left" hidden>Private: only Lifeboat staff and you will see this post.</p>
           </div>
+          <div class="ts" id="c-turnstile" hidden></div>
           <button class="btn" type="submit">Post</button>
         </form>
         <div class="n-msg" id="c-msg" role="status"></div>
@@ -584,8 +586,24 @@ body{font-variant-ligatures:no-contextual;font-feature-settings:"calt" 0}
     if(adm && !has){ var o = document.createElement('option'); o.value = 'news'; o.textContent = 'News from the team'; sel.appendChild(o); }
     if(!adm && has) sel.querySelector('option[value=news]').remove();
   }
-  function show(list, who){
-    posts = list; me = who;
+  // Cloudflare bot check (Turnstile). Only loads when the server sends a site key.
+  var tsKey = '', tsId = null;
+  function botCheck(key){
+    if(!key || tsKey || !LB.signedIn) return;
+    tsKey = key;
+    window.lbTurnstileReady = function(){
+      var box = $('c-turnstile'); box.hidden = false;
+      tsId = turnstile.render(box, { sitekey: tsKey, action: 'post', size: 'flexible', theme: 'light' });
+    };
+    var s = document.createElement('script');
+    s.src = 'https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit&onload=lbTurnstileReady';
+    s.async = true; s.defer = true;
+    document.head.appendChild(s);
+  }
+  function botToken(){ try { return (window.turnstile && tsId !== null && turnstile.getResponse(tsId)) || ''; } catch(e){ return ''; } }
+  function botReset(){ try { if(window.turnstile && tsId !== null) turnstile.reset(tsId); } catch(e){} }
+  function show(list, who, key){
+    posts = list; me = who; botCheck(key);
     pinOrder = posts.filter(function(p){ return p.pinned; }).map(function(p){ return p.id; });
     sortPosts(); draw();
     var adm = !!(me && me.admin); setKinds(adm); $('f-staff').hidden = !me; $('c-picwrap').hidden = !adm; $('prof').hidden = !adm; if(adm) setProf(me.avatar, me.name);
@@ -595,12 +613,12 @@ body{font-variant-ligatures:no-contextual;font-feature-settings:"calt" 0}
   try { var c = JSON.parse(sessionStorage.getItem('lb_news') || 'null'); if(c && Date.now() - c.t < 5 * 60000 && Array.isArray(c.posts)){ show(c.posts, null); shownEarly = true; } } catch(e){}
   // 2. Straight away: the public list, without waiting for login to load.
   var early = fetch('/api/news', { headers: { Accept: 'application/json' } }).then(function(r){ return r.json(); }).then(function(d){
-    if(d && d.ok && !upgraded){ show(d.posts, null); shownEarly = true; try { sessionStorage.setItem('lb_news', JSON.stringify({ t: Date.now(), posts: d.posts })); } catch(e){} }
+    if(d && d.ok && !upgraded){ show(d.posts, null, d.turnstile); shownEarly = true; try { sessionStorage.setItem('lb_news', JSON.stringify({ t: Date.now(), posts: d.posts })); } catch(e){} }
   }).catch(function(){});
   // 3. After login loads: the same list with your buttons (delete, badges, replies).
   var upgraded = false;
   async function load(){
-    try { var d = await api('list'); upgraded = true; show(d.posts, d.me); }
+    try { var d = await api('list'); upgraded = true; show(d.posts, d.me, d.turnstile); }
     catch(err){ if(!shownEarly){ $('posts').textContent = ''; $('posts').appendChild(el('p', 'n-empty', err.message)); } }
   }
 
@@ -616,6 +634,8 @@ body{font-variant-ligatures:no-contextual;font-feature-settings:"calt" 0}
   $('c-form').addEventListener('submit', async function(e){
     e.preventDefault();
     if(!$('c-kind').value){ say('c-msg', 'Pick a tag for your post.', 'bad'); $('c-kind').focus(); return; }
+    var token = botToken();
+    if(tsKey && !token){ say('c-msg', 'Finish the bot check above the Post button (tick the box if it asks), then post.', 'bad'); return; }
     var btn = this.querySelector('button[type=submit]'); btn.disabled = true; btn.textContent = 'Posting…'; say('c-msg', '');
     try {
       var keys = [];
@@ -624,10 +644,11 @@ body{font-variant-ligatures:no-contextual;font-feature-settings:"calt" 0}
         keys.push(await uploadPicture('image-url', await shrink(chosen[i].file, 2000, false)));
       }
       btn.textContent = 'Posting…';
-      var d = await api('post', { title: $('c-title').value, text: $('c-text').value, kind: $('c-kind').value, images: keys });
+      var d = await api('post', { title: $('c-title').value, text: $('c-text').value, kind: $('c-kind').value, images: keys, turnstile: token });
       posts.unshift(d.post); sortPosts(); draw(); this.reset(); $('c-kindnote').hidden = true; $('c-count').textContent = '0 / 4,000'; say('c-msg', d.post.kind === 'staff' ? 'Sent to staff. Only staff and you can see it.' : 'Posted.', 'ok');
       chosen.forEach(function(f){ URL.revokeObjectURL(f.preview); }); chosen = []; drawPicks();
     } catch(err){ say('c-msg', err.message, 'bad'); }
+    if(token) botReset(); // each check works once, so get a fresh one for the next post
     btn.disabled = false; btn.textContent = 'Post';
   });
 

@@ -56,7 +56,19 @@ const deps = {
   sendEmail(to, subject, text, html) { return files._deps.sendEmail(to, subject, text, html); },
   cmd() { return files._deps.cmd(); },
   now() { return Date.now(); },
+  // Cloudflare Turnstile: ask Cloudflare whether the token from the page is from a real person.
+  async verifyBot(token, ip) {
+    const form = new URLSearchParams({ secret: process.env.TURNSTILE_SECRET_KEY || '', response: token });
+    if (ip) form.set('remoteip', ip);
+    const r = await fetch('https://challenges.cloudflare.com/turnstile/v0/siteverify', { method: 'POST', body: form });
+    const d = await r.json();
+    return !!(d && d.success);
+  },
 };
+
+// The bot check is on only when both Cloudflare keys are set in Vercel.
+function botCheckOn() { return !!(process.env.TURNSTILE_SITE_KEY && process.env.TURNSTILE_SECRET_KEY); }
+function siteKey() { return botCheckOn() ? process.env.TURNSTILE_SITE_KEY : ''; }
 
 function isAdmin(username) {
   const list = (ADMINS && ADMINS.admins) || [];
@@ -157,6 +169,7 @@ async function list(req, res, cfg, keys) {
   if (!me) res.setHeader('Cache-Control', 'public, s-maxage=10, stale-while-revalidate=60');
   return res.status(200).json({
     ok: true,
+    turnstile: siteKey(),
     me: me ? { name: me.username, admin: me.admin, canReply: canReply(me, badges, tags), avatar: me.admin ? await avatarOf(me.userId, me.username) : '' } : null,
     posts: await Promise.all(posts.filter((p) => p && canSee(p, me)).map(async (p) => Object.assign(await publicPost(cfg, p, badges, me, avatarOf, tags), { pinned: pins.indexOf(p.id) !== -1 }))),
   });
@@ -238,6 +251,14 @@ async function post(req, res, cfg, keys, body) {
   const rate = await readJson(cfg, 'news/rate/' + me.userId + '.json', null);
   if (rate && now - rate.last < POST_GAP_SECONDS * 1000 && !me.admin) {
     return res.status(429).json({ ok: false, error: 'Wait a few seconds before posting again.' });
+  }
+  if (botCheckOn()) {
+    const token = String(body.turnstile || '');
+    if (!token || token.length > 2048) return res.status(400).json({ ok: false, error: 'Complete the bot check, then post again.', bot: true });
+    const ip = String((req.headers && req.headers['x-forwarded-for']) || '').split(',')[0].trim();
+    let human = false;
+    try { human = await deps.verifyBot(token, ip); } catch (e) { console.error('Lifeboat bot check failed to reach Cloudflare:', e); }
+    if (!human) return res.status(400).json({ ok: false, error: 'Bot check failed. Try it again, then post.', bot: true });
   }
   const p = { id: newId(now), title, text, kind, images, created: new Date(now).toISOString(), userId: me.userId, username: me.username };
   if (kind === 'bug') p.replies = [{ id: 'bot' + now.toString(36), text: BOT_BUG_REPLY, created: new Date(now + 1000).toISOString(), userId: BOT.id, username: BOT.name }];
