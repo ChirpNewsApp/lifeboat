@@ -4,7 +4,8 @@
 // and give authors a blue or yellow verified badge.
 //
 //   { "action": "list" }                                         newest posts first (no login needed)
-//   { "action": "post", "title": "...", "text": "...", "kind": "feedback" | "bug" | "news" (news is admins only) }
+//   { "action": "post", "title": "...", "text": "...", "kind": "other" | "bug" | "staff" | "news" }   a tag is required; news is admins only
+//   Staff reports are private: only admins and the person who wrote it can see or reply to them.
 //   { "action": "delete", "id": "..." }                          your own post, or any post if you are an admin
 //   { "action": "badge", "id": "...", "badge": "blue" | "yellow" | "" }   admins only: badge the post's author
 //   { "action": "avatar-url", "type": "image/jpeg", "size": 12345 }   admins only: link to upload a profile picture
@@ -118,6 +119,9 @@ async function publicPost(cfg, p, badges, me, avatarOf, tags) {
 
 // Only admins and people with the yellow badge can reply.
 function canReply(me, badges) { return !!me && (me.admin || badges[me.userId] === 'yellow'); }
+// Staff reports are only for admins and the person who wrote them.
+function canSee(p, me) { return p.kind !== 'staff' || (!!me && (me.admin || me.userId === p.userId)); }
+const KINDS = ['other', 'bug', 'staff'];
 
 async function list(req, res, cfg, keys) {
   const me = await viewer(req, keys);
@@ -139,7 +143,7 @@ async function list(req, res, cfg, keys) {
   return res.status(200).json({
     ok: true,
     me: me ? { name: me.username, admin: me.admin, canReply: canReply(me, badges), avatar: me.admin ? await avatarOf(me.userId, me.username) : '' } : null,
-    posts: await Promise.all(posts.filter(Boolean).map(async (p) => Object.assign(await publicPost(cfg, p, badges, me, avatarOf, tags), { pinned: pins.indexOf(p.id) !== -1 }))),
+    posts: await Promise.all(posts.filter((p) => p && canSee(p, me)).map(async (p) => Object.assign(await publicPost(cfg, p, badges, me, avatarOf, tags), { pinned: pins.indexOf(p.id) !== -1 }))),
   });
 }
 
@@ -147,13 +151,15 @@ async function reply(req, res, cfg, keys, body) {
   const me = await viewer(req, keys);
   if (!me) return res.status(401).json({ ok: false, error: 'Sign in first.' });
   const [badges, avatarOf, tags] = await Promise.all([readJson(cfg, 'news/badges.json', {}), avatarLinks(cfg), readJson(cfg, 'news/tags.json', {})]);
-  if (!canReply(me, badges)) return res.status(403).json({ ok: false, error: 'Only admins and people with the yellow badge can reply.' });
   if (!validId(body.id)) return res.status(400).json({ ok: false, error: 'Unknown post.' });
   const text = String(body.text || '').replace(/\r\n/g, '\n').replace(/\n{4,}/g, '\n\n\n').trim();
   if (!text) return res.status(400).json({ ok: false, error: 'Write a reply first.' });
   if (text.length > MAX_REPLY) return res.status(400).json({ ok: false, error: 'Keep replies under ' + MAX_REPLY.toLocaleString() + ' characters.' });
   const p = await readJson(cfg, postKey(body.id), null);
-  if (!p) return res.status(404).json({ ok: false, error: 'That post is gone.' });
+  if (!p || !canSee(p, me)) return res.status(404).json({ ok: false, error: 'That post is gone.' });
+  // Staff reports: staff and the author can talk. Everything else: admins and yellow badges.
+  const allowed = p.kind === 'staff' ? (me.admin || me.userId === p.userId) : canReply(me, badges);
+  if (!allowed) return res.status(403).json({ ok: false, error: 'Only admins and people with the yellow badge can reply.' });
   p.replies = p.replies || [];
   if (p.replies.length >= MAX_REPLIES) return res.status(400).json({ ok: false, error: 'This post has reached the reply limit.' });
   const now = deps.now();
@@ -204,7 +210,10 @@ async function post(req, res, cfg, keys, body) {
   if (!text) return res.status(400).json({ ok: false, error: 'Write something in the post.' });
   if (title.length > MAX_TITLE) return res.status(400).json({ ok: false, error: 'Keep the title under ' + MAX_TITLE + ' characters.' });
   if (text.length > MAX_TEXT) return res.status(400).json({ ok: false, error: 'Keep the post under ' + MAX_TEXT.toLocaleString() + ' characters.' });
-  const kind = body.kind === 'news' && me.admin ? 'news' : body.kind === 'bug' ? 'bug' : 'feedback';
+  const want = String(body.kind || '');
+  if (want === 'news' && !me.admin) return res.status(403).json({ ok: false, error: 'Only admins can post news.' });
+  if (want !== 'news' && KINDS.indexOf(want) === -1) return res.status(400).json({ ok: false, error: 'Pick a tag for your post: Other, Bug Report, or Staff Report.' });
+  const kind = want;
   const images = Array.isArray(body.images) ? body.images.map(String) : [];
   if (images.length && !me.admin) return res.status(403).json({ ok: false, error: 'Only admins can add photos.' });
   if (images.length > MAX_IMAGES) return res.status(400).json({ ok: false, error: 'Up to ' + MAX_IMAGES + ' photos per post.' });

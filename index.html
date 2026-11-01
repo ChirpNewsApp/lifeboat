@@ -283,18 +283,19 @@ footer{padding:36px 0 50px;color:var(--muted);font-size:14px;border-top:2px soli
 <script>
 // Latest posts from the News and feedback board
 (function(){
-  var KIND = { news: 'News', feedback: 'Feedback', bug: 'Bug Report' };
+  var KIND = { news: 'News', other: 'Other', feedback: 'Other', bug: 'Bug Report' };
   function el(tag, cls, text){ var e = document.createElement(tag); if(cls) e.className = cls; if(text !== undefined) e.textContent = text; return e; }
   function ago(iso){ var s = (Date.now() - new Date(iso).getTime()) / 1000; if(s < 3600) return Math.max(1, Math.floor(s / 60)) + ' min ago'; if(s < 86400) return Math.floor(s / 3600) + ' h ago'; if(s < 7 * 86400) return Math.floor(s / 86400) + ' d ago'; return new Date(iso).toLocaleDateString(undefined, { month: 'short', day: 'numeric' }); }
   function render(posts){
     if(!posts || !posts.length) return;
+    posts = posts.filter(function(p){ return p.kind !== 'staff'; });
     var top = posts.filter(function(p){ return p.pinned; }).concat(posts.filter(function(p){ return !p.pinned; }).sort(function(a, b){ return new Date(b.created) - new Date(a.created); })).slice(0, 3);
     var g = document.getElementById('latest-grid'); g.textContent = '';
     top.forEach(function(p){
       var a = el('a', 'lpost' + (p.kind === 'news' ? ' news' : '')); a.href = '/news';
       var m = el('div', 'lmeta');
       if(p.pinned) m.appendChild(el('span', 'lpin', 'Pinned'));
-      m.appendChild(el('span', 'ltag' + (p.kind === 'news' ? ' news' : p.kind === 'bug' ? ' bugrep' : ''), KIND[p.kind] || 'Feedback'));
+      m.appendChild(el('span', 'ltag' + (p.kind === 'news' ? ' news' : p.kind === 'bug' ? ' bugrep' : ''), KIND[p.kind] || 'Other'));
       m.appendChild(el('span', '', ago(p.created)));
       a.appendChild(m); a.appendChild(el('h3', '', p.title));
       var t = String(p.text || ''); a.appendChild(el('p', '', t.length > 140 ? t.slice(0, 137).trim() + '…' : t));
