@@ -183,6 +183,7 @@ body{font-variant-ligatures:no-contextual;font-feature-settings:"calt" 0}
 .tag{font-size:12.5px;font-weight:700;padding:2px 9px;border-radius:99px;border:1.5px solid var(--line);color:var(--muted)}
 .tag.news{background:var(--signal);border-color:var(--signal);color:var(--signal-ink)}
 .tag.team{border-color:var(--ink);color:var(--ink)}
+.tag.bug{border-color:var(--ok);color:var(--ok)}
 .post h2{font-size:24px;margin:10px 0 6px;letter-spacing:-.01em;overflow-wrap:anywhere}
 .post .body{white-space:pre-wrap;overflow-wrap:anywhere;margin:0}
 .post-acts{display:flex;gap:6px;flex-wrap:wrap;margin-top:14px;align-items:center}
@@ -421,6 +422,7 @@ body{font-variant-ligatures:no-contextual;font-feature-settings:"calt" 0}
       var who = el('span', 'who', r.author.name); if(BADGE[r.author.badge]) who.insertAdjacentHTML('beforeend', BADGE[r.author.badge]);
       line.appendChild(who);
       if(r.author.admin) line.appendChild(el('span', 'tag team', 'Team'));
+      if((r.author.tags || []).indexOf('bughunter') !== -1) line.appendChild(el('span', 'tag bug', 'Bug Hunter'));
       var t = el('time', '', ago(r.created)); t.dateTime = r.created; t.title = new Date(r.created).toLocaleString(); line.appendChild(t);
       body.appendChild(line); body.appendChild(el('p', '', r.text));
       if(r.canDelete) body.appendChild(replyDel(p, r));
@@ -488,6 +490,19 @@ body{font-variant-ligatures:no-contextual;font-feature-settings:"calt" 0}
       return new Date(y.created) - new Date(x.created);
     });
   }
+  function tagBtn(p, t, label){
+    var on = (p.author.tags || []).indexOf(t) !== -1;
+    var b = el('button', 'mini' + (on ? ' on' : ''), label); b.type = 'button'; b.setAttribute('aria-pressed', on ? 'true' : 'false');
+    b.addEventListener('click', async function(){
+      try {
+        var r = await api('tag', { id: p.id, tag: t, on: !on });
+        function upd(a){ if(a.name !== r.name) return; var list = (a.tags || []).filter(function(x){ return x !== t; }); if(r.on) list.push(t); a.tags = list; }
+        posts.forEach(function(x){ upd(x.author); (x.replies || []).forEach(function(y){ upd(y.author); }); });
+        draw(); say('listmsg', r.on ? 'Gave ' + r.name + ' the ' + label + ' tag.' : 'Removed ' + r.name + '\'s ' + label + ' tag.', 'ok');
+      } catch(err){ say('listmsg', err.message, 'bad'); }
+    });
+    return b;
+  }
   function badgeBtn(p, color, label){
     var b = el('button', 'mini' + (p.author.badge === color ? ' on' : ''), label); b.type = 'button';
     b.setAttribute('aria-pressed', p.author.badge === color ? 'true' : 'false');
@@ -517,6 +532,7 @@ body{font-variant-ligatures:no-contextual;font-feature-settings:"calt" 0}
       if(BADGE[p.author.badge]) who.insertAdjacentHTML('beforeend', BADGE[p.author.badge]);
       line1.appendChild(who);
       if(p.author.admin) line1.appendChild(el('span', 'tag team', 'Team'));
+      if((p.author.tags || []).indexOf('bughunter') !== -1) line1.appendChild(el('span', 'tag bug', 'Bug Hunter'));
       var line2 = el('div', 'post-line');
       line2.appendChild(el('span', 'tag' + (p.kind === 'news' ? ' news' : ''), p.kind === 'news' ? 'News' : 'Feedback'));
       var when = el('time', '', ago(p.created)); when.dateTime = p.created; when.title = new Date(p.created).toLocaleString(); line2.appendChild(when);
@@ -535,8 +551,9 @@ body{font-variant-ligatures:no-contextual;font-feature-settings:"calt" 0}
         if(p.canDelete) acts.appendChild(delBtn(p));
         if(me && me.admin) acts.appendChild(pinBtn(p));
         if(me && me.admin){
-          var adm = el('span', 'adm'); adm.appendChild(el('span', '', 'Badge for ' + p.author.name + ':'));
+          var adm = el('span', 'adm'); adm.appendChild(el('span', '', 'Badges for ' + p.author.name + ':'));
           adm.appendChild(badgeBtn(p, 'blue', 'Blue')); adm.appendChild(badgeBtn(p, 'yellow', 'Yellow'));
+          adm.appendChild(tagBtn(p, 'bughunter', 'Bug Hunter'));
           acts.appendChild(adm);
         }
         a.appendChild(acts);

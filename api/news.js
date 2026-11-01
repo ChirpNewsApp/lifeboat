@@ -14,6 +14,7 @@
 //   { "action": "pin", "id": "...", "pinned": true | false }   admins only: pinned posts show first
 //   { "action": "reply", "id": "...", "text": "..." }   admins and people with the yellow badge only
 //   { "action": "reply-delete", "id": "...", "replyId": "..." }   the reply's author or an admin
+//   { "action": "tag", "id": "...", "tag": "bughunter", "on": true | false }   admins only: give the post's author a tag
 //
 // Posts are stored as small JSON files in the same Backblaze bucket, under news/.
 
@@ -27,6 +28,7 @@ const MAX_TEXT = 4000;
 const MAX_LIST = 100;
 const POST_GAP_SECONDS = 30;          // one post every 30 seconds per person
 const BADGES = ['blue', 'yellow'];
+const TAGS = ['bughunter'];            // tags admins can give, shown next to the name like Team
 const MAX_AVATAR_BYTES = 5 * 1000 * 1000;
 const AVATAR_TYPES = { 'image/jpeg': 'jpg', 'image/png': 'png', 'image/webp': 'webp', 'image/gif': 'gif' };
 const AVATAR_KEY = /^news\/avatars\/[a-f0-9]{24}\.(jpg|png|webp|gif)$/;
@@ -93,17 +95,22 @@ async function avatarLinks(cfg) {
   };
 }
 
-async function publicPost(cfg, p, badges, me, avatarOf) {
+function tagsOf(tags, userId) { return TAGS.filter((t) => tags && tags[userId] && tags[userId][t]); }
+async function authorOf(userId, username, badges, tags, avatarOf) {
+  return { name: username || 'member', badge: badges[userId] || '', admin: isAdmin(username), tags: tagsOf(tags, userId), avatar: avatarOf ? await avatarOf(userId, username) : '' };
+}
+
+async function publicPost(cfg, p, badges, me, avatarOf, tags) {
   const { GetObjectCommand } = deps.cmd();
   const images = await Promise.all((p.images || []).map((k) => deps.sign(cfg, new GetObjectCommand({ Bucket: cfg.bucket, Key: k }), 3600).catch(() => '')));
   return {
     id: p.id, title: p.title, text: p.text, kind: p.kind, created: p.created, images: images.filter(Boolean),
-    author: { name: p.username || 'member', badge: badges[p.userId] || '', admin: isAdmin(p.username), avatar: avatarOf ? await avatarOf(p.userId, p.username) : '' },
+    author: await authorOf(p.userId, p.username, badges, tags, avatarOf),
     mine: !!(me && me.userId === p.userId),
     canDelete: !!(me && (me.userId === p.userId || me.admin)),
     replies: await Promise.all((p.replies || []).map(async (r) => ({
       id: r.id, text: r.text, created: r.created,
-      author: { name: r.username || 'member', badge: badges[r.userId] || '', admin: isAdmin(r.username), avatar: avatarOf ? await avatarOf(r.userId, r.username) : '' },
+      author: await authorOf(r.userId, r.username, badges, tags, avatarOf),
       canDelete: !!(me && (me.userId === r.userId || me.admin)),
     }))),
   };
@@ -122,23 +129,24 @@ async function list(req, res, cfg, keys) {
   // Pinned posts come first (most recently pinned on top), even if they are older than the newest 100.
   const pinKeys = pins.filter(validId).map(postKey);
   const keysFound = pinKeys.concat((r.Contents || []).map((o) => o.Key).filter((k) => k.endsWith('.json') && pinKeys.indexOf(k) === -1));
-  const [posts, badges, avatarOf] = await Promise.all([
+  const [posts, badges, avatarOf, tags] = await Promise.all([
     Promise.all(keysFound.map((k) => readJson(cfg, k, null))),
     readJson(cfg, 'news/badges.json', {}),
     avatarLinks(cfg),
+    readJson(cfg, 'news/tags.json', {}),
   ]);
   if (!me) res.setHeader('Cache-Control', 'public, s-maxage=10, stale-while-revalidate=60');
   return res.status(200).json({
     ok: true,
     me: me ? { name: me.username, admin: me.admin, canReply: canReply(me, badges), avatar: me.admin ? await avatarOf(me.userId, me.username) : '' } : null,
-    posts: await Promise.all(posts.filter(Boolean).map(async (p) => Object.assign(await publicPost(cfg, p, badges, me, avatarOf), { pinned: pins.indexOf(p.id) !== -1 }))),
+    posts: await Promise.all(posts.filter(Boolean).map(async (p) => Object.assign(await publicPost(cfg, p, badges, me, avatarOf, tags), { pinned: pins.indexOf(p.id) !== -1 }))),
   });
 }
 
 async function reply(req, res, cfg, keys, body) {
   const me = await viewer(req, keys);
   if (!me) return res.status(401).json({ ok: false, error: 'Sign in first.' });
-  const [badges, avatarOf] = await Promise.all([readJson(cfg, 'news/badges.json', {}), avatarLinks(cfg)]);
+  const [badges, avatarOf, tags] = await Promise.all([readJson(cfg, 'news/badges.json', {}), avatarLinks(cfg), readJson(cfg, 'news/tags.json', {})]);
   if (!canReply(me, badges)) return res.status(403).json({ ok: false, error: 'Only admins and people with the yellow badge can reply.' });
   if (!validId(body.id)) return res.status(400).json({ ok: false, error: 'Unknown post.' });
   const text = String(body.text || '').replace(/\r\n/g, '\n').replace(/\n{4,}/g, '\n\n\n').trim();
@@ -154,7 +162,7 @@ async function reply(req, res, cfg, keys, body) {
   await writeJson(cfg, postKey(p.id), p);
   return res.status(200).json({ ok: true, reply: {
     id: r.id, text: r.text, created: r.created,
-    author: { name: r.username || 'member', badge: badges[r.userId] || '', admin: isAdmin(r.username), avatar: await avatarOf(r.userId, r.username) },
+    author: await authorOf(r.userId, r.username, badges, tags, avatarOf),
     canDelete: true,
   } });
 }
@@ -210,8 +218,8 @@ async function post(req, res, cfg, keys, body) {
   const p = { id: newId(now), title, text, kind, images, created: new Date(now).toISOString(), userId: me.userId, username: me.username };
   await writeJson(cfg, postKey(p.id), p);
   await writeJson(cfg, 'news/rate/' + me.userId + '.json', { last: now });
-  const [badges, avatarOf] = await Promise.all([readJson(cfg, 'news/badges.json', {}), avatarLinks(cfg)]);
-  return res.status(200).json({ ok: true, post: await publicPost(cfg, p, badges, me, avatarOf) });
+  const [badges, avatarOf, tags] = await Promise.all([readJson(cfg, 'news/badges.json', {}), avatarLinks(cfg), readJson(cfg, 'news/tags.json', {})]);
+  return res.status(200).json({ ok: true, post: await publicPost(cfg, p, badges, me, avatarOf, tags) });
 }
 
 async function remove(req, res, cfg, keys, body) {
@@ -227,6 +235,22 @@ async function remove(req, res, cfg, keys, body) {
   const pins = await readJson(cfg, 'news/pins.json', []);
   if (pins.indexOf(body.id) !== -1) await writeJson(cfg, 'news/pins.json', pins.filter((x) => x !== body.id));
   return res.status(200).json({ ok: true });
+}
+
+async function tag(req, res, cfg, keys, body) {
+  const me = await viewer(req, keys);
+  if (!me || !me.admin) return res.status(403).json({ ok: false, error: 'Only admins can give tags.' });
+  if (!validId(body.id)) return res.status(400).json({ ok: false, error: 'Unknown post.' });
+  const t = String(body.tag || '');
+  if (TAGS.indexOf(t) === -1) return res.status(400).json({ ok: false, error: 'Unknown tag.' });
+  const p = await readJson(cfg, postKey(body.id), null);
+  if (!p) return res.status(404).json({ ok: false, error: 'That post is gone.' });
+  const tags = await readJson(cfg, 'news/tags.json', {});
+  const mine = Object.assign({}, tags[p.userId] || {});
+  if (body.on) mine[t] = true; else delete mine[t];
+  if (Object.keys(mine).length) tags[p.userId] = mine; else delete tags[p.userId];
+  await writeJson(cfg, 'news/tags.json', tags);
+  return res.status(200).json({ ok: true, name: p.username, tag: t, on: !!body.on });
 }
 
 async function badge(req, res, cfg, keys, body) {
@@ -288,6 +312,7 @@ async function handler(req, res) {
     if (body.action === 'post') return await post(req, res, cfg, keys, body);
     if (body.action === 'delete') return await remove(req, res, cfg, keys, body);
     if (body.action === 'badge') return await badge(req, res, cfg, keys, body);
+    if (body.action === 'tag') return await tag(req, res, cfg, keys, body);
     if (body.action === 'pin') return await pin(req, res, cfg, keys, body);
     if (body.action === 'reply') return await reply(req, res, cfg, keys, body);
     if (body.action === 'reply-delete') return await replyDelete(req, res, cfg, keys, body);
