@@ -184,6 +184,7 @@ body{font-variant-ligatures:no-contextual;font-feature-settings:"calt" 0}
 .tag.news{background:var(--signal);border-color:var(--signal);color:var(--signal-ink)}
 .tag.team{border-color:var(--ink);color:var(--ink)}
 .tag.bug{border-color:var(--ok);color:var(--ok)}
+.tag.bugrep{background:var(--bad);border-color:var(--bad);color:#fff}
 .post h2{font-size:24px;margin:10px 0 6px;letter-spacing:-.01em;overflow-wrap:anywhere}
 .post .body{white-space:pre-wrap;overflow-wrap:anywhere;margin:0}
 .post-acts{display:flex;gap:6px;flex-wrap:wrap;margin-top:14px;align-items:center}
@@ -239,6 +240,7 @@ body{font-variant-ligatures:no-contextual;font-feature-settings:"calt" 0}
           <button type="button" data-filter="all" aria-pressed="true">All</button>
           <button type="button" data-filter="news" aria-pressed="false">News</button>
           <button type="button" data-filter="feedback" aria-pressed="false">Feedback</button>
+          <button type="button" data-filter="bug" aria-pressed="false">Bug reports</button>
         </div>
         <div class="n-msg" id="listmsg" role="status"></div>
         <div id="posts"><p class="n-empty">Loading posts…</p></div>
@@ -252,7 +254,7 @@ body{font-variant-ligatures:no-contextual;font-feature-settings:"calt" 0}
         </div>
         <form id="c-form" hidden>
           <label for="c-title">Title</label>
-          <input id="c-title" type="text" maxlength="120" autocomplete="off" placeholder="e.g. Folder sharing would be great">
+          <input id="c-title" type="text" maxlength="120" autocomplete="off" placeholder="e.g. Folder sharing would be great, or Upload fails on Safari">
           <label for="c-text">Post</label>
           <textarea id="c-text" maxlength="4000" placeholder="What's on your mind?"></textarea>
           <div class="count" id="c-count">0 / 4,000</div>
@@ -261,9 +263,9 @@ body{font-variant-ligatures:no-contextual;font-feature-settings:"calt" 0}
             <input type="file" id="c-pics" accept="image/jpeg,image/png,image/webp,image/gif" multiple hidden>
             <div class="picks" id="c-picks"></div>
           </div>
-          <div id="c-kindwrap" hidden>
-            <label for="c-kind">Post as</label>
-            <select id="c-kind"><option value="feedback">Feedback</option><option value="news">News from the team</option></select>
+          <div id="c-kindwrap">
+            <label for="c-kind">Type</label>
+            <select id="c-kind"><option value="feedback">Feedback</option><option value="bug">Bug report</option></select>
           </div>
           <button class="btn" type="submit">Post</button>
         </form>
@@ -297,6 +299,7 @@ body{font-variant-ligatures:no-contextual;font-feature-settings:"calt" 0}
 (function(){
   var $ = function(id){ return document.getElementById(id); };
   var posts = [], me = null, filter = 'all';
+  var KIND_LABEL = { news: 'News', feedback: 'Feedback', bug: 'Bug Report' };
   var PIN = '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M15 3l6 6-3 1-4 4 1 5-2 2-4-4-5 5-1-1 5-5-4-4 2-2 5 1 4-4z"/></svg>';
   var BADGE = {
     blue: '<svg class="vbadge" viewBox="0 0 24 24" role="img" aria-label="Verified person"><title>Verified person</title><path fill="#2F7DF6" d="M12 1.5l2.6 1.9 3.2-.2 1 3 2.6 1.9-1 3 1 3-2.6 1.9-1 3-3.2-.2L12 22.5l-2.6-1.9-3.2.2-1-3L2.6 15.9l1-3-1-3 2.6-1.9 1-3 3.2.2z"/><path d="M7.5 12.3l3 3 6-6.2" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>',
@@ -520,7 +523,7 @@ body{font-variant-ligatures:no-contextual;font-feature-settings:"calt" 0}
   function draw(){
     var box = $('posts'); box.textContent = '';
     var shown = posts.filter(function(p){ return filter === 'all' || p.kind === filter; });
-    if(!shown.length){ box.appendChild(el('p', 'n-empty', filter === 'news' ? 'No news yet.' : posts.length ? 'Nothing here yet.' : 'No posts yet. Be the first to share feedback.')); return; }
+    if(!shown.length){ box.appendChild(el('p', 'n-empty', filter === 'news' ? 'No news yet.' : filter === 'bug' ? 'No bug reports. Nice.' : posts.length ? 'Nothing here yet.' : 'No posts yet. Be the first to share feedback.')); return; }
     shown.forEach(function(p){
       var a = el('article', 'post' + (p.kind === 'news' ? ' news' : '') + (p.pinned ? ' pinned' : ''));
       if(p.pinned){ var pl = el('div', 'pinned-label'); pl.insertAdjacentHTML('beforeend', PIN); pl.appendChild(document.createTextNode('Pinned')); a.appendChild(pl); }
@@ -534,7 +537,7 @@ body{font-variant-ligatures:no-contextual;font-feature-settings:"calt" 0}
       if(p.author.admin || (p.author.tags || []).indexOf('team') !== -1) line1.appendChild(el('span', 'tag team', 'Team'));
       if((p.author.tags || []).indexOf('bughunter') !== -1) line1.appendChild(el('span', 'tag bug', 'Bug Hunter'));
       var line2 = el('div', 'post-line');
-      line2.appendChild(el('span', 'tag' + (p.kind === 'news' ? ' news' : ''), p.kind === 'news' ? 'News' : 'Feedback'));
+      line2.appendChild(el('span', 'tag' + (p.kind === 'news' ? ' news' : p.kind === 'bug' ? ' bugrep' : ''), KIND_LABEL[p.kind] || 'Feedback'));
       var when = el('time', '', ago(p.created)); when.dateTime = p.created; when.title = new Date(p.created).toLocaleString(); line2.appendChild(when);
       whoBox.appendChild(line1); whoBox.appendChild(line2); top.appendChild(whoBox);
       a.appendChild(top);
@@ -563,11 +566,16 @@ body{font-variant-ligatures:no-contextual;font-feature-settings:"calt" 0}
     });
   }
 
+  function setKinds(adm){
+    var sel = $('c-kind'), has = !!sel.querySelector('option[value=news]');
+    if(adm && !has){ var o = document.createElement('option'); o.value = 'news'; o.textContent = 'News from the team'; sel.appendChild(o); }
+    if(!adm && has) sel.querySelector('option[value=news]').remove();
+  }
   function show(list, who){
     posts = list; me = who;
     pinOrder = posts.filter(function(p){ return p.pinned; }).map(function(p){ return p.id; });
     sortPosts(); draw();
-    var adm = !!(me && me.admin); $('c-kindwrap').hidden = !adm; $('c-picwrap').hidden = !adm; $('prof').hidden = !adm; if(adm) setProf(me.avatar, me.name);
+    var adm = !!(me && me.admin); setKinds(adm); $('c-picwrap').hidden = !adm; $('prof').hidden = !adm; if(adm) setProf(me.avatar, me.name);
   }
   // 1. Instantly: posts pre-loaded by another page (up to 5 minutes old).
   var shownEarly = false;

@@ -4,7 +4,7 @@
 // and give authors a blue or yellow verified badge.
 //
 //   { "action": "list" }                                         newest posts first (no login needed)
-//   { "action": "post", "title": "...", "text": "...", "kind": "feedback" | "news" }
+//   { "action": "post", "title": "...", "text": "...", "kind": "feedback" | "bug" | "news" (news is admins only) }
 //   { "action": "delete", "id": "..." }                          your own post, or any post if you are an admin
 //   { "action": "badge", "id": "...", "badge": "blue" | "yellow" | "" }   admins only: badge the post's author
 //   { "action": "avatar-url", "type": "image/jpeg", "size": 12345 }   admins only: link to upload a profile picture
@@ -204,7 +204,7 @@ async function post(req, res, cfg, keys, body) {
   if (!text) return res.status(400).json({ ok: false, error: 'Write something in the post.' });
   if (title.length > MAX_TITLE) return res.status(400).json({ ok: false, error: 'Keep the title under ' + MAX_TITLE + ' characters.' });
   if (text.length > MAX_TEXT) return res.status(400).json({ ok: false, error: 'Keep the post under ' + MAX_TEXT.toLocaleString() + ' characters.' });
-  const kind = body.kind === 'news' && me.admin ? 'news' : 'feedback';
+  const kind = body.kind === 'news' && me.admin ? 'news' : body.kind === 'bug' ? 'bug' : 'feedback';
   const images = Array.isArray(body.images) ? body.images.map(String) : [];
   if (images.length && !me.admin) return res.status(403).json({ ok: false, error: 'Only admins can add photos.' });
   if (images.length > MAX_IMAGES) return res.status(400).json({ ok: false, error: 'Up to ' + MAX_IMAGES + ' photos per post.' });
